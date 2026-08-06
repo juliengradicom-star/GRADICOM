@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GRADICOM • Portail Performance</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -470,6 +471,31 @@
             <button class="admin-back-btn" onclick="backToLogin()">← Retour Login</button>
         </div>
         <div id="adminPanel"></div>
+        
+        <!-- IMPORT SECTION -->
+        <div style="max-width: 1200px; margin: 50px auto; background: var(--dark-gray); border: 1px solid rgba(212, 175, 55, 0.2); padding: 30px; border-radius: 4px;">
+            <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 24px; color: var(--gold); margin-bottom: 25px;">📥 Import Excel</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <!-- IMPORT OBJECTIFS -->
+                <div>
+                    <h3 style="color: var(--white); margin-bottom: 15px;">📊 Fichier Objectifs</h3>
+                    <p style="color: var(--text-dim); font-size: 12px; margin-bottom: 15px;">OBJECTIFS_AOUT.xlsx</p>
+                    <input type="file" id="objectifsFile" accept=".xlsx,.xls" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(212, 175, 55, 0.3); color: var(--white); margin-bottom: 10px;">
+                    <button onclick="importObjectifs()" class="btn-add">Importer Objectifs</button>
+                </div>
+                
+                <!-- IMPORT JT -->
+                <div>
+                    <h3 style="color: var(--white); margin-bottom: 15px;">📅 Fichier Jours Travaillés</h3>
+                    <p style="color: var(--text-dim); font-size: 12px; margin-bottom: 15px;">JT.xlsx</p>
+                    <input type="file" id="jtFile" accept=".xlsx,.xls" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(212, 175, 55, 0.3); color: var(--white); margin-bottom: 10px;">
+                    <button onclick="importJT()" class="btn-add">Importer JT</button>
+                </div>
+            </div>
+            
+            <div id="importStatus" style="margin-top: 20px; padding: 15px; background: rgba(212, 175, 55, 0.1); border-left: 3px solid var(--gold); display: none; color: var(--text-dim); font-size: 12px;"></div>
+        </div>
     </div>
 
     <!-- APP SCREEN -->
@@ -807,6 +833,174 @@
                 option.textContent = `${store.name} (${store.city})`;
                 select.appendChild(option);
             });
+        }
+
+        function importObjectifs() {
+            const file = document.getElementById('objectifsFile').files[0];
+            if (!file) {
+                alert('Sélectionne le fichier OBJECTIFS_AOUT.xlsx');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    const gradicomData = getData();
+                    let currentStore = null;
+                    let currentStoreObj = null;
+
+                    for (let i = 0; i < rows.length; i++) {
+                        const row = rows[i];
+                        if (!row || row.length === 0) continue;
+
+                        const firstCell = row[0];
+                        
+                        // Détecter un nouveau magasin (première colonne avec un nom, pas "Objectifs")
+                        if (firstCell && firstCell !== 'Objectifs Magasins / Vendeurs journalier' && !firstCell.includes('Nombre') && typeof firstCell === 'string' && firstCell.trim() && i > 2) {
+                            // Si c'est un vendeur connu, on passe
+                            if (['STEPHANE', 'CAPUCINE', 'MARIE', 'CHRISTELLE', 'LENA-MAY', 'ARNAUD', 'DYLAN', 'MATTHIEU', 'MAXIME', 'NOELLA', 'OCEANE G', 'ADAM'].includes(firstCell.toUpperCase())) {
+                                continue;
+                            }
+                            // Sinon c'est un magasin
+                            currentStore = firstCell.trim();
+                            // Créer le magasin s'il n'existe pas
+                            if (!gradicomData.stores.find(s => s.name === currentStore)) {
+                                gradicomData.stores.push({
+                                    id: Date.now() + Math.random(),
+                                    name: currentStore,
+                                    city: currentStore
+                                });
+                            }
+                            currentStoreObj = gradicomData.stores.find(s => s.name === currentStore);
+                        }
+
+                        // Détecter les objectifs (ligne avec des nombres et des noms)
+                        if (row[1] && typeof row[1] === 'string' && (row[1].includes('MARGE') || row[1].includes('OFFRES') || row[1].includes('CONQUETE') || row[1].includes('FIBRE') || row[1].includes('VOLUME') || row[1].includes('CANAL') || row[1].includes('OPTIONS') || row[1].includes('TCS'))) {
+                            // C'est une ligne d'en-tête d'objectif
+                            let objName = row[1].trim();
+                            let objValue = row[2]; // Valeur mensuelle
+
+                            if (objValue && !isNaN(objValue)) {
+                                // Créer l'objectif s'il n'existe pas
+                                if (!gradicomData.objectives.find(o => o.name === objName)) {
+                                    gradicomData.objectives.push({
+                                        id: Date.now() + Math.random(),
+                                        name: objName,
+                                        unit: typeof objValue === 'number' ? '€' : 'qty',
+                                        target: parseFloat(objValue),
+                                        done: 0
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    saveData(gradicomData);
+                    showImportStatus('✅ Objectifs importés avec succès ! ' + gradicomData.objectives.length + ' objectifs créés.');
+                    document.getElementById('objectifsFile').value = '';
+                    refreshLists();
+                    updateStoreSelects();
+                } catch (error) {
+                    showImportStatus('❌ Erreur : ' + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function importJT() {
+            const file = document.getElementById('jtFile').files[0];
+            if (!file) {
+                alert('Sélectionne le fichier JT.xlsx');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    const gradicomData = getData();
+                    let vendorCount = 0;
+
+                    // Extraire les en-têtes de jours (L M M J V S D)
+                    const headerRow = rows[0];
+                    const dateRow = rows[1];
+                    const daysLabels = [];
+                    const dates = [];
+
+                    for (let j = 2; j < headerRow.length; j++) {
+                        daysLabels.push(headerRow[j]);
+                        dates.push(dateRow[j]);
+                    }
+
+                    // Lire les vendeurs
+                    for (let i = 2; i < rows.length; i++) {
+                        const row = rows[i];
+                        if (!row || !row[0]) continue;
+
+                        const vendorName = row[0].toString().trim().toUpperCase();
+                        const totalJours = row[1]; // Nombre total de jours travaillés
+
+                        if (vendorName && totalJours) {
+                            // Chercher le vendeur dans la base
+                            let user = gradicomData.users.find(u => u.name.toUpperCase() === vendorName);
+                            
+                            if (!user) {
+                                // Créer le vendeur s'il n'existe pas
+                                gradicomData.users.push({
+                                    email: vendorName.toLowerCase() + '@gradicom.fr',
+                                    password: '123456',
+                                    name: row[0], // Garder la casse originale
+                                    isManager: false,
+                                    store: 'LANGON', // Magasin par défaut
+                                    totalJoursTravailles: parseInt(totalJours),
+                                    calendar: [] // Calendrier 0/1
+                                });
+                                user = gradicomData.users[gradicomData.users.length - 1];
+                                vendorCount++;
+                            } else {
+                                // Mettre à jour les jours travaillés
+                                user.totalJoursTravailles = parseInt(totalJours);
+                            }
+
+                            // Stocker le calendrier
+                            user.calendar = [];
+                            for (let j = 2; j < row.length; j++) {
+                                user.calendar.push({
+                                    date: dates[j - 2],
+                                    day: daysLabels[j - 2],
+                                    worked: row[j] === 1 ? true : false
+                                });
+                            }
+                        }
+                    }
+
+                    saveData(gradicomData);
+                    showImportStatus('✅ Jours travaillés importés ! ' + vendorCount + ' vendeurs mis à jour.');
+                    document.getElementById('jtFile').value = '';
+                    refreshLists();
+                } catch (error) {
+                    showImportStatus('❌ Erreur : ' + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function showImportStatus(message) {
+            const statusDiv = document.getElementById('importStatus');
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
         }
     </script>
 </body>
