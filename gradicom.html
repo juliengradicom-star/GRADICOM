@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRADICOM • Portail Performance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --black: #0a0a0a;
+            --dark-gray: #1a1a1a;
+            --gold: #d4af37;
+            --white: #ffffff;
+            --text-dim: #999999;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--black);
+            color: var(--white);
+        }
+
+        /* ========== LOGIN PAGE ========== */
+        #loginScreen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--black) 0%, #1a1a1a 100%);
+            padding: 20px;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            font-size: 12px;
+            letter-spacing: 3px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-top: 8px;
+        }
+
+        .login-form {
+            background: var(--dark-gray);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 50px 40px;
+            border-radius: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: var(--white);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--gold);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--gold);
+            color: var(--black);
+            border: none;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .login-btn:hover {
+            background: #e8d5a8;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        }
+
+        .admin-link {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+        }
+
+        .admin-link a {
+            color: var(--gold);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .admin-link a:hover {
+            color: #e8d5a8;
+            text-decoration: underline;
+        }
+
+        /* ========== APP SCREEN ========== */
+        #appScreen {
+            display: none;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--black) 0%, #1a1a1a 100%);
+        }
+
+        #appScreen.active {
+            display: block;
+        }
+
+        .app-header {
+            background: var(--dark-gray);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px;
+            color: var(--gold);
+            letter-spacing: 1px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        #userInfo {
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            color: var(--gold);
+            cursor: pointer;
+            font-size: 12px;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(212, 175, 55, 0.1);
+            border-color: var(--gold);
+        }
+
+        /* ========== TABS ========== */
+        .tabs-container {
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            background: var(--dark-gray);
+            padding: 0 50px;
+            display: flex;
+            gap: 40px;
+        }
+
+        .tab-btn {
+            padding: 20px 0;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            font-weight: 600;
+        }
+
+        .tab-btn:hover {
+            color: var(--gold);
+        }
+
+        .tab-btn.active {
+            color: var(--gold);
+            border-bottom-color: var(--gold);
+        }
+
+        /* ========== TAB CONTENT ========== */
+        .tab-content {
+            display: none;
+            padding: 50px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* ========== DASHBOARD ========== */
+        .dashboard-placeholder {
+            background: var(--dark-gray);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 60px;
+            text-align: center;
+            color: var(--text-dim);
+            border-radius: 4px;
+        }
+
+        .dashboard-placeholder h3 {
+            color: var(--white);
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        /* ========== ADMIN PANEL ========== */
+        #adminScreen {
+            display: none;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--black) 0%, #1a1a1a 100%);
+            padding: 50px;
+        }
+
+        #adminScreen.active {
+            display: block;
+        }
+
+        .admin-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .admin-header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 40px;
+            color: var(--gold);
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+
+        .admin-back-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            color: var(--gold);
+            cursor: pointer;
+            font-size: 12px;
+            letter-spacing: 1px;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .admin-back-btn:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .admin-sections {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .admin-section {
+            background: var(--dark-gray);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 30px;
+            border-radius: 4px;
+        }
+
+        .admin-section h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 24px;
+            color: var(--gold);
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: var(--white);
+            font-size: 13px;
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--gold);
+        }
+
+        .btn-add {
+            width: 100%;
+            padding: 12px;
+            background: var(--gold);
+            color: var(--black);
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 12px;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-add:hover {
+            background: #e8d5a8;
+        }
+
+        .list-items {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .list-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 2px solid rgba(212, 175, 55, 0.3);
+            font-size: 12px;
+        }
+
+        .btn-delete {
+            padding: 6px 12px;
+            background: rgba(255, 100, 100, 0.2);
+            color: #ff6464;
+            border: 1px solid rgba(255, 100, 100, 0.3);
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-delete:hover {
+            background: rgba(255, 100, 100, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 20px;
+            }
+
+            .tabs-container {
+                padding: 0 20px;
+                gap: 20px;
+            }
+
+            .tab-content {
+                padding: 30px 20px;
+            }
+
+            .admin-sections {
+                grid-template-columns: 1fr;
+            }
+
+            #adminScreen {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen">
+        <div class="login-container">
+            <div class="login-header">
+                <div class="logo">GRADICOM</div>
+                <div class="tagline">Portail Performance</div>
+            </div>
+            <form class="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" placeholder="Votre email" required>
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="login-btn">Connexion</button>
+            </form>
+            <div class="admin-link">
+                <a onclick="goToAdmin()">Accès Administration</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN SCREEN -->
+    <div id="adminScreen">
+        <div class="admin-header">
+            <h1>Administration</h1>
+            <button class="admin-back-btn" onclick="backToLogin()">← Retour Login</button>
+        </div>
+        <div id="adminPanel"></div>
+    </div>
+
+    <!-- APP SCREEN -->
+    <div id="appScreen">
+        <div class="app-header">
+            <div class="app-title">GRADICOM</div>
+            <div class="header-right">
+                <div id="userInfo"></div>
+                <button class="logout-btn" onclick="handleLogout()">Déconnexion</button>
+            </div>
+        </div>
+
+        <div class="tabs-container">
+            <button class="tab-btn active" onclick="switchTab('vendeur')">Mon Dashboard</button>
+            <button class="tab-btn" id="managerTabBtn" onclick="switchTab('manager')">Vue Manager</button>
+        </div>
+
+        <!-- VENDEUR TAB -->
+        <div id="vendeur-tab" class="tab-content active">
+            <div class="dashboard-placeholder">
+                <h3>Dashboard Vendeur</h3>
+                <p>En construction...</p>
+            </div>
+        </div>
+
+        <!-- MANAGER TAB -->
+        <div id="manager-tab" class="tab-content">
+            <div class="dashboard-placeholder">
+                <h3>Benchmark Vendeurs</h3>
+                <p id="benchmarkList">En construction...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'gradicomData';
+
+        function getData() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : initializeData();
+        }
+
+        function initializeData() {
+            const emptyData = {
+                stores: [],
+                users: [],
+                objectives: []
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(emptyData));
+            return emptyData;
+        }
+
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const data = getData();
+            const user = data.users.find(u => u.email === email && u.password === password);
+
+            if (!user) {
+                alert('Email ou mot de passe incorrect');
+                return;
+            }
+
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appScreen').classList.add('active');
+            document.getElementById('userInfo').textContent = `${user.name} • ${user.store}`;
+
+            if (user.isManager) {
+                document.getElementById('managerTabBtn').style.display = 'block';
+                switchTab('manager');
+            } else {
+                document.getElementById('managerTabBtn').style.display = 'none';
+                switchTab('vendeur');
+            }
+        }
+
+        function handleLogout() {
+            document.getElementById('appScreen').classList.remove('active');
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tabName === 'vendeur') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('vendeur-tab').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('manager-tab').classList.add('active');
+            }
+        }
+
+        function goToAdmin() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('adminScreen').classList.add('active');
+            renderAdmin();
+        }
+
+        function backToLogin() {
+            document.getElementById('adminScreen').classList.remove('active');
+            document.getElementById('loginScreen').style.display = 'flex';
+        }
+
+        function renderAdmin() {
+            const data = getData();
+            const html = `
+                <div class="admin-sections">
+                    <!-- STORES -->
+                    <div class="admin-section">
+                        <h2>🏪 Magasins</h2>
+                        <form onsubmit="addStore(event)">
+                            <div class="form-group">
+                                <label>Nom du magasin</label>
+                                <input type="text" id="storeName" placeholder="Ex: Paris Marais" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Ville</label>
+                                <input type="text" id="storeCity" placeholder="Ex: Paris" required>
+                            </div>
+                            <button type="submit" class="btn-add">+ Ajouter Magasin</button>
+                        </form>
+                        <div class="list-items" id="storesList"></div>
+                    </div>
+
+                    <!-- USERS -->
+                    <div class="admin-section">
+                        <h2>👥 Comptes</h2>
+                        <form onsubmit="addUser(event)">
+                            <div class="form-group">
+                                <label>Type</label>
+                                <select id="userType" required>
+                                    <option value="vendeur">Vendeur</option>
+                                    <option value="manager">Manager</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Nom</label>
+                                <input type="text" id="userName" placeholder="Ex: Marie Dupont" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="userEmail" placeholder="marie@example.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Mot de passe</label>
+                                <input type="password" id="userPassword" placeholder="••••••••" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Magasin</label>
+                                <select id="userStore" required>
+                                    <option value="">-- Sélectionner --</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-add">+ Ajouter Compte</button>
+                        </form>
+                        <div class="list-items" id="usersList"></div>
+                    </div>
+
+                    <!-- OBJECTIVES -->
+                    <div class="admin-section">
+                        <h2>🎯 Objectifs</h2>
+                        <form onsubmit="addObjective(event)">
+                            <div class="form-group">
+                                <label>Nom</label>
+                                <input type="text" id="objectiveName" placeholder="Ex: Crème Anti-Âge" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Unité</label>
+                                <select id="objectiveUnit" required>
+                                    <option value="€">€ (Euros)</option>
+                                    <option value="%">% (Pourcentage)</option>
+                                    <option value="qty">Quantité</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Objectif</label>
+                                <input type="number" id="objectiveTarget" placeholder="100" step="0.01" required>
+                            </div>
+                            <button type="submit" class="btn-add">+ Ajouter Objectif</button>
+                        </form>
+                        <div class="list-items" id="objectivesList"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('adminPanel').innerHTML = html;
+            refreshLists();
+            updateStoreSelects();
+        }
+
+        function addStore(event) {
+            event.preventDefault();
+            const name = document.getElementById('storeName').value;
+            const city = document.getElementById('storeCity').value;
+            const data = getData();
+            data.stores.push({
+                id: Date.now(),
+                name: name,
+                city: city
+            });
+            saveData(data);
+            document.getElementById('storeName').value = '';
+            document.getElementById('storeCity').value = '';
+            refreshLists();
+            updateStoreSelects();
+        }
+
+        function addUser(event) {
+            event.preventDefault();
+            const type = document.getElementById('userType').value;
+            const name = document.getElementById('userName').value;
+            const email = document.getElementById('userEmail').value;
+            const password = document.getElementById('userPassword').value;
+            const store = document.getElementById('userStore').value;
+
+            if (!store) {
+                alert('Sélectionne un magasin');
+                return;
+            }
+
+            const data = getData();
+            const storeName = data.stores.find(s => s.id == store)?.name;
+
+            data.users.push({
+                email: email,
+                password: password,
+                name: name,
+                isManager: type === 'manager',
+                store: storeName
+            });
+            saveData(data);
+            document.getElementById('userName').value = '';
+            document.getElementById('userEmail').value = '';
+            document.getElementById('userPassword').value = '';
+            document.getElementById('userStore').value = '';
+            refreshLists();
+        }
+
+        function addObjective(event) {
+            event.preventDefault();
+            const name = document.getElementById('objectiveName').value;
+            const unit = document.getElementById('objectiveUnit').value;
+            const target = document.getElementById('objectiveTarget').value;
+            const data = getData();
+            data.objectives.push({
+                id: Date.now(),
+                name: name,
+                unit: unit,
+                target: parseFloat(target),
+                done: 0
+            });
+            saveData(data);
+            document.getElementById('objectiveName').value = '';
+            document.getElementById('objectiveUnit').value = '€';
+            document.getElementById('objectiveTarget').value = '';
+            refreshLists();
+        }
+
+        function deleteStore(id) {
+            const data = getData();
+            const store = data.stores.find(s => s.id === id);
+            const usersInStore = data.users.filter(u => u.store === store.name);
+            if (usersInStore.length > 0) {
+                alert('Impossible de supprimer: des utilisateurs existent dans ce magasin');
+                return;
+            }
+            data.stores = data.stores.filter(s => s.id !== id);
+            saveData(data);
+            refreshLists();
+            updateStoreSelects();
+        }
+
+        function deleteUser(email) {
+            const data = getData();
+            data.users = data.users.filter(u => u.email !== email);
+            saveData(data);
+            refreshLists();
+        }
+
+        function deleteObjective(id) {
+            const data = getData();
+            data.objectives = data.objectives.filter(o => o.id !== id);
+            saveData(data);
+            refreshLists();
+        }
+
+        function refreshLists() {
+            const data = getData();
+
+            const storesHtml = data.stores.map(s => `
+                <div class="list-item">
+                    <span>🏪 ${s.name} (${s.city})</span>
+                    <button class="btn-delete" onclick="deleteStore(${s.id})">Supprimer</button>
+                </div>
+            `).join('');
+            document.getElementById('storesList').innerHTML = storesHtml;
+
+            const usersHtml = data.users.map(u => `
+                <div class="list-item">
+                    <span>${u.isManager ? '👨‍💼' : '👤'} ${u.name} • ${u.email} • ${u.store}</span>
+                    <button class="btn-delete" onclick="deleteUser('${u.email}')">Supprimer</button>
+                </div>
+            `).join('');
+            document.getElementById('usersList').innerHTML = usersHtml;
+
+            const objectivesHtml = data.objectives.map(o => {
+                const unitLabel = o.unit === '€' ? '€' : o.unit === '%' ? '%' : 'qty';
+                return `
+                <div class="list-item">
+                    <span>${o.name} (${o.target}${unitLabel})</span>
+                    <button class="btn-delete" onclick="deleteObjective(${o.id})">Supprimer</button>
+                </div>
+            `;
+            }).join('');
+            document.getElementById('objectivesList').innerHTML = objectivesHtml;
+        }
+
+        function updateStoreSelects() {
+            const data = getData();
+            const select = document.getElementById('userStore');
+            if (!select) return;
+
+            select.innerHTML = '<option value="">-- Sélectionner --</option>';
+            data.stores.forEach(store => {
+                const option = document.createElement('option');
+                option.value = store.id;
+                option.textContent = `${store.name} (${store.city})`;
+                select.appendChild(option);
+            });
+        }
+    </script>
+</body>
+</html>
