@@ -1566,7 +1566,18 @@
                     const objectiveNames = [];
                     for (let j = 2; j < objectiveNamesRow.length; j += 2) {
                         if (objectiveNamesRow[j]) {
-                            objectiveNames.push(objectiveNamesRow[j].toString().trim());
+                            let objName = objectiveNamesRow[j].toString().trim();
+                            // Mappings pour harmoniser les noms
+                            if (objName === 'MARGE JOURNALIERE') {
+                                objName = 'MARGE TOTALE';
+                            }
+                            if (objName === 'TOTAL RM') {
+                                objName = 'VOLUME RM';
+                            }
+                            if (objName === 'CANAL +' || objName === 'CANAL+') {
+                                objName = 'CANAL+';
+                            }
+                            objectiveNames.push(objName);
                         }
                     }
 
