@@ -1381,9 +1381,12 @@
                         // Sauter les colonnes VENDEUR
                         if (gsheetCol.startsWith('VENDEUR')) return;
                         
-                        // Ignorer "VOLUME TERMINAUX" du GSheets car c'est une autre métrique
-                        // On utilise "Volume TOTAL Mobiles vendus" à la place
-                        if (gsheetCol === 'VOLUME TERMINAUX') return;
+                        // Ignorer les colonnes VOLUME TERMINAUX sauf "Volume TOTAL Mobiles vendus"
+                        if (gsheetCol === 'VOLUME TERMINAUX' || 
+                            (gsheetCol === 'Volume Accessoire / Mobile' && formatted[user.email]['VOLUME TERMINAUX']) ||
+                            (gsheetCol === 'Volume terminaux' && formatted[user.email]['VOLUME TERMINAUX'])) {
+                            return;
+                        }
                         
                         // Trouver l'objectif correspondant via COLUMN_MAPPING
                         const objectiveName = COLUMN_MAPPING[gsheetCol] || gsheetCol;
