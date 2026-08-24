@@ -1346,6 +1346,9 @@
                 return formatted;
             }
             
+            // Liste des noms d'objectifs du portail (pour filtrer)
+            const validObjectives = data.objectives.map(o => o.name);
+            
             // Pour chaque vendeur dans GSheets
             realizationsData.vendeurs.forEach(row => {
                 // Chercher la colonne qui commence par "VENDEUR"
@@ -1381,11 +1384,24 @@
                         // Trouver l'objectif correspondant via COLUMN_MAPPING
                         const objectiveName = COLUMN_MAPPING[gsheetCol] || gsheetCol;
                         
+                        // IMPORTANT: Vérifier que cet objectif existe dans le portail
+                        if (!validObjectives.includes(objectiveName)) {
+                            return; // Ignorer les colonnes qui ne sont pas des objectifs du portail
+                        }
+                        
                         // Stocker la valeur (convertir en nombre)
                         if (value !== undefined && value !== null && value !== '') {
                             formatted[user.email][objectiveName] = parseFloat(value) || 0;
                         }
                     });
+                    
+                    // Gérer OPTIONS qui peut avoir un nom qui change chaque mois
+                    if (validObjectives.includes('OPTIONS')) {
+                        const optionsValue = getOptionsValue(row);
+                        if (optionsValue > 0) {
+                            formatted[user.email]['OPTIONS'] = optionsValue;
+                        }
+                    }
                 }
             });
             
@@ -1442,9 +1458,9 @@
             'FIXE CONQUETE': 'CONQUETE FIXE VV',
             'CONQUÊTE FIXE VV': 'CONQUETE FIXE VV',
             'FIXE CONQUÊTE': 'CONQUETE FIXE VV',
+            'TOTAL RACCORDEMENT Fixe Conquête': 'VR FIXE CONQUETE',
             'VR FIXE CONQUETE': 'VR FIXE CONQUETE',
             'VR FIXE CONQUÊTE': 'VR FIXE CONQUETE',
-            'TOTAL raccordement': 'VR FIXE CONQUETE',
             'Maison SECURISEE': 'MAISON SECURISEE',
             'Maison sécurisée': 'MAISON SECURISEE',
             'MAISON SECURISEE': 'MAISON SECURISEE',
@@ -1455,6 +1471,7 @@
             'Total Abo': 'TOTAL ABO',
             'Volume RM': 'VOLUME RM',
             'TOTAL RM': 'VOLUME RM',
+            'Volume TOTAL Mobiles vendus': 'VOLUME TERMINAUX',
             'Volume Accessoire / Mobile': 'VOLUME TERMINAUX',
             'Volume terminaux': 'VOLUME TERMINAUX',
             'TOTAL Mobiles': 'VOLUME TERMINAUX',
@@ -1471,6 +1488,16 @@
             'Taux Chubb': 'Taux chubb',
             'TAUX CHUBB': 'Taux chubb'
         };
+        
+        // Pour OPTIONS, on cherche la colonne contenant "POINTS OPTION"
+        function getOptionsValue(row) {
+            for (let key in row) {
+                if (key.includes('POINTS OPTION') || key.includes('POINTS OPTION AOUT')) {
+                    return parseFloat(row[key]) || 0;
+                }
+            }
+            return 0;
+        }
 
         function mapColumnToObjective(columnName) {
             const normalized = columnName.trim();
