@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GRADICOM • Portail Performance</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -363,6 +363,13 @@
             border-color: var(--gold);
         }
 
+        /* Fix pour les options du select */
+        .form-group select option {
+            background: var(--dark-gray);
+            color: var(--white);
+            padding: 10px;
+        }
+
         .btn-add {
             width: 100%;
             padding: 12px;
@@ -459,7 +466,8 @@
                 <button type="submit" class="login-btn">Connexion</button>
             </form>
             <div class="admin-link">
-                <a onclick="goToAdmin()">Accès Administration</a>
+                <a onclick="goToAdmin()">Accès Administration</a> | 
+                <a onclick="resetAllData()" style="cursor: pointer; color: #d4af37;">🔄 Reset Données</a>
             </div>
         </div>
     </div>
@@ -511,6 +519,7 @@
         <div class="tabs-container">
             <button class="tab-btn active" onclick="switchTab('vendeur')">Mon Dashboard</button>
             <button class="tab-btn" id="managerTabBtn" onclick="switchTab('manager')">Vue Manager</button>
+            <button class="tab-btn" id="directorTabBtn" style="display: none;" onclick="switchTab('director')">Vue Dirigeant</button>
         </div>
 
         <!-- VENDEUR TAB -->
@@ -528,31 +537,134 @@
                 <p id="benchmarkList">En construction...</p>
             </div>
         </div>
+
+        <div id="director-tab" class="tab-content">
+            <div class="dashboard-placeholder">
+                <h3>Vue Globale - Ranking Vendeurs & Magasins</h3>
+                <div id="directorDashboard">En construction...</div>
+            </div>
+        </div>
     </div>
 
     <script>
         const STORAGE_KEY = 'gradicomData';
+        let currentRealizations = {};
+        let currentUser = null;
 
         function getData() {
-            const data = localStorage.getItem(STORAGE_KEY);
-            return data ? JSON.parse(data) : initializeData();
-        }
-
-        function initializeData() {
-            const emptyData = {
-                stores: [],
-                users: [],
-                objectives: []
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(emptyData));
-            return emptyData;
+            // Lire depuis localStorage
+            let data = localStorage.getItem(STORAGE_KEY);
+            
+            // Si vide, créer les données de test
+            if (!data) {
+                const testData = {
+                    stores: [
+                        { id: 1, name: 'LANGON', city: 'Langon' },
+                        { id: 2, name: 'GRADIGNAN', city: 'Gradignan' },
+                        { id: 3, name: 'MARMANDE', city: 'Marmande' },
+                        { id: 4, name: 'COGNAC', city: 'Cognac' }
+                    ],
+                    users: [
+                        // COMPTE DE TEST/DÉMO DÉDIÉ
+                        { email: 'demo@gradicom.fr', password: 'demo123', name: 'DEMO', isManager: false, isDirector: false, store: 'LANGON', objectiveTargets: { 'MARGE TOTALE': 750, 'OFFRES PRO': 50, 'CONQUETE FIXE VV': 30, 'VR FIXE CONQUETE': 25, 'MAISON SECURISEE': 40, 'MIGRATION FIBRE VR': 20, 'TOTAL ABO': 100, 'VOLUME RM': 80, 'VOLUME TERMINAUX': 60, 'MARGE ACESSOIRE': 500, 'CANAL+': 35, 'OPTIONS': 25, 'TCS': 45, 'Taux chubb': 42, 'Mix 2h': 17 } },
+                        // VRAIS VENDEURS - À REMPLIR AVEC MOTS DE PASSE RÉELS
+                        { email: 'christelle@gradicom.fr', password: 'ChONGer123', name: 'CHRISTELLE', isManager: false, isDirector: false, store: 'LANGON', objectiveTargets: {} },
+                        { email: 'stephane@gradicom.fr', password: 'ChONGer123', name: 'STEPHANE', isManager: false, isDirector: false, store: 'LANGON', objectiveTargets: {} },
+                        { email: 'capucine@gradicom.fr', password: 'ChONGer123', name: 'CAPUCINE', isManager: false, isDirector: false, store: 'LANGON', objectiveTargets: {} },
+                        { email: 'marie@gradicom.fr', password: 'ChONGer123', name: 'MARIE', isManager: false, isDirector: false, store: 'LANGON', objectiveTargets: {} },
+                        { email: 'arnaud@gradicom.fr', password: 'ChONGer123', name: 'ARNAUD', isManager: false, isDirector: false, store: 'GRADIGNAN', objectiveTargets: {} },
+                        { email: 'adam@amr.fr', password: 'ChONGer123', name: 'ADAM', isManager: false, isDirector: false, store: 'MARMANDE', objectiveTargets: {} },
+                        { email: 'oceane@amr.fr', password: 'ChONGer123', name: 'OCEANE', isManager: false, isDirector: false, store: 'MARMANDE', objectiveTargets: {} },
+                        { email: 'matthieu@gradicom.fr', password: 'ChONGer123', name: 'MATTHIEU', isManager: false, isDirector: false, store: 'COGNAC', objectiveTargets: {} },
+                        { email: 'noella@gradicom.fr', password: 'ChONGer123', name: 'NOELLA', isManager: false, isDirector: false, store: 'COGNAC', objectiveTargets: {} },
+                        { email: 'maxime@gradicom.fr', password: 'ChONGer123', name: 'MAXIME', isManager: false, isDirector: false, store: 'COGNAC', objectiveTargets: {} },
+                        // MANAGERS
+                        { email: 'samara@gradicom.fr', password: 'ChONGer123', name: 'SAMARA', isManager: true, isDirector: false, store: 'LANGON', objectiveTargets: {} },
+                        { email: 'melissa@gradicom.fr', password: 'ChONGer123', name: 'MELISSA', isManager: true, isDirector: false, store: 'GRADIGNAN', objectiveTargets: {} },
+                        { email: 'lea@amr.fr', password: 'ChONGer123', name: 'LEA', isManager: true, isDirector: false, store: 'MARMANDE', objectiveTargets: {} },
+                        { email: 'dylan@gradicom.fr', password: 'ChONGer123', name: 'DYLAN', isManager: true, isDirector: false, store: 'COGNAC', objectiveTargets: {} },
+                        // DIRIGEANTS
+                        { email: 'anthony@gradicom.fr', password: 'ChONGer123', name: 'Anthony', isManager: false, isDirector: true, store: null, objectiveTargets: {} },
+                        { email: 'julien@gradicom.fr', password: 'ChONGer123', name: 'Julien', isManager: false, isDirector: true, store: null, objectiveTargets: {} }
+                    ],
+                    objectives: [
+                        { id: 0, name: 'MARGE TOTALE', unit: '€' },
+                        { id: 1, name: 'OFFRES PRO', unit: 'qty' },
+                        { id: 2, name: 'CONQUETE FIXE VV', unit: 'qty' },
+                        { id: 3, name: 'VR FIXE CONQUETE', unit: 'qty' },
+                        { id: 4, name: 'MAISON SECURISEE', unit: 'qty' },
+                        { id: 5, name: 'MIGRATION FIBRE VR', unit: 'qty' },
+                        { id: 6, name: 'TOTAL ABO', unit: 'qty' },
+                        { id: 7, name: 'VOLUME RM', unit: 'qty' },
+                        { id: 8, name: 'VOLUME TERMINAUX', unit: 'qty' },
+                        { id: 9, name: 'MARGE ACESSOIRE', unit: '€' },
+                        { id: 10, name: 'CANAL+', unit: 'qty' },
+                        { id: 11, name: 'OPTIONS', unit: 'qty' },
+                        { id: 12, name: 'TCS', unit: 'qty' },
+                        { id: 13, name: 'Taux chubb', unit: '%', target: 42 },
+                        { id: 14, name: 'Mix 2h', unit: '%', target: 17 }
+                    ]
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(testData));
+                return testData;
+            }
+            
+            // Parser les données sauvegardées
+            const parsed = JSON.parse(data);
+            
+            // Corriger les targets manquantes pour Taux chubb et Mix 2h
+            if (parsed.objectives && Array.isArray(parsed.objectives)) {
+                let needsSave = false;
+                parsed.objectives.forEach(obj => {
+                    if (obj.name === 'Taux chubb' && !obj.target) {
+                        obj.target = 42;
+                        needsSave = true;
+                    }
+                    if (obj.name === 'Mix 2h' && !obj.target) {
+                        obj.target = 17;
+                        needsSave = true;
+                    }
+                });
+                
+                // ✅ CRUCIAL: Ajouter aussi à TOUS les utilisateurs
+                if (parsed.users && Array.isArray(parsed.users)) {
+                    parsed.users.forEach(user => {
+                        if (!user.isDirector && user.objectiveTargets) {
+                            if (!user.objectiveTargets['Taux chubb']) {
+                                user.objectiveTargets['Taux chubb'] = 42;
+                                needsSave = true;
+                            }
+                            if (!user.objectiveTargets['Mix 2h']) {
+                                user.objectiveTargets['Mix 2h'] = 17;
+                                needsSave = true;
+                            }
+                        }
+                    });
+                }
+                
+                if (needsSave) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+                }
+            }
+            
+            return parsed;
         }
 
         function saveData(data) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         }
 
-        function handleLogin(event) {
+        function resetAllData() {
+            if (confirm('⚠️ Êtes-vous sûr(e) ?\n\nCela va supprimer TOUTES les données et réinitialiser les comptes de test.\n\nComptess de test après reset:\nchristelle@gradicom.fr / test123\nsamara@gradicom.fr / test123\nanthony@gradicom.fr / test123')) {
+                // Vider TOUT localStorage
+                localStorage.clear();
+                
+                // Recharger la page pour réinitialiser avec les données de test
+                location.reload();
+            }
+        }
+
+        async function handleLogin(event) {
             event.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -564,15 +676,36 @@
                 return;
             }
 
+            // Stocker l'utilisateur actuel globalement
+            currentUser = user;
+
+            // Afficher "Chargement..." pendant qu'on récupère les données GSheets
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appScreen').classList.add('active');
-            document.getElementById('userInfo').textContent = `${user.name} • ${user.store}`;
+            document.getElementById('userInfo').textContent = `${user.name}${user.store ? ' • ' + user.store : ' • Dirigeant'} - Chargement des données...`;
 
-            if (user.isManager) {
+            // Charger les réalisations depuis GSheets
+            const realizationsData = await loadRealizationsFromGSheets();
+            if (realizationsData) {
+                currentRealizations = transformRealizationsToUserFormat(realizationsData);
+            }
+
+            // Mettre à jour l'affichage
+            document.getElementById('userInfo').textContent = `${user.name}${user.store ? ' • ' + user.store : ' • Dirigeant'}`;
+
+            if (user.isDirector) {
+                document.getElementById('managerTabBtn').style.display = 'none';
+                document.getElementById('directorTabBtn').style.display = 'block';
+                switchTab('director');
+            } else if (user.isManager) {
                 document.getElementById('managerTabBtn').style.display = 'block';
+                document.getElementById('directorTabBtn').style.display = 'none';
+                loadManagerDashboard(user);
                 switchTab('manager');
             } else {
                 document.getElementById('managerTabBtn').style.display = 'none';
+                document.getElementById('directorTabBtn').style.display = 'none';
+                loadVendorDashboard(user);
                 switchTab('vendeur');
             }
         }
@@ -591,13 +724,237 @@
             if (tabName === 'vendeur') {
                 document.querySelectorAll('.tab-btn')[0].classList.add('active');
                 document.getElementById('vendeur-tab').classList.add('active');
-            } else {
+            } else if (tabName === 'manager') {
                 document.querySelectorAll('.tab-btn')[1].classList.add('active');
                 document.getElementById('manager-tab').classList.add('active');
+            } else if (tabName === 'director') {
+                document.querySelectorAll('.tab-btn')[2].classList.add('active');
+                document.getElementById('director-tab').classList.add('active');
+                loadDirectorDashboard();
             }
         }
 
+        function displayKPITable(user, objectives) {
+            if (!user || !user.objectiveTargets) return '';
+            
+            // Éliminer les doublons par nom d'objectif
+            const uniqueObjectives = [];
+            const seenNames = new Set();
+            
+            objectives.forEach(obj => {
+                if (!seenNames.has(obj.name)) {
+                    seenNames.add(obj.name);
+                    uniqueObjectives.push(obj);
+                }
+            });
+            
+            // Séparer les objectifs normaux des % (Taux chubb, Mix 2h)
+            const normalObjectives = uniqueObjectives.filter(o => o.unit !== '%');
+            const percentObjectives = uniqueObjectives.filter(o => o.unit === '%');
+            
+            let html = '';
+            
+            // TABLEAU POUR LES OBJECTIFS NORMAUX
+            if (normalObjectives.length > 0) {
+                html += `<h3 style="color: var(--gold); margin: 20px 0 10px; font-size: 16px;">Feuille d'Objectifs</h3>
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 12px;">
+                    <thead style="background: rgba(212,175,55,0.2);">
+                        <tr>
+                            <th style="padding: 10px; border: 1px solid rgba(212,175,55,0.3); text-align: left; color: var(--gold);">OBJECTIF</th>
+                            <th style="padding: 10px; border: 1px solid rgba(212,175,55,0.3); color: var(--white);">OBJECTIF MOIS</th>
+                            <th style="padding: 10px; border: 1px solid rgba(212,175,55,0.3); color: var(--white);">RÉALISATION</th>
+                            <th style="padding: 10px; border: 1px solid rgba(212,175,55,0.3); color: var(--gold);">R/O %</th>
+                            <th style="padding: 10px; border: 1px solid rgba(212,175,55,0.3); color: var(--white);">AVANCE/RETARD</th>
+                            <th style="padding: 10px; border: 1px solid rgba(212,175,55,0.3); color: var(--white);">PROJECTION</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                
+                normalObjectives.forEach(obj => {
+                    const target = user.objectiveTargets[obj.name] || 0;
+                    // Charger la réalisation depuis Google Sheets, sinon 0
+                    const realization = currentRealizations && currentRealizations[user.email] ? (currentRealizations[user.email][obj.name] || 0) : 0;
+                    const kpis = calculateKPIs(realization, target, user);
+                    
+                    const ratioColor = kpis.ratio >= 100 ? '#4baf4f' : kpis.ratio >= 50 ? '#ffc107' : '#f44336';
+                    const advanceColor = kpis.advance_retard >= 0 ? '#4baf4f' : '#f44336';
+                    
+                    html += `<tr style="border-bottom: 1px solid rgba(212,175,55,0.1);">
+                        <td style="padding: 8px; color: var(--white);">${obj.name}</td>
+                        <td style="padding: 8px; color: var(--text-dim);">${Math.round(target).toLocaleString()} ${obj.unit}</td>
+                        <td style="padding: 8px; color: var(--white);">${Math.round(kpis.realization).toLocaleString()} ${obj.unit}</td>
+                        <td style="padding: 8px; color: ${ratioColor}; font-weight: bold;">${kpis.ratio.toFixed(1)}%</td>
+                        <td style="padding: 8px; color: ${advanceColor}; font-weight: bold;">${kpis.advance_retard > 0 ? '+' : ''}${Math.round(kpis.advance_retard).toLocaleString()} ${obj.unit}</td>
+                        <td style="padding: 8px; color: var(--white);">${Math.round(kpis.projection).toLocaleString()} ${obj.unit}</td>
+                    </tr>`;
+                });
+                
+                html += `</tbody></table>`;
+            }
+            
+            // TABLEAU POUR LES POURCENTAGES (Taux chubb, Mix 2h)
+            if (percentObjectives.length > 0) {
+                html += `<h3 style="color: var(--gold); margin: 20px 0 10px; font-size: 16px;">Indicateurs</h3>
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 12px;">
+                    <thead style="background: rgba(212,175,55,0.2);">
+                        <tr>
+                            <th style="padding: 10px; border: 1px solid rgba(212,175,55,0.3); text-align: left; color: var(--gold);">INDICATEUR</th>
+                            <th style="padding: 10px; border: 1px solid rgba(212,175,55,0.3); color: var(--white);">OBJECTIF</th>
+                            <th style="padding: 10px; border: 1px solid rgba(212,175,55,0.3); color: var(--white);">RÉALISATION</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                
+                percentObjectives.forEach(obj => {
+                    const target = user.objectiveTargets[obj.name] || 0;
+                    // Charger la réalisation depuis Google Sheets, sinon 0
+                    const realization = currentRealizations && currentRealizations[user.email] ? (currentRealizations[user.email][obj.name] || 0) : 0;
+                    
+                    // Logique de couleur inversée pour Mix 2h
+                    let statusColor;
+                    if (obj.name === 'Mix 2h') {
+                        // Mix 2h : vert si <= 17%, rouge si > 17%
+                        statusColor = realization <= target ? '#4baf4f' : '#f44336';
+                    } else {
+                        // Taux chubb et autres : vert si >= 42%, rouge si < 42%
+                        statusColor = realization >= target ? '#4baf4f' : '#f44336';
+                    }
+                    
+                    // Afficher le bon signe
+                    const displaySign = obj.name === 'Mix 2h' ? '<' : '>';
+                    
+                    html += `<tr style="border-bottom: 1px solid rgba(212,175,55,0.1);">
+                        <td style="padding: 8px; color: var(--white);">${obj.name}</td>
+                        <td style="padding: 8px; color: var(--text-dim);">${displaySign}${target}%</td>
+                        <td style="padding: 8px; color: ${statusColor}; font-weight: bold;">${realization.toFixed(1)}%</td>
+                    </tr>`;
+                });
+                
+                html += `</tbody></table>`;
+            }
+            
+            return html;
+        }
+
+        function loadDirectorDashboard() {
+            const data = getData();
+            const container = document.getElementById('directorDashboard');
+            
+            // Calcul des scores vendeurs
+            const vendors = data.users.filter(u => !u.isManager && !u.isDirector);
+            const vendorScores = vendors.map(v => ({
+                user: v,
+                score: calculateScore(v, data.objectives)
+            })).sort((a, b) => b.score - a.score);
+            
+            // Calcul des scores magasins
+            const storeScores = data.stores.map(store => {
+                const storeVendors = vendors.filter(v => v.store === store.name);
+                const score = storeVendors.reduce((sum, v) => sum + calculateScore(v, data.objectives), 0);
+                return {
+                    store: store,
+                    vendors: storeVendors,
+                    score: score
+                };
+            }).sort((a, b) => b.score - a.score);
+            
+            let html = `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+                
+                <!-- RANKING VENDEURS -->
+                <div>
+                    <h3 style="color: var(--gold); margin-bottom: 15px; font-family: 'Cormorant Garamond'; font-size: 18px;">🏆 Ranking Vendeurs</h3>
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 4px; overflow: hidden;">`;
+            
+            vendorScores.forEach((item, idx) => {
+                const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+                html += `
+                    <div style="padding: 12px 15px; border-bottom: 1px solid rgba(212,175,55,0.2); display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="color: var(--white); font-weight: bold;">${medal} ${item.user.name}</div>
+                            <div style="color: var(--text-dim); font-size: 11px;">${item.user.store}</div>
+                        </div>
+                        <div style="color: var(--gold); font-weight: bold; font-size: 14px;">${item.score} pts</div>
+                    </div>`;
+            });
+            
+            html += `</div></div>
+                
+                <!-- RANKING MAGASINS -->
+                <div>
+                    <h3 style="color: var(--gold); margin-bottom: 15px; font-family: 'Cormorant Garamond'; font-size: 18px;">🏢 Ranking Magasins</h3>
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 4px; overflow: hidden;">`;
+            
+            storeScores.forEach((item, idx) => {
+                const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+                html += `
+                    <div style="padding: 12px 15px; border-bottom: 1px solid rgba(212,175,55,0.2);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div>
+                                <div style="color: var(--white); font-weight: bold;">${medal} ${item.store.name}</div>
+                                <div style="color: var(--text-dim); font-size: 11px;">${item.vendors.length} vendeur(s)</div>
+                            </div>
+                            <div style="color: var(--gold); font-weight: bold; font-size: 14px;">${item.score} pts</div>
+                        </div>
+                    </div>`;
+            });
+            
+            html += `</div></div></div>`;
+            
+            container.innerHTML = html;
+        }
+
+        function loadVendorDashboard(currentUser) {
+            const data = getData();
+            const container = document.querySelector('#vendeur-tab');
+            
+            const html = `
+                <div style="max-width: 1400px; margin: 0 auto; padding: 20px;">
+                    <h2 style="font-family: 'Cormorant Garamond'; color: var(--gold); margin-bottom: 10px;">📊 Mes Objectifs - ${currentUser.name}</h2>
+                    <div style="color: var(--text-dim); margin-bottom: 20px; font-size: 13px;">
+                        Jours travaillés: <strong style="color: var(--gold);">${currentUser.calendar ? currentUser.calendar.filter(d => d.worked).length : 0}/20</strong> | 
+                        Mise à jour: <strong>${new Date().toLocaleDateString("fr-FR")}</strong>
+                    </div>
+                    <div id="kpiTableContainer">
+                        ${displayKPITable(currentUser, data.objectives)}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function loadManagerDashboard(currentUser) {
+            const data = getData();
+            const container = document.querySelector('#manager-tab');
+            
+            // Récupérer les vendeurs du magasin
+            const storeVendors = data.users.filter(u => u.store === currentUser.store && !u.isManager && !u.isDirector);
+            
+            let html = `
+                <div style="max-width: 1400px; margin: 0 auto; padding: 20px;">
+                    <h2 style="font-family: 'Cormorant Garamond'; color: var(--gold); margin-bottom: 10px;">📊 Vue Équipe - ${currentUser.store}</h2>
+                    <p style="color: var(--text-dim); margin-bottom: 20px;">${storeVendors.length} vendeur(s)</p>
+            `;
+            
+            storeVendors.forEach(vendor => {
+                html += `
+                    <div style="margin-bottom: 30px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 4px;">
+                        <h3 style="color: var(--gold); margin: 0 0 15px 0;">${vendor.name}</h3>
+                        ${displayKPITable(vendor, data.objectives)}
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
         function goToAdmin() {
+            const password = prompt('🔐 Mot de passe Administrateur :');
+            if (password !== 'Gradicom16100') {
+                alert('❌ Mot de passe incorrect !');
+                return;
+            }
+
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('adminScreen').classList.add('active');
             renderAdmin();
@@ -666,27 +1023,21 @@
                     <!-- OBJECTIVES -->
                     <div class="admin-section">
                         <h2>🎯 Objectifs</h2>
-                        <form onsubmit="addObjective(event)">
-                            <div class="form-group">
-                                <label>Nom</label>
-                                <input type="text" id="objectiveName" placeholder="Ex: Crème Anti-Âge" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Unité</label>
-                                <select id="objectiveUnit" required>
-                                    <option value="€">€ (Euros)</option>
-                                    <option value="%">% (Pourcentage)</option>
-                                    <option value="qty">Quantité</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Objectif</label>
-                                <input type="number" id="objectiveTarget" placeholder="100" step="0.01" required>
-                            </div>
-                            <button type="submit" class="btn-add">+ Ajouter Objectif</button>
-                        </form>
+                        <p style="color: var(--text-dim); font-size: 12px; margin-bottom: 15px;">Les objectifs sont créés via l'import Excel. Vous pouvez les supprimer ici.</p>
                         <div class="list-items" id="objectivesList"></div>
                     </div>
+
+                    <!-- MOTS DE PASSE -->
+                    <div class="admin-section">
+                        <h2>🔐 Mots de Passe</h2>
+                        <div class="list-items" id="passwordsList"></div>
+                    </div>
+                </div>
+
+                <!-- VÉRIFICATION OBJECTIFS -->
+                <div style="max-width: 1200px; margin: 30px auto; background: var(--dark-gray); border: 1px solid rgba(212, 175, 55, 0.2); padding: 30px; border-radius: 4px;">
+                    <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 24px; color: var(--gold); margin-bottom: 25px;">✅ Vérification Objectifs</h2>
+                    <div id="objectiveVerification" style="font-size: 13px;"></div>
                 </div>
             `;
             document.getElementById('adminPanel').innerHTML = html;
@@ -790,6 +1141,53 @@
             refreshLists();
         }
 
+        function calculateScore(user, objectives) {
+            let score = 0;
+            if (!user.objectiveTargets) return score;
+
+            objectives.forEach(obj => {
+                const value = user.objectiveTargets[obj.name];
+                if (value !== undefined) {
+                    // Scoring: MARGE TOTALE = 3pts, MARGE ACESSOIRE = 1pt, autres = 1pt
+                    if (obj.name.includes('MARGE TOTALE') || obj.name.includes('MARGE Totale')) {
+                        score += 3;
+                    } else {
+                        score += 1;
+                    }
+                }
+            });
+            return score;
+        }
+
+        function getRanking(users, objectives) {
+            return users
+                .map(u => ({ user: u, score: calculateScore(u, objectives) }))
+                .sort((a, b) => b.score - a.score);
+        }
+
+        function generatePassword() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let password = '';
+            for (let i = 0; i < 8; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return password;
+        }
+
+        function changePassword(email) {
+            const newPassword = prompt('Nouveau mot de passe pour ' + email + ' :');
+            if (!newPassword || newPassword.trim() === '') return;
+
+            const data = getData();
+            const user = data.users.find(u => u.email === email);
+            if (user) {
+                user.password = newPassword;
+                saveData(data);
+                alert('✅ Mot de passe mis à jour !');
+                refreshLists();
+            }
+        }
+
         function refreshLists() {
             const data = getData();
 
@@ -809,16 +1207,91 @@
             `).join('');
             document.getElementById('usersList').innerHTML = usersHtml;
 
+            // Afficher les objectifs avec boutons supprimer
             const objectivesHtml = data.objectives.map(o => {
                 const unitLabel = o.unit === '€' ? '€' : o.unit === '%' ? '%' : 'qty';
                 return `
                 <div class="list-item">
-                    <span>${o.name} (${o.target}${unitLabel})</span>
+                    <span>${o.name} (${unitLabel})</span>
                     <button class="btn-delete" onclick="deleteObjective(${o.id})">Supprimer</button>
                 </div>
             `;
             }).join('');
-            document.getElementById('objectivesList').innerHTML = objectivesHtml;
+            document.getElementById('objectivesList').innerHTML = objectivesHtml || '<div style="color: var(--text-dim); text-align: center; padding: 20px;">Aucun objectif pour l\'instant</div>';
+
+            // Affichage des mots de passe
+            const passwordsHtml = data.users.map(u => `
+                <div class="list-item" style="justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;">
+                        <div style="color: var(--white); margin-bottom: 5px;"><strong>${u.name}</strong></div>
+                        <div style="color: var(--text-dim); font-size: 11px; margin-bottom: 3px;">Email: ${u.email}</div>
+                        <div style="color: var(--gold); font-size: 12px; font-family: monospace;">Mot de passe: <strong>${u.password}</strong></div>
+                    </div>
+                    <button class="btn-delete" onclick="changePassword('${u.email}')" style="background: rgba(212, 175, 55, 0.3); color: var(--gold); border-color: var(--gold); width: auto; margin-left: 10px;">Modifier</button>
+                </div>
+            `).join('');
+            document.getElementById('passwordsList').innerHTML = passwordsHtml || '<div style="color: var(--text-dim); text-align: center; padding: 20px;">Aucun utilisateur</div>';
+
+            // Vérification objectifs
+            displayObjectiveVerification(data);
+        }
+
+        function moveObjective(index, direction) {
+            const data = getData();
+            if (direction === 'up' && index > 0) {
+                [data.objectives[index], data.objectives[index - 1]] = [data.objectives[index - 1], data.objectives[index]];
+            } else if (direction === 'down' && index < data.objectives.length - 1) {
+                [data.objectives[index], data.objectives[index + 1]] = [data.objectives[index + 1], data.objectives[index]];
+            }
+            saveData(data);
+            displayObjectiveVerification(data);
+        }
+
+        function displayObjectiveVerification(data) {
+            if (!data.objectives || data.objectives.length === 0) {
+                document.getElementById('objectiveVerification').innerHTML = '<p style="color: var(--text-dim);">Aucun objectif importé. Lancez l\'import Excel d\'abord.</p>';
+                return;
+            }
+
+            let html = `<p style="color: var(--gold); margin-bottom: 20px;"><strong>${data.objectives.length} objectifs créés :</strong></p>`;
+            
+            // Afficher les objectifs globaux
+            html += `<div style="margin-bottom: 30px;">
+                <p style="color: var(--text-dim); margin-bottom: 10px;"><strong>Objectifs Globaux (Cliquez sur ↑↓ pour réorganiser) :</strong></p>`;
+            
+            data.objectives.forEach((obj, idx) => {
+                html += `<div style="padding: 12px; margin-bottom: 8px; background: rgba(212,175,55,0.05); border-left: 2px solid rgba(212,175,55,0.3); display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: var(--white);">${obj.name} <span style="color: var(--text-dim);">(${obj.unit})</span></span>
+                    <div style="display: flex; gap: 8px;">
+                        ${idx > 0 ? `<button onclick="moveObjective(${idx}, 'up')" style="background: rgba(212,175,55,0.2); border: 1px solid rgba(212,175,55,0.3); color: var(--gold); padding: 4px 8px; cursor: pointer; border-radius: 3px;">↑</button>` : '<button style="background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2); color: var(--text-dim); padding: 4px 8px; cursor: default; border-radius: 3px;" disabled>↑</button>'}
+                        ${idx < data.objectives.length - 1 ? `<button onclick="moveObjective(${idx}, 'down')" style="background: rgba(212,175,55,0.2); border: 1px solid rgba(212,175,55,0.3); color: var(--gold); padding: 4px 8px; cursor: pointer; border-radius: 3px;">↓</button>` : '<button style="background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2); color: var(--text-dim); padding: 4px 8px; cursor: default; border-radius: 3px;" disabled>↓</button>'}
+                    </div>
+                </div>`;
+            });
+            
+            html += `</div>`;
+
+            // Afficher les objectifs personnalisés par user
+            if (data.users.length > 0) {
+                html += `<p style="color: var(--text-dim); margin-bottom: 10px; margin-top: 20px;"><strong>Objectifs Personnalisés par User :</strong></p>`;
+                
+                data.users.forEach(user => {
+                    const hasObjectives = user.objectiveTargets && Object.keys(user.objectiveTargets).length > 0;
+                    const status = hasObjectives ? '✅' : '❌';
+                    const count = hasObjectives ? Object.keys(user.objectiveTargets).length : 0;
+                    
+                    html += `<div style="padding: 12px; margin-bottom: 10px; background: rgba(${hasObjectives ? '75,175,79' : '255,100,100'},0.1); border-left: 3px solid ${hasObjectives ? '#4baf4f' : '#ff6464'};">
+                        <div style="color: var(--white); margin-bottom: 5px;"><strong>${status} ${user.isManager ? '👨‍💼' : '👤'} ${user.name}</strong> (${user.store}) - ${count} objectifs</div>
+                        ${hasObjectives ? `<div style="color: var(--text-dim); font-size: 11px;">
+                            ${Object.entries(user.objectiveTargets).map(([name, value]) => 
+                                `<div>${name}: ${Math.round(value)}</div>`
+                            ).join('')}
+                        </div>` : '<div style="color: #ff6464; font-size: 11px;">Pas d\'objectifs personnalisés</div>'}
+                    </div>`;
+                });
+            }
+
+            document.getElementById('objectiveVerification').innerHTML = html;
         }
 
         function updateStoreSelects() {
@@ -835,6 +1308,192 @@
             });
         }
 
+        // Google Sheets configuration
+        const GOOGLE_SHEETS = {
+            MAGASINS_ID: '1t7ypfj6CObBDXQgjzWQKQbIQr6XIiRjO5_Qk0uSv8vg',
+            MAGASINS_GID: '372873581',
+            VENDEURS_ID: '1t7ypfj6CObBDXQgjzWQKQbIQr6XIiRjO5_Qk0uSv8vg',
+            VENDEURS_GID: '864659492'
+        };
+
+        // Vendeurs autorisés (de la grille d'objectifs)
+        const AUTHORIZED_VENDORS = [
+            'CHRISTELLE', 'STEPHANE', 'CAPUCINE', 'MARIE', 
+            'ARNAUD', 'ADAM', 'OCEANE', 
+            'MATTHIEU', 'NOELLA', 'MAXIME', 'DYLAN'
+        ];
+
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxl_n4E1JLWOrClYIdQIRKBldqOFSESN67wUd6wS-a_DWxAfDTklaB_q__OIjcDzZVTLA/exec';
+
+        async function fetchGoogleSheetData(sheetId, gid) {
+            try {
+                const response = await fetch(APPS_SCRIPT_URL);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Erreur fetch Web App:', error);
+                return null;
+            }
+        }
+
+
+        // Transformer les données GSheets en structure [email][objectif] = valeur
+        function transformRealizationsToUserFormat(realizationsData) {
+            const formatted = {};
+            const data = getData();
+            
+            if (!realizationsData || !realizationsData.vendeurs) {
+                return formatted;
+            }
+            
+            // Pour chaque vendeur dans GSheets
+            realizationsData.vendeurs.forEach(row => {
+                const vendeurName = row['VENDEUR'] || '';
+                
+                // Trouver l'utilisateur correspondant par nom (avec matching partiel)
+                const user = data.users.find(u => {
+                    const userName = u.name.toUpperCase();
+                    const gsheetName = vendeurName.toUpperCase();
+                    
+                    // Match exact ou le nom du portail est au début du nom GSheets
+                    return (userName === gsheetName || gsheetName.startsWith(userName)) && !u.isDirector;
+                });
+                
+                if (user && user.email) {
+                    if (!formatted[user.email]) {
+                        formatted[user.email] = {};
+                    }
+                    
+                    // Mapper chaque colonne GSheets vers les objectifs du portail
+                    Object.entries(row).forEach(([gsheetCol, value]) => {
+                        // Sauter la colonne VENDEUR
+                        if (gsheetCol === 'VENDEUR') return;
+                        
+                        // Trouver l'objectif correspondant via COLUMN_MAPPING
+                        const objectiveName = COLUMN_MAPPING[gsheetCol] || gsheetCol;
+                        
+                        // Stocker la valeur (convertir en nombre)
+                        if (value !== undefined && value !== null && value !== '') {
+                            formatted[user.email][objectiveName] = parseFloat(value) || 0;
+                        }
+                    });
+                }
+            });
+            
+            return formatted;
+        }
+
+        async function loadRealizationsFromGSheets() {
+            try {
+                const data = await fetchGoogleSheetData();
+                
+                if (!data || !data.vendeurs) {
+                    console.error('Erreur chargement Web App');
+                    return null;
+                }
+
+                return data;
+            } catch (error) {
+                console.error('Erreur loadRealizationsFromGSheets:', error);
+                return null;
+            }
+        }
+
+        function calculateKPIs(realization, objective, user, monthDays = 20) {
+            // Compter les jours travaillés jusqu'à aujourd'hui
+            const today = new Date();
+            const daysWorkedToday = user.calendar ? user.calendar.filter(d => d.worked).length : 0;
+            const daysRemaining = user.calendar ? user.calendar.filter(d => !d.worked).length : 0;
+            
+            // Objectif théorique au 24/08
+            const theoreticalObjective = objective * daysWorkedToday / monthDays;
+            
+            return {
+                realization: parseFloat(realization) || 0,
+                objective: parseFloat(objective) || 0,
+                ratio: objective > 0 ? ((parseFloat(realization) || 0) / parseFloat(objective)) * 100 : 0,
+                projection: daysWorkedToday > 0 ? ((parseFloat(realization) || 0) / daysWorkedToday) * monthDays : 0,
+                advance_retard: (parseFloat(realization) || 0) - theoreticalObjective,
+                theoreticalObjective: theoreticalObjective,
+                reste_100: Math.max(0, parseFloat(objective) - (parseFloat(realization) || 0)),
+                reste_par_jour: daysRemaining > 0 ? Math.max(0, parseFloat(objective) - (parseFloat(realization) || 0)) / daysRemaining : 0,
+                par_jour: monthDays > 0 ? parseFloat(objective) / monthDays : 0,
+                daysWorked: daysWorkedToday,
+                daysRemaining: daysRemaining
+            };
+        }
+
+        // Mapping GSheets → Objectifs portail (flexible pour changements)
+        const COLUMN_MAPPING = {
+            'MARGE TOTALE': 'MARGE TOTALE',
+            'MARGE TOTAL': 'MARGE TOTALE',
+            'MARGE': 'MARGE TOTALE',
+            'OFFRES PRO FIXE + ABO': 'OFFRES PRO',
+            'OFFRES PRO': 'OFFRES PRO',
+            'FIXE CONQUETE': 'CONQUETE FIXE VV',
+            'CONQUÊTE FIXE VV': 'CONQUETE FIXE VV',
+            'FIXE CONQUÊTE': 'CONQUETE FIXE VV',
+            'VR FIXE CONQUETE': 'VR FIXE CONQUETE',
+            'VR FIXE CONQUÊTE': 'VR FIXE CONQUETE',
+            'TOTAL raccordement': 'VR FIXE CONQUETE',
+            'Maison SECURISEE': 'MAISON SECURISEE',
+            'Maison sécurisée': 'MAISON SECURISEE',
+            'MAISON SECURISEE': 'MAISON SECURISEE',
+            'Migration FIBRE / BOX 5G': 'MIGRATION FIBRE VR',
+            'Migration Fibre VR': 'MIGRATION FIBRE VR',
+            'MIGRATIONS FIBRE VR': 'MIGRATION FIBRE VR',
+            'TOTAL ABO': 'TOTAL ABO',
+            'Total Abo': 'TOTAL ABO',
+            'Volume RM': 'VOLUME RM',
+            'TOTAL RM': 'VOLUME RM',
+            'Volume Accessoire / Mobile': 'VOLUME TERMINAUX',
+            'Volume terminaux': 'VOLUME TERMINAUX',
+            'TOTAL Mobiles': 'VOLUME TERMINAUX',
+            'MARGE ACCESSOIRE': 'MARGE ACESSOIRE',
+            'Marge accessoire': 'MARGE ACESSOIRE',
+            'MARGE ACESSOIRE': 'MARGE ACESSOIRE',
+            'CANAL +': 'CANAL+',
+            'Canal +': 'CANAL+',
+            'CANAL+': 'CANAL+',
+            'TCS': 'TCS',
+            'Mix 2H': 'Mix 2h',
+            'Mix 2h': 'Mix 2h',
+            'Taux CHUBB (>42%)': 'Taux chubb',
+            'Taux Chubb': 'Taux chubb',
+            'TAUX CHUBB': 'Taux chubb'
+        };
+
+        function mapColumnToObjective(columnName) {
+            const normalized = columnName.trim();
+            
+            // Exact match
+            if (COLUMN_MAPPING[normalized]) {
+                return COLUMN_MAPPING[normalized];
+            }
+            
+            // Recherche approximative pour "Options"
+            if (normalized.includes('Volume de point option') || normalized.includes('options')) {
+                return 'OPTIONS';
+            }
+            
+            // Recherche approximative pour "OFFRES PRO"
+            if (normalized.includes('OFFRES') && normalized.includes('PRO')) {
+                return 'OFFRES PRO FIXE + ABO';
+            }
+            
+            return null;
+        }
+
+        // Mapping des managers par magasin
+        const storeManagers = {
+            'LANGON': 'SAMARA',
+            'GRADIGNAN': 'MELISSA',
+            'MARMANDE': 'LEA',
+            'COGNAC': 'DYLAN'
+        };
+
+        const storeNames = Object.keys(storeManagers);
+
         function importObjectifs() {
             const file = document.getElementById('objectifsFile').files[0];
             if (!file) {
@@ -850,62 +1509,155 @@
                     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
+                    if (!rows || rows.length < 4) {
+                        showImportStatus('❌ Fichier vide');
+                        return;
+                    }
+
                     const gradicomData = getData();
+
+                    // Ligne des noms objectifs (index 1 = ligne 2)
+                    const objectiveNamesRow = rows[1];
+                    
+                    // Extraire les noms des objectifs (à partir de l'index 2)
+                    const objectiveNames = [];
+                    for (let j = 2; j < objectiveNamesRow.length; j += 2) {
+                        if (objectiveNamesRow[j]) {
+                            objectiveNames.push(objectiveNamesRow[j].toString().trim());
+                        }
+                    }
+
+                    // Créer les objectifs globaux
+                    for (const objName of objectiveNames) {
+                        if (!gradicomData.objectives.find(o => o.name === objName)) {
+                            let unit = 'qty';
+                            if (objName.includes('MARGE')) {
+                                unit = '€';
+                            }
+                            
+                            gradicomData.objectives.push({
+                                id: Date.now() + Math.random(),
+                                name: objName,
+                                unit: unit,
+                                target: 0,
+                                done: 0
+                            });
+                        }
+                    }
+
+                    // Ajouter les deux objectifs fixes
+                    const fixedObjectives = [
+                        { name: 'Taux chubb', unit: '%', target: 42 },
+                        { name: 'Mix 2h', unit: '%', target: 17 }
+                    ];
+
+                    for (const fixed of fixedObjectives) {
+                        if (!gradicomData.objectives.find(o => o.name === fixed.name)) {
+                            gradicomData.objectives.push({
+                                id: Date.now() + Math.random(),
+                                name: fixed.name,
+                                unit: fixed.unit,
+                                target: fixed.target,
+                                done: 0
+                            });
+                        }
+                    }
+
+                    // Maintenant lire les valeurs personnalisées par magasin/vendeur
                     let currentStore = null;
-                    let currentStoreObj = null;
-
-                    for (let i = 0; i < rows.length; i++) {
+                    
+                    for (let i = 2; i < rows.length; i++) {
                         const row = rows[i];
-                        if (!row || row.length === 0) continue;
+                        if (!row || !row[0]) continue;
 
-                        const firstCell = row[0];
-                        
-                        // Détecter un nouveau magasin (première colonne avec un nom, pas "Objectifs")
-                        if (firstCell && firstCell !== 'Objectifs Magasins / Vendeurs journalier' && !firstCell.includes('Nombre') && typeof firstCell === 'string' && firstCell.trim() && i > 2) {
-                            // Si c'est un vendeur connu, on passe
-                            if (['STEPHANE', 'CAPUCINE', 'MARIE', 'CHRISTELLE', 'LENA-MAY', 'ARNAUD', 'DYLAN', 'MATTHIEU', 'MAXIME', 'NOELLA', 'OCEANE G', 'ADAM'].includes(firstCell.toUpperCase())) {
+                        const firstCell = row[0].toString().trim().toUpperCase();
+
+                        // Vérifier si c'est un magasin
+                        if (storeNames.includes(firstCell)) {
+                            currentStore = firstCell;
+                            const managerName = storeManagers[currentStore];
+                            
+                            // Créer ou obtenir le manager
+                            let manager = gradicomData.users.find(u => u.name.toUpperCase() === managerName && u.isManager);
+                            if (!manager) {
+                                const domain = currentStore === 'MARMANDE' ? '@amr.fr' : '@gradicom.fr';
+                                manager = {
+                                    email: managerName.toLowerCase() + domain,
+                                    password: generatePassword(),
+                                    name: managerName,
+                                    isManager: true,
+                                    store: currentStore,
+                                    objectiveTargets: {}
+                                };
+                                gradicomData.users.push(manager);
+                            }
+
+                            // Stocker les valeurs d'objectifs du magasin pour le manager
+                            for (let j = 0; j < objectiveNames.length; j++) {
+                                const colIndex = 2 + (j * 2);
+                                if (row[colIndex] && typeof row[colIndex] === 'number') {
+                                    manager.objectiveTargets[objectiveNames[j]] = Math.round(row[colIndex]);
+                                }
+                            }
+                        } 
+                        // Sinon c'est un vendeur (ou un nom de vendeur)
+                        else if (currentStore && !firstCell.includes('NOMBRE') && firstCell) {
+                            // IMPORTANT: Ignorer les lignes managers (sauf DYLAN qui est manager + vendeur)
+                            const managerName = storeManagers[currentStore];
+                            if (firstCell.toUpperCase() === managerName.toUpperCase() && managerName.toUpperCase() !== 'DYLAN') {
+                                // Ignorer cette ligne - le manager utilise les objectifs du magasin
                                 continue;
                             }
-                            // Sinon c'est un magasin
-                            currentStore = firstCell.trim();
-                            // Créer le magasin s'il n'existe pas
-                            if (!gradicomData.stores.find(s => s.name === currentStore)) {
-                                gradicomData.stores.push({
-                                    id: Date.now() + Math.random(),
-                                    name: currentStore,
-                                    city: currentStore
-                                });
+
+                            // Créer ou obtenir le vendeur
+                            let vendor = gradicomData.users.find(u => u.name.toUpperCase() === firstCell);
+                            if (!vendor) {
+                                const domain = currentStore === 'MARMANDE' ? '@amr.fr' : '@gradicom.fr';
+                                vendor = {
+                                    email: firstCell.toLowerCase() + domain,
+                                    password: generatePassword(),
+                                    name: firstCell,
+                                    isManager: false,
+                                    store: currentStore,
+                                    objectiveTargets: {}
+                                };
+                                gradicomData.users.push(vendor);
+                            } else {
+                                vendor.store = currentStore;
                             }
-                            currentStoreObj = gradicomData.stores.find(s => s.name === currentStore);
+
+                            // Stocker les valeurs d'objectifs du vendeur
+                            for (let j = 0; j < objectiveNames.length; j++) {
+                                const colIndex = 2 + (j * 2);
+                                if (row[colIndex] && typeof row[colIndex] === 'number') {
+                                    vendor.objectiveTargets[objectiveNames[j]] = Math.round(row[colIndex]);
+                                }
+                            }
                         }
+                    }
 
-                        // Détecter les objectifs (ligne avec des nombres et des noms)
-                        if (row[1] && typeof row[1] === 'string' && (row[1].includes('MARGE') || row[1].includes('OFFRES') || row[1].includes('CONQUETE') || row[1].includes('FIBRE') || row[1].includes('VOLUME') || row[1].includes('CANAL') || row[1].includes('OPTIONS') || row[1].includes('TCS'))) {
-                            // C'est une ligne d'en-tête d'objectif
-                            let objName = row[1].trim();
-                            let objValue = row[2]; // Valeur mensuelle
+                    // ✅ IMPORTANT: Ajouter les objectifs fixes (Taux chubb, Mix 2h) à TOUS les utilisateurs
+                    const fixedObjectivesToAssign = [
+                        { name: 'Taux chubb', value: 42 },
+                        { name: 'Mix 2h', value: 17 }
+                    ];
 
-                            if (objValue && !isNaN(objValue)) {
-                                // Créer l'objectif s'il n'existe pas
-                                if (!gradicomData.objectives.find(o => o.name === objName)) {
-                                    gradicomData.objectives.push({
-                                        id: Date.now() + Math.random(),
-                                        name: objName,
-                                        unit: typeof objValue === 'number' ? '€' : 'qty',
-                                        target: parseFloat(objValue),
-                                        done: 0
-                                    });
+                    for (const user of gradicomData.users) {
+                        if (!user.isDirector) { // Ne pas ajouter aux dirigeants
+                            for (const fixed of fixedObjectivesToAssign) {
+                                if (!user.objectiveTargets[fixed.name]) {
+                                    user.objectiveTargets[fixed.name] = fixed.value;
                                 }
                             }
                         }
                     }
 
                     saveData(gradicomData);
-                    showImportStatus('✅ Objectifs importés avec succès ! ' + gradicomData.objectives.length + ' objectifs créés.');
+                    showImportStatus('✅ Import réussi ! Objectifs + valeurs personnalisées créés.');
                     document.getElementById('objectifsFile').value = '';
                     refreshLists();
-                    updateStoreSelects();
                 } catch (error) {
+                    console.error('Import error:', error);
                     showImportStatus('❌ Erreur : ' + error.message);
                 }
             };
@@ -927,67 +1679,60 @@
                     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
+                    if (!rows || rows.length < 2) {
+                        showImportStatus('❌ Fichier vide');
+                        return;
+                    }
+
                     const gradicomData = getData();
-                    let vendorCount = 0;
 
                     // Extraire les en-têtes de jours (L M M J V S D)
-                    const headerRow = rows[0];
-                    const dateRow = rows[1];
+                    const headerRow = rows[0] || [];
+                    const dateRow = rows[1] || [];
                     const daysLabels = [];
                     const dates = [];
 
-                    for (let j = 2; j < headerRow.length; j++) {
-                        daysLabels.push(headerRow[j]);
-                        dates.push(dateRow[j]);
+                    for (let j = 2; j < Math.min(headerRow.length, dateRow.length); j++) {
+                        if (headerRow[j]) daysLabels.push(headerRow[j]);
+                        if (dateRow[j]) dates.push(dateRow[j]);
                     }
 
                     // Lire les vendeurs
+                    let updatedCount = 0;
                     for (let i = 2; i < rows.length; i++) {
                         const row = rows[i];
                         if (!row || !row[0]) continue;
 
-                        const vendorName = row[0].toString().trim().toUpperCase();
-                        const totalJours = row[1]; // Nombre total de jours travaillés
+                        const vendorName = row[0].toString().trim();
+                        const totalJours = row[1];
 
                         if (vendorName && totalJours) {
-                            // Chercher le vendeur dans la base
-                            let user = gradicomData.users.find(u => u.name.toUpperCase() === vendorName);
+                            // Chercher l'utilisateur existant
+                            let user = gradicomData.users.find(u => u.name && u.name.toUpperCase() === vendorName.toUpperCase());
                             
-                            if (!user) {
-                                // Créer le vendeur s'il n'existe pas
-                                gradicomData.users.push({
-                                    email: vendorName.toLowerCase() + '@gradicom.fr',
-                                    password: '123456',
-                                    name: row[0], // Garder la casse originale
-                                    isManager: false,
-                                    store: 'LANGON', // Magasin par défaut
-                                    totalJoursTravailles: parseInt(totalJours),
-                                    calendar: [] // Calendrier 0/1
-                                });
-                                user = gradicomData.users[gradicomData.users.length - 1];
-                                vendorCount++;
-                            } else {
-                                // Mettre à jour les jours travaillés
+                            if (user) {
                                 user.totalJoursTravailles = parseInt(totalJours);
-                            }
-
-                            // Stocker le calendrier
-                            user.calendar = [];
-                            for (let j = 2; j < row.length; j++) {
-                                user.calendar.push({
-                                    date: dates[j - 2],
-                                    day: daysLabels[j - 2],
-                                    worked: row[j] === 1 ? true : false
-                                });
+                                user.calendar = [];
+                                
+                                // Stocker le calendrier
+                                for (let j = 2; j < row.length; j++) {
+                                    user.calendar.push({
+                                        date: dates[j - 2] || '',
+                                        day: daysLabels[j - 2] || '',
+                                        worked: row[j] === 1
+                                    });
+                                }
+                                updatedCount++;
                             }
                         }
                     }
 
                     saveData(gradicomData);
-                    showImportStatus('✅ Jours travaillés importés ! ' + vendorCount + ' vendeurs mis à jour.');
+                    showImportStatus('✅ ' + updatedCount + ' users mis à jour avec jours travaillés !');
                     document.getElementById('jtFile').value = '';
                     refreshLists();
                 } catch (error) {
+                    console.error('Import JT error:', error);
                     showImportStatus('❌ Erreur : ' + error.message);
                 }
             };
