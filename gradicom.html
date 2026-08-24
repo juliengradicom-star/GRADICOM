@@ -1348,7 +1348,16 @@
             
             // Pour chaque vendeur dans GSheets
             realizationsData.vendeurs.forEach(row => {
-                const vendeurName = row['VENDEUR'] || '';
+                // Chercher la colonne qui commence par "VENDEUR"
+                let vendeurName = '';
+                for (let key in row) {
+                    if (key.startsWith('VENDEUR')) {
+                        vendeurName = row[key];
+                        break;
+                    }
+                }
+                
+                if (!vendeurName) return; // Pas de vendeur trouvé
                 
                 // Trouver l'utilisateur correspondant par nom (avec matching partiel)
                 const user = data.users.find(u => {
@@ -1366,8 +1375,8 @@
                     
                     // Mapper chaque colonne GSheets vers les objectifs du portail
                     Object.entries(row).forEach(([gsheetCol, value]) => {
-                        // Sauter la colonne VENDEUR
-                        if (gsheetCol === 'VENDEUR') return;
+                        // Sauter les colonnes VENDEUR
+                        if (gsheetCol.startsWith('VENDEUR')) return;
                         
                         // Trouver l'objectif correspondant via COLUMN_MAPPING
                         const objectiveName = COLUMN_MAPPING[gsheetCol] || gsheetCol;
