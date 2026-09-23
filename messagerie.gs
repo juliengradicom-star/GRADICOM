@@ -1,4 +1,4 @@
-const ADMIN_KEY = 'Gradicom16100&';  // ← à remplacer par une clé à toi (longue, jamais publiée)
+const ADMIN_KEY = 'CHOISIS-UNE-NOUVELLE-CLE';  // ← à remplacer par une clé à toi (longue, jamais publiée)
 const SALT = 'GRADICOM-AMR';         // ne pas modifier (doit être identique au portail)
 const CONFIG_CHUNK = 40000;          // une cellule Google Sheets contient au plus 50 000 caractères
 const PRIMES_TOUT_VOIR = ['julien@gradicom.fr'];  // seuls à recevoir le détail de toutes les primes validées
