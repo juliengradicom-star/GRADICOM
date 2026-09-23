@@ -8,8 +8,10 @@
 
 ## Architecture
 - `gradicom.html` : tout le portail (HTML + CSS + JS dans un seul fichier). Thème noir / or, polices Bodoni Moda + Manrope.
-- Config (objectifs, comptes aux mots de passe hachés, payplan, notes clients, primes validées, `adminHash`) : enregistrée en ligne automatiquement depuis l'Admin via le script de messagerie (actions `getConfig` / `saveConfig`, protégée par `ADMIN_KEY`). `config.json` n'est plus qu'une copie de secours ; la version au `updatedAt` le plus récent l'emporte.
-- Mot de passe Admin : jamais en clair, empreinte PBKDF2 (`DEFAULT_ADMIN_HASH`, ou `adminHash` s'il a été changé dans l'Admin).
+- Config (objectifs, comptes aux mots de passe hachés, payplan, notes clients, primes validées, `adminHash`) : stockée en ligne dans le Google Sheets du script de messagerie, rien n'est lisible sans connexion.
+  - Connexion : action `login` (vérifiée par le script) → renvoie la config SANS empreintes de mots de passe, primes validées limitées à l'utilisateur (dirigeants : toutes).
+  - Admin : mot de passe vérifié par le script (`adminConfig`, empreinte PBKDF2) ; les modifs sont enregistrées automatiquement (`saveConfig`), qui reconstruit aussi les comptes de la messagerie. `ADMIN_KEY` ne sert plus qu'en secours.
+  - Plus de `config.json` public. Aucun mot de passe en clair dans le code (données de démo sans mot de passe).
 - `sw.js`, `manifest.webmanifest`, icônes : application installable (PWA), stratégie réseau d'abord.
 - `vercel.json` : `/` → `gradicom.html`, pas de cache sur html/config/sw.
 - Ventes : Google Sheets lu via un Apps Script (URL `APPS_SCRIPT_URL` dans le code), rafraîchi toutes les 15 min.

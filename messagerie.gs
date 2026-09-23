@@ -5,6 +5,7 @@
 const ADMIN_KEY = 'CHOISIS-UNE-NOUVELLE-CLE';  // ← à remplacer par une clé à toi (longue, jamais publiée)
 const SALT = 'GRADICOM-AMR';         // ne pas modifier (doit être identique au portail)
 const CONFIG_CHUNK = 40000;          // une cellule Google Sheets contient au plus 50 000 caractères
+const PRIMES_TOUT_VOIR = ['julien@gradicom.fr'];  // seuls à recevoir le détail de toutes les primes validées
 
 function initialiser() {
   const s = setup_();
@@ -91,19 +92,70 @@ function writeConfigText_(sh, text) {
   sh.getRange(1, 1, rows.length, 2).setValues(rows);
 }
 
+function config_(ss) {
+  const text = readConfigText_(ss.getSheetByName('CONFIG'));
+  return text ? JSON.parse(text) : null;
+}
+
+// Admin reconnu par son mot de passe (empreinte envoyée par le portail) ou, en secours, par ADMIN_KEY
+function isAdmin_(ss, req) {
+  if (req.adminKey && req.adminKey === ADMIN_KEY) return true;
+  const c = config_(ss);
+  return !!(req.adminHash && c && c.adminHash && req.adminHash === c.adminHash);
+}
+
+// Ce que reçoit un utilisateur connecté : jamais d'empreinte de mot de passe,
+// et le détail des primes validées seulement pour lui (sauf dirigeants)
+function configFor_(c, me) {
+  const out = JSON.parse(JSON.stringify(c));
+  delete out.adminHash;
+  out.users.forEach(function (u) { delete u.passwordHash; delete u.password; });
+  const self = out.users.filter(function (u) { return String(u.email).toLowerCase() === me.email; })[0];
+  const toutVoir = PRIMES_TOUT_VOIR.indexOf(me.email) >= 0 || (self && self.isDirector);
+  if (!toutVoir && out.primeHistory) {
+    Object.keys(out.primeHistory).forEach(function (k) {
+      const h = out.primeHistory[k], a = {}, st = {};
+      if (h.amounts && h.amounts[me.email] !== undefined) a[me.email] = h.amounts[me.email];
+      if (h.stores && h.stores[me.email] !== undefined) st[me.email] = h.stores[me.email];
+      h.amounts = a; h.stores = st;
+    });
+  }
+  return out;
+}
+
+// Comptes de la messagerie = comptes de la config (reconstruits à chaque enregistrement)
+function usersFromConfig_(ss, c) {
+  const rows = c.users.filter(function (u) { return u.email && u.passwordHash; }).map(function (u) {
+    return [String(u.email).toLowerCase(), u.name || '', u.store || '', u.isDirector ? 'Dirigeant' : (u.isManager ? 'Responsable' : 'Vendeur'), u.passwordHash];
+  });
+  const sh = ss.getSheetByName('USERS');
+  sh.clearContents();
+  sh.appendRow(['email', 'name', 'store', 'role', 'hash']);
+  if (rows.length) sh.getRange(2, 1, rows.length, 5).setValues(rows);
+  return rows.length;
+}
+
 function handle_(req) {
   const s = setup_();
   const ss = s.ss;
   switch (req.action) {
 
-    case 'getConfig': {
-      // Lu par le portail avant la connexion (comme l'ancien config.json) : pas de mots de passe en clair dedans
-      const text = readConfigText_(ss.getSheetByName('CONFIG'));
-      return { ok: true, config: text ? JSON.parse(text) : null };
+    case 'login': {
+      // Connexion d'un vendeur / responsable / dirigeant : renvoie SA version des réglages
+      const me = auth_(ss, req);
+      const c = config_(ss);
+      if (!c) throw new Error('Réglages pas encore enregistrés en ligne');
+      return { ok: true, user: me.email, config: configFor_(c, me) };
+    }
+
+    case 'adminConfig': {
+      // Entrée dans l'Admin : réglages complets
+      if (!isAdmin_(ss, req)) throw new Error('Mot de passe Admin incorrect');
+      return { ok: true, config: config_(ss) };
     }
 
     case 'saveConfig': {
-      if (req.adminKey !== ADMIN_KEY) throw new Error('Clé Admin incorrecte');
+      if (!isAdmin_(ss, req)) throw new Error('Mot de passe Admin incorrect : reconnecte-toi à l\'Admin');
       const c = req.config;
       if (!c || !Array.isArray(c.users) || !Array.isArray(c.objectives)) throw new Error('Réglages incomplets, rien n\'a été enregistré');
       if (c.users.some(function (u) { return u.password; })) throw new Error('Mot de passe en clair refusé');
@@ -116,12 +168,13 @@ function handle_(req) {
         if (prev) writeConfigText_(ss.getSheetByName('CONFIG_PRECEDENTE'), prev); // copie de secours de la version d'avant
         writeConfigText_(cur, text);
         if (readConfigText_(cur) !== text) throw new Error('Vérification de l\'enregistrement échouée');
+        usersFromConfig_(ss, c);
       } finally { lock.releaseLock(); }
       return { ok: true, size: text.length };
     }
 
     case 'syncUsers': {
-      if (req.adminKey !== ADMIN_KEY) throw new Error('Clé de synchronisation incorrecte');
+      if (!isAdmin_(ss, req)) throw new Error('Clé de synchronisation incorrecte');
       const sh = ss.getSheetByName('USERS');
       sh.clearContents();
       sh.appendRow(['email', 'name', 'store', 'role', 'hash']);
