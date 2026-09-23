@@ -28,3 +28,19 @@
 - Avance/retard au prorata des jours travaillés (fichier JT, 1 = travaillé) et des horaires magasin (Gradignan 9h30-18h30 fermé dim+lun ; Marmande 9h30-19h ; Cognac/Langon 9h30-19h30, fermés le dimanche).
 - Pourcentages tronqués à 1 décimale (jamais arrondis vers le haut).
 - Payplan : 4 grilles (Gradignan / autres × vendeur / responsable), bloc 1 (% de la marge, ×2 si R/O marge ≥ 100 % et Chubb ≥ 42 %) + bloc 2 (points → €). Modifiable chaque mois dans l'Admin. Primes affichées « sous réserve de vérification en fin de mois ».
+
+## Façon de travailler avec Julien
+- Quand il doit agir (script Google, Admin…), donner **une seule étape à la fois** et attendre son « fait » avant la suivante.
+- Toute modif du script Google (`messagerie.gs`) : le portail doit rester compatible avec l'ancienne version du script (il ne doit jamais bloquer les connexions si Julien n'a pas encore redéployé). Lui faire garder sa vraie `ADMIN_KEY` à la ligne 5 en recollant le script, puis Déployer → Gérer les déploiements → ✏️ → Nouvelle version.
+- Tests : faire tourner le portail dans Chromium (Playwright) avec le vrai `messagerie.gs` exécuté sur un faux Google Sheets en mémoire (script.google.com n'est pas joignable depuis l'environnement de Claude).
+
+## Historique
+- Août 2026 : création du portail (tableaux de bord vendeur / magasin / dirigeant, points, payplan et estimation des primes, import Excel des objectifs et du fichier JT, notes clients, primes validées, messagerie avec pièces jointes, application installable). Les conversations de cette période ne sont pas connues, seulement le code.
+- 23/09/2026 :
+  - Création de ce fichier `CLAUDE.md`.
+  - Réglages de l'Admin enregistrés en ligne automatiquement (fin du téléchargement / dépôt de `config.json`, fichier supprimé du dépôt).
+  - Sécurité : mots de passe en clair retirés du code ; connexion et Admin vérifiés par le script Google ; chaque vendeur ne reçoit que ses propres primes ; mot de passe Admin changé par Julien (modifiable dans l'Admin) ; `ADMIN_KEY` changée (l'ancienne était publique).
+  - 13 comptes avaient encore l'ancien mot de passe par défaut public : tous renouvelés par Julien via le bouton « 🔑 Renouveler les anciens mots de passe par défaut » et transmis à chacun.
+  - Connexion accélérée (ventes préchargées, entrée immédiate sur un appareil déjà validé).
+  - Primes d'août 2026 de Dylan et Mathilda = données de test (suppression conseillée dans l'Admin → Primes validées).
+  - Dépôt GitHub public : rien de sensible dans l'historique (anciens mots de passe tous renouvelés, primes = test) ; pas besoin de le passer en privé.
