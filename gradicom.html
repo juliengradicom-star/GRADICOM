@@ -2,8 +2,16 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>GRADICOM AMR • Portail Performance</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0b0a08">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GRADICOM AMR">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -564,6 +572,12 @@
         .msg-badge { display: inline-block; min-width: 18px; padding: 1px 6px; margin-left: 4px; border-radius: 10px; background: var(--ko); color: #fff; font-size: 10px; font-weight: 800; letter-spacing: 0; line-height: 16px; text-align: center; vertical-align: middle; }
         .msg-tools { text-align: right; margin-bottom: 8px; font-size: 12px; }
         .msg-list { display: grid; gap: 8px; }
+        .msg-item { position: relative; padding-left: 40px !important; }
+        .msg-sel { position: absolute; left: 13px; top: 14px; width: 18px; height: 18px; accent-color: #c9a65b; }
+        .msg-tools { display: flex; justify-content: flex-end; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .msg-selall { margin-right: auto; display: flex; gap: 8px; align-items: center; color: var(--text-dim); cursor: pointer; }
+        .msg-selall input { width: 17px; height: 17px; accent-color: #c9a65b; }
+        .msg-delbtn { border-color: rgba(208,88,78,.5) !important; color: #f0a39b !important; }
         .msg-item { background: linear-gradient(180deg, #17150f 0%, #100f0c 100%); border: 1px solid var(--line); border-radius: 10px; padding: 11px 14px; cursor: pointer; }
         .msg-item:hover { border-color: rgba(201,166,91,.45); }
         .msg-item.unread { border-left: 3px solid var(--gold); }
@@ -597,6 +611,12 @@
         .cmp-fileitem { font-size: 12.5px; color: var(--white); margin-top: 6px; }
         .cmp-fileitem em { color: var(--text-dim); font-style: normal; margin: 0 6px; }
         .cmp-fileitem a { color: var(--ko); cursor: pointer; }
+        .install-btn { display: block; width: 100%; margin-top: 16px; padding: 13px; background: transparent; border: 1px solid rgba(201,166,91,.55); color: var(--gold-2); border-radius: 10px; font-family: var(--sans); font-size: 13px; letter-spacing: 1.5px; cursor: pointer; }
+        .install-btn:hover { background: rgba(201,166,91,.08); }
+        /* Encoches iPhone en mode application */
+        .app-header { padding-top: max(20px, env(safe-area-inset-top)); }
+        #loginScreen { padding-top: max(20px, env(safe-area-inset-top)); padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+        .tab-content { padding-bottom: max(30px, env(safe-area-inset-bottom)); }
         .card-link { cursor: pointer; transition: border-color .2s; }
         .card-link:hover { border-color: var(--gold); }
         .rt-input { width: 100%; max-width: 110px; padding: 6px 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(201,166,91,0.3); color: var(--white); font-size: 13px; text-align: right; }
@@ -768,6 +788,7 @@
                 <label class="remember"><input type="checkbox" id="rememberMe" checked> <span>Se souvenir de moi (connexion automatique)</span></label>
                 <button type="submit" class="login-btn">Connexion</button>
             </form>
+            <button type="button" class="install-btn" id="installBtn" style="display:none" onclick="installApp()">📲 Installer l'application</button>
             <div class="admin-link">
                 <a onclick="goToAdmin()">Accès Administration</a> | 
                 <a onclick="resetAllData()" style="cursor: pointer; color: #d4af37;">🔄 Reset Données</a>
@@ -1086,6 +1107,38 @@
 
         ensureConfigLoaded();
 
+        // ===== APPLICATION (PWA) : installable sur iPhone, Android, PC et Mac =====
+        let deferredInstall = null;
+        const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+        }
+        window.addEventListener('beforeinstallprompt', e => {
+            e.preventDefault();
+            deferredInstall = e;
+            const b = document.getElementById('installBtn'); if (b && !isStandalone()) b.style.display = '';
+        });
+        window.addEventListener('appinstalled', () => { const b = document.getElementById('installBtn'); if (b) b.style.display = 'none'; });
+        document.addEventListener('DOMContentLoaded', () => {
+            const b = document.getElementById('installBtn');
+            if (b && isIOS() && !isStandalone()) b.style.display = '';
+        });
+        async function installApp() {
+            if (deferredInstall) {
+                deferredInstall.prompt();
+                await deferredInstall.userChoice;
+                deferredInstall = null;
+                document.getElementById('installBtn').style.display = 'none';
+                return;
+            }
+            if (isIOS()) {
+                alert("Pour installer l'application sur iPhone :\n\n1. Ouvre ce lien dans Safari\n2. Touche le bouton Partager (carré avec une flèche ↑)\n3. Choisis « Sur l'écran d'accueil »\n4. Touche « Ajouter »\n\nL'icône GRADICOM AMR apparaît avec tes autres applis.");
+            } else {
+                alert("Pour installer l'application : ouvre le menu du navigateur (⋮) puis « Installer l'application » ou « Ajouter à l'écran d'accueil ».");
+            }
+        }
+
         // ================= SÉCURITÉ : empreinte des mots de passe (config.json ne contient plus les mots de passe) =================
         const PW_SALT = 'GRADICOM-AMR';
         async function pwHash(email, password) {
@@ -1202,8 +1255,11 @@
             else if (msgView === 'read') body += renderMessage(msgs.find(m => m.id === msgOpenId));
             else {
                 const list = msgView === 'sent' ? sent : inbox;
-                body += `<div class="msg-tools"><a class="pr-link" onclick="refreshMessages()">↻ Actualiser</a></div>`;
+                body += `<div class="msg-tools">${list.length ? `<label class="msg-selall"><input type="checkbox" onchange="document.querySelectorAll('.msg-sel').forEach(b=>b.checked=this.checked);updateMsgSel()"> Tout sélectionner</label>
+                    <button class="logout-btn msg-delbtn" id="msgDelBtn" style="display:none" onclick="deleteSelectedMessages()">🗑 Supprimer</button>` : ''}
+                    <a class="pr-link" onclick="refreshMessages()">↻ Actualiser</a></div>`;
                 body += list.length ? `<div class="msg-list">${list.map(m => `<div class="msg-item ${!m.read && msgView === 'inbox' ? 'unread' : ''}" onclick="openMessage('${m.id}')">
+                        <input type="checkbox" class="msg-sel" value="${m.id}" onclick="event.stopPropagation();updateMsgSel()">
                         <div class="msg-top"><span class="msg-from">${esc(msgView === 'sent' ? '→ ' + m.to.map(contactName).join(', ') : m.fromName)}</span><span class="msg-date">${fmtDate(m.date)}</span></div>
                         <div class="msg-subj">${m.attachments.length || m.links.length ? '📎 ' : ''}${esc(m.subject || '(sans objet)')}</div>
                         <div class="msg-prev">${esc(String(m.body).slice(0, 110))}</div>
@@ -1237,7 +1293,32 @@
                     ${m.from !== me ? `<button class="btn-add" onclick="replyTo('${m.id}', false)">↩ Répondre</button>` : ''}
                     ${m.to.length > 1 || m.from === me ? `<button class="logout-btn" onclick="replyTo('${m.id}', true)">↩ Répondre à tous</button>` : ''}
                     <button class="logout-btn" onclick="setMsgView('${m.from === me ? 'sent' : 'inbox'}')">← Retour</button>
+                    <button class="logout-btn msg-delbtn" onclick="deleteMessages(['${m.id}'])">🗑 Supprimer</button>
                 </div></div>`;
+        }
+
+        function updateMsgSel() {
+            const n = document.querySelectorAll('.msg-sel:checked').length;
+            const b = document.getElementById('msgDelBtn');
+            if (b) { b.style.display = n ? '' : 'none'; b.textContent = `🗑 Supprimer (${n})`; }
+        }
+
+        function deleteSelectedMessages() {
+            deleteMessages([...document.querySelectorAll('.msg-sel:checked')].map(b => b.value));
+        }
+
+        async function deleteMessages(ids) {
+            if (!ids.length) return;
+            if (!confirm(ids.length > 1 ? `Supprimer ces ${ids.length} messages ?` : 'Supprimer ce message ?')) return;
+            const back = msgView === 'read' ? ((msgCache.messages || []).some(m => m.id === ids[0] && m.from === currentUser.email.toLowerCase()) ? 'sent' : 'inbox') : msgView;
+            try {
+                await msgApi('delete', { ids });
+                msgCache.messages = (msgCache.messages || []).filter(m => !ids.includes(m.id));
+                updateMsgBadge();
+                setMsgView(back);
+            } catch (e) {
+                alert('Suppression impossible : ' + e.message);
+            }
         }
 
         function replyTo(id, all) {
