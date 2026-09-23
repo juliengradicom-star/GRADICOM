@@ -12,6 +12,7 @@
   - Connexion : action `login` (vérifiée par le script) → renvoie la config SANS empreintes de mots de passe, primes validées limitées à l'utilisateur (dirigeants : toutes).
   - Admin : mot de passe vérifié par le script (`adminConfig`, empreinte PBKDF2) ; les modifs sont enregistrées automatiquement (`saveConfig`), qui reconstruit aussi les comptes de la messagerie. `ADMIN_KEY` ne sert plus qu'en secours.
   - Plus de `config.json` public. Aucun mot de passe en clair dans le code (données de démo sans mot de passe).
+- `api/gs.js` et `api/ventes.js` : relais Vercel vers les deux scripts Google. Certains iPhone ne joignent pas script.google.com (« Impossible d'ouvrir le fichier », même en navigation privée) : le portail essaie en direct puis passe par le relais (et s'en souvient pour la session). Limite Vercel ~4,5 Mo par requête : les grosses pièces jointes passent seulement en direct.
 - `sw.js`, `manifest.webmanifest`, icônes : application installable (PWA), stratégie réseau d'abord.
 - `vercel.json` : `/` → `gradicom.html`, pas de cache sur html/config/sw.
 - Ventes : Google Sheets lu via un Apps Script (URL `APPS_SCRIPT_URL` dans le code), rafraîchi toutes les 15 min. Ce script est lisible sans connexion : choix assumé par Julien (pas de données sensibles), ne pas reproposer de le protéger.

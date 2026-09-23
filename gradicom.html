@@ -1083,19 +1083,40 @@
             return DEFAULT_MSG_URL;
         }
 
+        // Certains téléphones n'arrivent pas à joindre script.google.com (réseau, Relais privé iCloud, VPN…).
+        // Dans ce cas on passe par le relais du site (/api/gs, /api/ventes) : c'est Vercel qui contacte Google.
+        const RELAY_KEY = 'gradicomRelay';
+        const relayFirst = () => { try { return sessionStorage.getItem(RELAY_KEY) === '1'; } catch (e) { return false; } };
+        const rememberRelay = () => { try { sessionStorage.setItem(RELAY_KEY, '1'); } catch (e) {} };
+        async function fetchJson(url, opts, ms) {
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), ms);
+            try {
+                const res = await fetch(url, Object.assign({ signal: ctrl.signal }, opts));
+                return await res.json();
+            } finally { clearTimeout(t); }
+        }
+        // POST vers le script : direct, puis relais si le direct échoue (ou relais d'abord s'il a déjà servi)
+        async function postScript(url, body, ms) {
+            const opts = { method: 'POST', body: JSON.stringify(body) };
+            const direct = () => fetchJson(url, opts, ms || 20000);
+            const relay = () => fetchJson('/api/gs', opts, ms || 25000);
+            const useRelay = url === DEFAULT_MSG_URL && location.protocol.startsWith('http');
+            if (useRelay && relayFirst()) { try { return await relay(); } catch (e) { return await direct(); } }
+            try { return await direct(); }
+            catch (e) { if (!useRelay) throw e; const j = await relay(); rememberRelay(); return j; }
+        }
+
         // Appel au script. Erreur « réseau » (pas de connexion) distinguée d'un refus du script.
         async function callScript(action, payload, ms) {
-            const ctrl = new AbortController();
-            const t = setTimeout(() => ctrl.abort(), ms || 20000);
             let j;
             try {
-                const res = await fetch(scriptUrl(), { method: 'POST', signal: ctrl.signal, body: JSON.stringify(Object.assign({ action }, payload || {})) });
-                j = await res.json();
+                j = await postScript(scriptUrl(), Object.assign({ action }, payload || {}), ms);
             } catch (e) {
                 const err = new Error('Connexion au serveur impossible');
                 err.network = true;
                 throw err;
-            } finally { clearTimeout(t); }
+            }
             if (!j.ok) throw new Error(j.error || 'Erreur');
             return j;
         }
@@ -1221,8 +1242,7 @@
         async function msgApi(action, payload) {
             const url = msgUrl();
             if (!url) throw new Error('Messagerie non activée');
-            const res = await fetch(url, { method: 'POST', body: JSON.stringify(Object.assign({ action, email: currentUser.email, password: currentPassword }, payload || {})) });
-            const j = await res.json();
+            const j = await postScript(url, Object.assign({ action, email: currentUser.email, password: currentPassword }, payload || {}), action === 'upload' ? 120000 : 30000);
             if (!j.ok) throw new Error(j.error || 'Erreur messagerie');
             return j;
         }
@@ -2994,9 +3014,9 @@
 
         async function fetchGoogleSheetData(sheetId, gid) {
             try {
-                const response = await fetch(APPS_SCRIPT_URL);
-                const data = await response.json();
-                return data;
+                if (relayFirst()) { try { return await fetchJson('/api/ventes', {}, 30000); } catch (e) {} }
+                try { return await fetchJson(APPS_SCRIPT_URL, {}, 25000); }
+                catch (e) { if (!location.protocol.startsWith('http')) throw e; const d = await fetchJson('/api/ventes', {}, 30000); rememberRelay(); return d; }
             } catch (error) {
                 console.error('Erreur fetch Web App:', error);
                 return null;
