@@ -457,6 +457,16 @@
         .vendor-detail summary { cursor: pointer; padding: 12px 0; color: var(--white); font-weight: 600; font-size: 14px; }
         .vendor-detail[open] summary { color: var(--gold); }
 
+        .mode-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .mode-btn { padding: 8px 14px; background: transparent; border: 1px solid rgba(212,175,55,0.4); color: var(--gold); cursor: pointer; font-size: 12px; border-radius: 3px; }
+        .mode-btn.active { background: var(--gold); color: var(--black); font-weight: 700; }
+        table.kpi.global th { white-space: normal; min-width: 70px; vertical-align: bottom; }
+        table.kpi.global th:first-child { min-width: 150px; }
+        table.kpi.global tr.row-store td { background: rgba(212,175,55,0.12); font-weight: 700; }
+        table.kpi.global tr.row-store td:first-child { background: #2a2410; color: var(--gold); }
+        table.kpi.global tr.row-total td { background: rgba(212,175,55,0.25); font-weight: 700; border-top: 2px solid var(--gold); }
+        table.kpi.global tr.row-total td:first-child { background: #3a3114; color: var(--gold); }
+
         /* Responsive */
         @media (max-width: 768px) {
             .two-cols { grid-template-columns: 1fr; }
@@ -661,6 +671,7 @@
             
             // Parser les données sauvegardées
             const parsed = JSON.parse(data);
+            sanitizeData(parsed);
             
             // Corriger les targets manquantes pour Taux chubb et Mix 2h
             if (parsed.objectives && Array.isArray(parsed.objectives)) {
@@ -698,6 +709,50 @@
             }
             
             return parsed;
+        }
+
+        // Prénom sans accents pour l'email : « LÉNA-MAY » → lena-may, « STÉPHANE D » → stephane
+        function emailSlug(name) {
+            return String(name || '').trim().split(/\s+/)[0]
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase().replace(/[^a-z0-9-]/g, '');
+        }
+        function firstNameKey(name) {
+            return String(name || '').trim().split(/[\s\-]+/)[0]
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        }
+        const DEFAULT_DIRECTORS = [
+            { email: 'anthony@gradicom.fr', password: 'ChONGer123', name: 'Anthony', isManager: false, isDirector: true, store: null, objectiveTargets: {} },
+            { email: 'julien@gradicom.fr', password: 'ChONGer123', name: 'Julien', isManager: false, isDirector: true, store: null, objectiveTargets: {} }
+        ];
+
+        // Répare les données (import avec accents / initiales) — sans effet si tout est déjà propre
+        function sanitizeData(d) {
+            if (!d || !Array.isArray(d.users)) return d;
+            // a) Managers sans ligne vendeur : supprimer le doublon vendeur créé par l'import (ex. MÉLISSA, LÉA C)
+            const managers = d.users.filter(u => u.isManager && !u.isDirector);
+            d.users = d.users.filter(u => {
+                if (u.isManager || u.isDirector) return true;
+                const m = managers.find(m => m.store === u.store && firstNameKey(m.name) === firstNameKey(u.name));
+                return !(m && !m.hasVendorLine && firstNameKey(m.name) !== 'DYLAN');
+            });
+            // b) Emails invalides (espaces, accents) → prenom@domaine
+            const used = new Set(d.users.map(u => (u.email || '').toLowerCase()));
+            d.users.forEach(u => {
+                const e = u.email || '';
+                if (u.isDirector || /^[a-z0-9._-]+@[a-z0-9.-]+$/.test(e)) return;
+                const domain = (e.split('@')[1] || (u.store === 'MARMANDE' ? 'amr.fr' : 'gradicom.fr')).trim();
+                let base = emailSlug(u.name) || 'vendeur', cand = base + '@' + domain, i = 2;
+                while (used.has(cand)) cand = base + (i++) + '@' + domain;
+                used.delete(e.toLowerCase());
+                used.add(cand);
+                u.email = cand;
+            });
+            // c) Comptes dirigeants toujours présents
+            DEFAULT_DIRECTORS.forEach(dir => {
+                if (!d.users.some(u => (u.email || '').toLowerCase() === dir.email)) d.users.push(Object.assign({}, dir));
+            });
+            return d;
         }
 
         function saveData(data) {
@@ -1117,6 +1172,84 @@
             document.getElementById('adminScreen').classList.add('active');
             await ensureConfigLoaded();
             renderAdmin();
+            await refreshRealizations();
+            renderAdminGlobal();
+        }
+
+        // ================= VUE GLOBALE ADMIN =================
+        let adminGlobalMode = 'ratio';
+        const ADMIN_MODES = [
+            ['ratio', 'R/O %'], ['real', 'Réalisé'], ['target', 'Objectif'],
+            ['avance', 'Avance / retard'], ['projection', 'Projection']
+        ];
+
+        function setAdminGlobalMode(m) { adminGlobalMode = m; renderAdminGlobal(); }
+
+        async function refreshAdminGlobal() {
+            const el = document.getElementById('adminGlobal');
+            if (el) el.innerHTML = '<p class="muted">Chargement des ventes...</p>';
+            await refreshRealizations();
+            renderAdminGlobal();
+        }
+
+        function adminCell(obj, targets, nrow, days) {
+            const t = targetFor(targets, obj);
+            const r = getRealization(nrow, obj.name);
+            if (obj.unit === '%') {
+                const lower = isLowerBetter(obj);
+                const cls = r === null || t === null ? '' : ((lower ? r <= t : r >= t) ? 'ok' : 'ko');
+                if (adminGlobalMode === 'target') return `<td class="dim">${t === null ? '—' : (lower ? '<' : '>') + t + '%'}</td>`;
+                return `<td class="${cls}">${fmt(r, '%')}</td>`;
+            }
+            const k = computeKPIs(r || 0, t || 0, days);
+            const cls = t ? paceClass(k) : '';
+            switch (adminGlobalMode) {
+                case 'real': return `<td class="${cls}" title="Obj. ${fmt(t, obj.unit)}">${fmt(k.real, obj.unit)}</td>`;
+                case 'target': return `<td class="dim">${t ? fmt(t, obj.unit) : '—'}</td>`;
+                case 'avance': return `<td class="${t ? (k.avance >= 0 ? 'ok' : 'ko') : ''}">${t ? fmtSigned(k.avance, obj.unit) : '—'}</td>`;
+                case 'projection': return `<td class="${cls}">${fmt(k.projection, obj.unit)}</td>`;
+                default: return `<td class="${cls}" title="${fmt(k.real, obj.unit)} / ${fmt(t, obj.unit)}">${k.ratio === null ? '—' : k.ratio.toFixed(0) + ' %'}</td>`;
+            }
+        }
+
+        function renderAdminGlobal() {
+            const el = document.getElementById('adminGlobal');
+            if (!el) return;
+            const data = getData();
+            const objs = uniqueObjectives(data.objectives);
+            const storeDays = workingDays(null);
+            const stores = storeRanking(data);
+            const vendors = vendorRanking(data);
+
+            const modes = ADMIN_MODES.map(([k, l]) =>
+                `<button class="mode-btn ${adminGlobalMode === k ? 'active' : ''}" onclick="setAdminGlobalMode('${k}')">${l}</button>`).join('');
+
+            let head = '<tr><th>Magasin / vendeur</th><th>Rang</th>' + objs.map(o => `<th>${esc(o.name)}</th>`).join('') + '</tr>';
+            let body = '';
+            stores.forEach((s, si) => {
+                body += `<tr class="row-store"><td>🏪 ${esc(s.store.name)}</td><td>${rankLabel(si)}</td>` +
+                    objs.map(o => adminCell(o, s.targets, s.nrow, storeDays)).join('') + '</tr>';
+                vendors.forEach((v, vi) => {
+                    if (v.user.store !== s.store.name) return;
+                    body += `<tr><td>&nbsp;&nbsp;${esc(v.user.name)}${v.nrow ? '' : ' <span class="muted">(pas de ventes)</span>'}</td><td class="dim">${rankLabel(vi)}</td>` +
+                        objs.map(o => adminCell(o, v.user.objectiveTargets, v.nrow, v.days)).join('') + '</tr>';
+                });
+            });
+            if (RZ.total) {
+                const netTargets = {};
+                objs.forEach(o => {
+                    if (o.unit === '%') { netTargets[o.name] = targetFor(stores[0] && stores[0].targets, o); return; }
+                    netTargets[o.name] = stores.reduce((a, s) => a + (targetFor(s.targets, o) || 0), 0);
+                });
+                body += `<tr class="row-total"><td>RÉSEAU</td><td></td>` + objs.map(o => adminCell(o, netTargets, RZ.total, storeDays)).join('') + '</tr>';
+            }
+
+            el.innerHTML = `
+                ${errorBanner()}
+                <div class="dash-sub">${periodLabel(storeDays)} ${RZ.fetchedAt ? '• MAJ ' + RZ.fetchedAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
+                <div class="mode-bar">${modes}<button class="mode-btn" onclick="refreshAdminGlobal()">↻ Actualiser</button></div>
+                <div class="tbl-wrap"><table class="kpi global">${head}${body}</table></div>
+                <p class="muted" style="font-size:11px;">Couleurs : vert = en avance sur le prorata du jour, orange = entre 80 et 100 %, rouge = en retard. Rang vendeur = classement réseau. Survole une case pour voir réalisé / objectif.</p>`;
         }
 
         function backToLogin() {
@@ -1191,6 +1324,12 @@
                         <h2>🔐 Mots de Passe</h2>
                         <div class="list-items" id="passwordsList"></div>
                     </div>
+                </div>
+
+                <!-- VUE GLOBALE -->
+                <div style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(212, 175, 55, 0.2); padding: 30px; border-radius: 4px;">
+                    <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 24px; color: var(--gold); margin-bottom: 15px;">📊 Vue globale — objectifs & réalisations</h2>
+                    <div id="adminGlobal"><p class="muted">Chargement des ventes...</p></div>
                 </div>
 
                 <!-- VÉRIFICATION OBJECTIFS -->
@@ -1501,7 +1640,7 @@
 
         // Définition des objectifs : noms possibles côté portail/Excel + colonnes GSheets (par priorité)
         const KPI_DEFS = [
-            { names: ['MARGE TOTALE', 'MARGE TOTAL', 'MARGE JOURNALIERE', 'MARGE'], cols: ['MARGE TOTALE', 'MARGE TOTAL'], weight: 3, isMarge: true },
+            { names: ['MARGE TOTALE', 'MARGE TOTAL', 'MARGE JOURNALIERE'], cols: ['MARGE TOTALE', 'MARGE TOTAL'], weight: 3, isMarge: true },
             { names: ['OFFRES PRO', 'OFFRES PRO FIXE + ABO'], cols: ['OFFRES PRO FIXE + ABO', 'OFFRES PRO'] },
             { names: ['CONQUETE FIXE VV', 'FIXE CONQUETE'], cols: ['FIXE CONQUETE', 'CONQUETE FIXE VV'] },
             { names: ['VR FIXE CONQUETE', 'TOTAL RACCORDEMENT FIXE CONQUETE'], cols: ['TOTAL RACCORDEMENT Fixe Conquête', 'VR FIXE CONQUETE'] },
@@ -1525,7 +1664,14 @@
 
         function findDef(objName) {
             const n = norm(objName);
-            return KPI_DEFS.find(d => d.nNames.includes(n)) || null;
+            const exact = KPI_DEFS.find(d => d.nNames.includes(n));
+            if (exact) return exact;
+            // ex. « VOLUME RM (24M + SS ENG) » → VOLUME RM : plus long nom connu qui commence le libellé
+            let best = null, bestLen = 0;
+            KPI_DEFS.forEach(d => d.nNames.forEach(nm => {
+                if (nm.length >= 3 && n.startsWith(nm) && nm.length > bestLen) { best = d; bestLen = nm.length; }
+            }));
+            return best;
         }
 
         // Objectif cible d'un vendeur/magasin, en acceptant les anciens noms
@@ -1622,9 +1768,12 @@
             if (!user || !user.name) return null;
             const un = norm(user.name);
             const uf = norm(String(user.name).split(/\s+/)[0]);
+            const firstTok = norm(String(user.name).split(/[\s\-]+/)[0]);
+            const byFirst = RZ.vendors.filter(v => v.first === firstTok);
             const hit = RZ.vendors.find(v => v.n === un)
                 || RZ.vendors.find(v => v.first === un)
-                || RZ.vendors.find(v => v.first === uf && v.n.startsWith(un));
+                || RZ.vendors.find(v => v.first === uf && v.n.startsWith(un))
+                || (byFirst.length === 1 ? byFirst[0] : null);
             return hit ? hit.nrow : null;
         }
 
@@ -1917,11 +2066,11 @@
                             const managerName = storeManagers[currentStore];
                             
                             // Créer ou obtenir le manager
-                            let manager = gradicomData.users.find(u => u.name.toUpperCase() === managerName && u.isManager);
+                            let manager = gradicomData.users.find(u => u.isManager && firstNameKey(u.name) === firstNameKey(managerName));
                             if (!manager) {
                                 const domain = currentStore === 'MARMANDE' ? '@amr.fr' : '@gradicom.fr';
                                 manager = {
-                                    email: managerName.toLowerCase() + domain,
+                                    email: emailSlug(managerName) + domain,
                                     password: generatePassword(),
                                     name: managerName,
                                     isManager: true,
@@ -1951,17 +2100,18 @@
                         else if (currentStore && !firstCell.includes('NOMBRE') && firstCell) {
                             // IMPORTANT: Ignorer les lignes managers (sauf DYLAN qui est manager + vendeur)
                             const managerName = storeManagers[currentStore];
-                            if (firstCell.toUpperCase() === managerName.toUpperCase() && managerName.toUpperCase() !== 'DYLAN') {
+                            if (firstNameKey(firstCell) === firstNameKey(managerName) && firstNameKey(managerName) !== 'DYLAN') {
                                 // Ignorer cette ligne - le manager utilise les objectifs du magasin
                                 continue;
                             }
 
                             // Créer ou obtenir le vendeur
-                            let vendor = gradicomData.users.find(u => u.name.toUpperCase() === firstCell);
+                            let vendor = gradicomData.users.find(u => !u.isDirector && norm(u.name) === norm(firstCell))
+                                || gradicomData.users.find(u => !u.isDirector && u.store === currentStore && firstNameKey(u.name) === firstNameKey(firstCell));
                             if (!vendor) {
                                 const domain = currentStore === 'MARMANDE' ? '@amr.fr' : '@gradicom.fr';
                                 vendor = {
-                                    email: firstCell.toLowerCase() + domain,
+                                    email: emailSlug(firstCell) + domain,
                                     password: generatePassword(),
                                     name: firstCell,
                                     isManager: false,
@@ -2001,6 +2151,7 @@
                         }
                     }
 
+                    sanitizeData(gradicomData);
                     saveData(gradicomData);
                     showImportStatus('✅ Import réussi ! Objectifs + valeurs personnalisées créés.');
                     document.getElementById('objectifsFile').value = '';
@@ -2057,7 +2208,8 @@
 
                         if (vendorName && totalJours) {
                             // Chercher l'utilisateur existant
-                            let user = gradicomData.users.find(u => u.name && u.name.toUpperCase() === vendorName.toUpperCase());
+                            let user = gradicomData.users.find(u => u.name && norm(u.name) === norm(vendorName))
+                                || gradicomData.users.find(u => u.name && !u.isDirector && firstNameKey(u.name) === firstNameKey(vendorName));
                             
                             if (user) {
                                 user.totalJoursTravailles = parseInt(totalJours);
