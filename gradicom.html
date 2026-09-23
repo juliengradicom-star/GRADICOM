@@ -1560,14 +1560,23 @@
         }
         document.addEventListener('DOMContentLoaded', () => animateLogo(document.getElementById('loginLogo'), { step: 120, delay: 250 }));
 
-        function resetAllData() {
-            if (confirm('⚠️ Êtes-vous sûr(e) ?\n\nCela efface les données enregistrées sur CET appareil. Elles seront rechargées depuis le serveur à la prochaine connexion.')) {
-                // Vider TOUT localStorage
-                localStorage.clear();
-                
-                // Recharger la page pour réinitialiser avec les données de test
-                location.reload();
+        // Réinitialisation des données de CET appareil : réservée à l'Admin (mot de passe vérifié par le serveur)
+        async function resetAllData() {
+            const password = prompt('🔐 Mot de passe Administrateur :');
+            if (password === null) return;
+            const h = await adminPwHash(password);
+            try {
+                await callScript('adminConfig', { adminHash: h, adminKey: password });
+            } catch (e) {
+                // Script pas à jour ou hors connexion : empreinte déjà connue sur cet appareil
+                if (!(isOldScript(e) || e.network) || getData().adminHash !== h) {
+                    alert(isBadPassword(e) || isOldScript(e) ? '❌ Mot de passe incorrect !' : e.network ? '❌ Pas de connexion internet.' : '❌ ' + e.message);
+                    return;
+                }
             }
+            if (!confirm('⚠️ Êtes-vous sûr(e) ?\n\nCela efface les données enregistrées sur CET appareil (rien n\'est supprimé sur le serveur). Elles seront rechargées à la prochaine connexion.')) return;
+            localStorage.clear();
+            location.reload();
         }
 
         // ===== Œil pour afficher le mot de passe + « Se souvenir de moi » =====
