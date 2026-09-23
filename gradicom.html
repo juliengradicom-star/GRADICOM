@@ -2448,19 +2448,44 @@
         function setDirStore(k) { dirStore = k; loadDirectorDashboard(); }
         function setDirVendor(k) { dirVendor = k; loadDirectorDashboard(); }
 
+        // Mot de passe Admin : jamais écrit en clair, seulement une empreinte lente (PBKDF2).
+        // Modifiable dans l'Admin (enregistré en ligne dans la config, champ adminHash).
+        const ADMIN_SALT = 'GRADICOM-AMR-ADMIN';
+        const DEFAULT_ADMIN_HASH = '11649f497d0b20d2dfa5d35a074f0f4f1eae1a994d256f6fc2e0f4394cb19815';
+        async function adminPwHash(password) {
+            const enc = new TextEncoder();
+            const key = await crypto.subtle.importKey('raw', enc.encode(String(password)), 'PBKDF2', false, ['deriveBits']);
+            const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: enc.encode(ADMIN_SALT), iterations: 150000, hash: 'SHA-256' }, key, 256);
+            return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
         async function goToAdmin() {
             const password = prompt('🔐 Mot de passe Administrateur :');
-            if (password !== 'Gradicom16100') {
+            if (password === null) return;
+            await ensureConfigLoaded();
+            if ((await adminPwHash(password)) !== (getData().adminHash || DEFAULT_ADMIN_HASH)) {
                 alert('❌ Mot de passe incorrect !');
                 return;
             }
 
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('adminScreen').classList.add('active');
-            await ensureConfigLoaded();
             renderAdmin();
             await refreshRealizations();
             renderAdminGlobal();
+        }
+
+        async function changeAdminPassword() {
+            const p1 = prompt('Nouveau mot de passe Admin (10 caractères minimum) :');
+            if (p1 === null) return;
+            if (p1.length < 10) { alert('❌ Trop court : 10 caractères minimum.'); return; }
+            const p2 = prompt('Retape le nouveau mot de passe pour confirmer :');
+            if (p2 !== p1) { alert('❌ Les deux saisies ne correspondent pas. Rien n\'a été changé.'); return; }
+            const data = getData();
+            data.adminHash = await adminPwHash(p1);
+            saveData(data);
+            const ok = await saveConfigOnline();
+            alert(ok ? '✅ Mot de passe Admin changé sur tous les appareils.' : '⚠️ Mot de passe changé sur cet appareil seulement : l\'enregistrement en ligne a échoué (voir « Enregistrement en ligne »).');
         }
 
         // ================= VUE GLOBALE ADMIN =================
@@ -2626,6 +2651,13 @@
                 <div style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
                     <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">✉️ Messagerie</h2>
                     <div id="messagingAdmin"></div>
+                </div>
+
+                <!-- MOT DE PASSE ADMIN -->
+                <div style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
+                    <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">🔐 Mot de passe de l'Admin</h2>
+                    <p class="muted" style="font-size:12px;margin-bottom:12px;">Choisis un mot de passe d'au moins 10 caractères. Il est enregistré en ligne sous forme codée et vaut pour tous les appareils.</p>
+                    <button class="btn-add" style="max-width: 360px;" onclick="changeAdminPassword()">🔐 Changer le mot de passe Admin</button>
                 </div>
 
                 <!-- ESTIMATIONS DE PRIMES -->

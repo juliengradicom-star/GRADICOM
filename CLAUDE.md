@@ -8,7 +8,8 @@
 
 ## Architecture
 - `gradicom.html` : tout le portail (HTML + CSS + JS dans un seul fichier). Thème noir / or, polices Bodoni Moda + Manrope.
-- `config.json` : objectifs, comptes (mots de passe hachés), payplan, notes clients, primes validées. Généré depuis l'Admin (« Télécharger config.json »).
+- Config (objectifs, comptes aux mots de passe hachés, payplan, notes clients, primes validées, `adminHash`) : enregistrée en ligne automatiquement depuis l'Admin via le script de messagerie (actions `getConfig` / `saveConfig`, protégée par `ADMIN_KEY`). `config.json` n'est plus qu'une copie de secours ; la version au `updatedAt` le plus récent l'emporte.
+- Mot de passe Admin : jamais en clair, empreinte PBKDF2 (`DEFAULT_ADMIN_HASH`, ou `adminHash` s'il a été changé dans l'Admin).
 - `sw.js`, `manifest.webmanifest`, icônes : application installable (PWA), stratégie réseau d'abord.
 - `vercel.json` : `/` → `gradicom.html`, pas de cache sur html/config/sw.
 - Ventes : Google Sheets lu via un Apps Script (URL `APPS_SCRIPT_URL` dans le code), rafraîchi toutes les 15 min.
