@@ -2,6 +2,7 @@ const ADMIN_KEY = 'CHOISIS-UNE-NOUVELLE-CLE';  // ← à remplacer par une clé 
 const SALT = 'GRADICOM-AMR';         // ne pas modifier (doit être identique au portail)
 const CONFIG_CHUNK = 40000;          // une cellule Google Sheets contient au plus 50 000 caractères
 const PRIMES_TOUT_VOIR = ['julien@gradicom.fr'];  // seuls à recevoir le détail de toutes les primes validées
+const VENTES_SHEET_ID = '1t7ypfj6CObBDXQgjzWQKQbIQr6XIiRjO5_Qk0uSv8vg';  // Google Sheets des ventes (lu ici, plus par un script public)
 
 function initialiser() {
   const s = setup_();
@@ -131,10 +132,71 @@ function usersFromConfig_(ss, c) {
   return rows.length;
 }
 
+// ----- Ventes : réservées aux personnes connectées (ou à l'Admin) -----
+function ventes_() {
+  const cache = CacheService.getScriptCache();
+  const hit = cache.get('ventes');
+  if (hit) return JSON.parse(hit);
+  const ss = SpreadsheetApp.openById(VENTES_SHEET_ID);
+  const toJSON = function (data) {
+    const headers = data[0], rows = [];
+    for (let i = 1; i < data.length; i++) {
+      const row = {};
+      for (let j = 0; j < headers.length; j++) row[headers[j]] = data[i][j] || '';
+      rows.push(row);
+    }
+    return rows;
+  };
+  const out = {
+    vendeurs: toJSON(ss.getSheetByName('exportcaissevendeurs').getDataRange().getValues()),
+    magasins: toJSON(ss.getSheetByName('exportcaissemagasins').getDataRange().getValues())
+  };
+  const text = JSON.stringify(out);
+  if (text.length < 90000) cache.put('ventes', text, 60);  // 1 min : évite de relire le Sheets pour chaque vendeur
+  return JSON.parse(text);
+}
+
+// ----- Pièces jointes : fichiers privés, remis seulement à l'expéditeur et aux destinataires -----
+function peutVoirFichier_(ss, me, fileId) {
+  const msgs = ss.getSheetByName('MESSAGES').getDataRange().getValues(); msgs.shift();
+  return msgs.some(function (m) {
+    const concerne = String(m[2]).toLowerCase() === me.email || String(m[4]).toLowerCase().split(',').indexOf(me.email) >= 0;
+    if (!concerne) return false;
+    return JSON.parse(m[7] || '[]').some(function (a) { return String(a.id) === String(fileId); });
+  });
+}
+
+// À exécuter UNE fois (bouton ▶ Exécuter) : rend privés les fichiers déjà envoyés
+function securiserPiecesJointes() {
+  const s = setup_();
+  let n = 0;
+  const walk = function (folder) {
+    const files = folder.getFiles();
+    while (files.hasNext()) { const f = files.next(); f.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE); n++; }
+    const subs = folder.getFolders();
+    while (subs.hasNext()) walk(subs.next());
+  };
+  walk(s.folder);
+  Logger.log(n + ' fichier(s) rendus privés');
+}
+
 function handle_(req) {
   const s = setup_();
   const ss = s.ss;
   switch (req.action) {
+
+    case 'sales': {
+      if (!(req.adminHash || req.adminKey) || !isAdmin_(ss, req)) auth_(ss, req);
+      const v = ventes_();
+      return { ok: true, vendeurs: v.vendeurs, magasins: v.magasins };
+    }
+
+    case 'download': {
+      const me = auth_(ss, req);
+      if (!peutVoirFichier_(ss, me, req.id)) throw new Error('Fichier non autorisé');
+      const f = DriveApp.getFileById(String(req.id)), blob = f.getBlob();
+      return { ok: true, name: f.getName(), mime: blob.getContentType(), data: Utilities.base64Encode(blob.getBytes()) };
+    }
 
     case 'login': {
       // Connexion d'un vendeur / responsable / dirigeant : renvoie SA version des réglages
@@ -215,8 +277,7 @@ function handle_(req) {
       const sub = it.hasNext() ? it.next() : s.folder.createFolder(day);
       const blob = Utilities.newBlob(Utilities.base64Decode(req.data), req.mime || 'application/octet-stream', req.name);
       const f = sub.createFile(blob);
-      f.setDescription('Envoyé par ' + me.name + ' (' + me.email + ')');
-      f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      f.setDescription('Envoyé par ' + me.name + ' (' + me.email + ')');  // fichier privé : remis via l'action « download »
       return { ok: true, file: { name: req.name, size: blob.getBytes().length, url: f.getUrl(), id: f.getId() } };
     }
 

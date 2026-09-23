@@ -1367,7 +1367,7 @@
                 <div class="msg-subj big">${esc(m.subject || '(sans objet)')}</div>
                 <div class="msg-meta">De <strong>${esc(m.fromName)}</strong> • ${new Date(m.date).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })}<br>À ${m.to.map(e => esc(contactName(e))).join(', ')}</div>
                 <div class="msg-body">${esc(m.body).replace(/\n/g, '<br>')}</div>
-                ${m.attachments.length ? `<div class="msg-atts">${m.attachments.map(a => `<a class="msg-att" href="${esc(a.url)}" target="_blank" rel="noopener">${fileIcon(a.name)} <span>${esc(a.name)}</span> <em>${fmtSize(a.size)}</em></a>`).join('')}</div>` : ''}
+                ${m.attachments.length ? `<div class="msg-atts">${m.attachments.map((a, i) => `<a class="msg-att" href="#" onclick="downloadAttachment(event, '${esc(m.id)}', ${i})">${fileIcon(a.name)} <span>${esc(a.name)}</span> <em>${fmtSize(a.size)}</em></a>`).join('')}</div>` : ''}
                 ${m.links.length ? `<div class="msg-atts">${m.links.map(l => `<a class="msg-att" href="${esc(l)}" target="_blank" rel="noopener">🔗 <span>${esc(l)}</span></a>`).join('')}</div>` : ''}
                 <div class="pe-actions">
                     ${m.from !== me ? `<button class="btn-add" onclick="replyTo('${m.id}', false)">↩ Répondre</button>` : ''}
@@ -1385,6 +1385,25 @@
 
         function deleteSelectedMessages() {
             deleteMessages([...document.querySelectorAll('.msg-sel:checked')].map(b => b.value));
+        }
+
+        // Les fichiers sont privés : on les récupère via le script (seuls l'expéditeur et les destinataires y ont droit)
+        async function downloadAttachment(ev, msgId, idx) {
+            ev.preventDefault();
+            const m = (msgCache.messages || []).find(x => x.id === msgId); if (!m) return;
+            const a = m.attachments[idx], link = ev.currentTarget, label = link.querySelector('em'), old = label.textContent;
+            label.textContent = 'téléchargement…';
+            try {
+                if (!a.id) throw Object.assign(new Error('ancien'), { legacy: true });
+                const j = await msgApi('download', { id: a.id });
+                const bytes = Uint8Array.from(atob(j.data), c => c.charCodeAt(0));
+                const url = URL.createObjectURL(new Blob([bytes], { type: j.mime || 'application/octet-stream' }));
+                const d = document.createElement('a'); d.href = url; d.download = j.name || a.name; document.body.appendChild(d); d.click(); d.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+            } catch (e) {
+                if (e.legacy || isOldScript(e)) { if (a.url) location.href = a.url; }   // script pas encore à jour : ancien lien
+                else alert('Téléchargement impossible : ' + e.message);
+            } finally { label.textContent = old; }
         }
 
         async function deleteMessages(ids) {
@@ -1582,6 +1601,8 @@
             event.preventDefault();
             const email = document.getElementById('email').value.trim().toLowerCase();
             const password = document.getElementById('password').value;
+            salesCreds = { email, password };
+            prefetchSales();
             const btn = event.submitter || document.querySelector('#loginScreen button[type="submit"]');
             if (btn) btn.disabled = true;
             let user = null, refused = false;
@@ -1690,6 +1711,7 @@
         function handleLogout() {
             currentUser = null;
             currentPassword = null;
+            salesCreds = null; salesPrefetch = null;
             msgCache = { messages: null, contacts: null, error: null, loading: false };
             msgView = 'inbox'; msgOpenId = null; msgDraft = null;
             mgrSub = 'store';
@@ -2482,6 +2504,7 @@
             }
             adminAuth = h;
             adminSecret = password;
+            salesPrefetch = null;
 
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('adminScreen').classList.add('active');
@@ -3003,7 +3026,19 @@
 
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyq_Ce7ay905Pe_uIJQUQnhmO3mKnYVvA6F-UhZhDmvyqMlAfka2phqVD9_djjffBSYVw/exec';
 
+        // Identifiants utilisés pour lire les ventes (connexion vendeur ou Admin)
+        let salesCreds = null;
+        function salesAuth() {
+            if (adminAuth) return { adminHash: adminAuth, adminKey: adminSecret };
+            return salesCreds;
+        }
         async function fetchGoogleSheetData(sheetId, gid) {
+            const auth = salesAuth();
+            if (auth) {
+                try { const j = await callScript('sales', auth, 30000); return { vendeurs: j.vendeurs, magasins: j.magasins }; }
+                catch (e) { if (isBadPassword(e)) return null; console.warn('Ventes via la messagerie indisponibles :', e.message); }
+            }
+            // Script de messagerie pas encore à jour : ancien script des ventes
             try {
                 if (relayFirst()) { try { return await fetchJson('/api/ventes', {}, 30000); } catch (e) {} }
                 try { return await fetchJson(APPS_SCRIPT_URL, {}, 25000); }
@@ -3202,7 +3237,8 @@
         }
 
         // Les ventes commencent à charger dès l'ouverture de la page (pendant la saisie du mot de passe)
-        let salesPrefetch = { promise: loadRealizationsFromGSheets(), at: Date.now() };
+        let salesPrefetch = null; // lancé dès que les identifiants sont saisis (en parallèle de la connexion)
+        function prefetchSales() { salesPrefetch = { promise: loadRealizationsFromGSheets(), at: Date.now() }; }
         async function refreshRealizations() {
             let raw;
             if (salesPrefetch && Date.now() - salesPrefetch.at < 5 * 60 * 1000) { raw = await salesPrefetch.promise; salesPrefetch = null; }

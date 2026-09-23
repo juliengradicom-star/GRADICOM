@@ -16,7 +16,8 @@
 - `api/gs.js` et `api/ventes.js` : relais Vercel vers les deux scripts Google. Certains iPhone ne joignent pas script.google.com (« Impossible d'ouvrir le fichier », même en navigation privée) : le portail essaie en direct puis passe par le relais (et s'en souvient pour la session). Limite Vercel ~4,5 Mo par requête : les grosses pièces jointes passent seulement en direct.
 - `sw.js`, `manifest.webmanifest`, icônes : application installable (PWA), stratégie réseau d'abord.
 - `vercel.json` : `/` → `gradicom.html`, pas de cache sur html/config/sw.
-- Ventes : Google Sheets lu via un Apps Script (URL `APPS_SCRIPT_URL` dans le code), rafraîchi toutes les 15 min. Ce script est lisible sans connexion : choix assumé par Julien (pas de données sensibles), ne pas reproposer de le protéger.
+- Ventes : Google Sheets alimenté automatiquement par l'outil de caisse (ID `1t7ypfj6…`, onglets `exportcaissevendeurs` / `exportcaissemagasins`, à ne pas renommer), rafraîchi toutes les 15 min. Lu par l'action `sales` du script de messagerie, réservée aux connectés / à l'Admin. L'ancien script public des ventes (`APPS_SCRIPT_URL`) ne sert plus qu'en secours tant que le script de messagerie n'est pas à jour ; son déploiement est à archiver (sans toucher au Sheets).
+- Pièces jointes : fichiers Drive privés, téléchargés via l'action `download` (expéditeur et destinataires seulement). `securiserPiecesJointes()` rend privés les anciens fichiers (à exécuter une fois).
 - Messagerie + config : Apps Script séparé (Google Sheets + Drive), adresse fixée dans le code (voir plus haut). Copie de référence dans `messagerie.gs` (sans la vraie `ADMIN_KEY`, qui n'existe que dans le script Google) ; toute modif du script doit être recollée par Julien dans script.google.com puis redéployée (Gérer les déploiements → Nouvelle version).
 
 ## Organisation
