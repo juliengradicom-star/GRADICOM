@@ -14,7 +14,7 @@
   - Plus de `config.json` public. Aucun mot de passe en clair dans le code (données de démo sans mot de passe).
 - `sw.js`, `manifest.webmanifest`, icônes : application installable (PWA), stratégie réseau d'abord.
 - `vercel.json` : `/` → `gradicom.html`, pas de cache sur html/config/sw.
-- Ventes : Google Sheets lu via un Apps Script (URL `APPS_SCRIPT_URL` dans le code), rafraîchi toutes les 15 min.
+- Ventes : Google Sheets lu via un Apps Script (URL `APPS_SCRIPT_URL` dans le code), rafraîchi toutes les 15 min. Ce script est lisible sans connexion : choix assumé par Julien (pas de données sensibles), ne pas reproposer de le protéger.
 - Messagerie + config : Apps Script séparé (Google Sheets + Drive), URL saisie dans l'Admin. Copie de référence dans `messagerie.gs` (sans la vraie `ADMIN_KEY`, qui n'existe que dans le script Google) ; toute modif du script doit être recollée par Julien dans script.google.com puis redéployée (Gérer les déploiements → Nouvelle version).
 
 ## Organisation
