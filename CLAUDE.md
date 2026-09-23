@@ -48,3 +48,4 @@
   - Primes d'août 2026 de Dylan et Mathilda = données de test (suppression conseillée dans l'Admin → Primes validées).
   - Dépôt GitHub public : rien de sensible dans l'historique (anciens mots de passe tous renouvelés, primes = test) ; pas besoin de le passer en privé.
   - Ventes lues par le script de messagerie (connectés seulement) ; pièces jointes rendues privées (1 ancien fichier sécurisé). Un déploiement en trop du script de messagerie a été créé par erreur : inutilisé, sans danger (le bon reste `AKfycbwAm_…`).
+  - Vidéo de présentation (données fictives) publiée TEMPORAIREMENT, avec l'accord de Julien, sur la branche `video` du dépôt public (fichier `GRADICOM_AMR_video_TV.mp4`, 83 Mo). À supprimer dès qu'il le demande : `git push origin --delete video`.
