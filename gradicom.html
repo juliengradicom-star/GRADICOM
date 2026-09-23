@@ -1076,6 +1076,7 @@
         let adminAuth = null;            // empreinte du mot de passe Admin, en mémoire le temps de la session Admin
         let adminSecret = null;          // ce qui a été tapé : accepté aussi par le script s'il s'agit de la clé ADMIN_KEY (secours)
         try { localStorage.removeItem('gradicomMsgKey'); } catch (e) {} // ancienne clé Admin gardée en clair : effacée
+        try { fetch(scriptUrl(), { mode: 'no-cors' }).catch(() => {}); } catch (e) {} // réveille le script Google pendant la saisie
 
         function scriptUrl() {
             try { const d = JSON.parse(localStorage.getItem(STORAGE_KEY)); if (d && d.messaging && d.messaging.url) return d.messaging.url; } catch (e) {}
@@ -1574,7 +1575,7 @@
             if (btn) btn.disabled = true;
             let user = null, refused = false;
             const localAuth = (() => { try { return JSON.parse(localStorage.getItem(AUTH_KEY)); } catch (x) { return null; } })();
-            if (auto && localAuth && localAuth.email === email && localAuth.h === await pwHash(email, password)) {
+            if (localAuth && localAuth.email === email && localAuth.h === await pwHash(email, password)) {
                 // « Se souvenir de moi » : ouverture immédiate avec les données de l'appareil, vérification en arrière-plan
                 user = getData().users.find(u => (u.email || '').toLowerCase() === email) || null;
                 if (user) backgroundRelogin(email, password);
@@ -3189,8 +3190,12 @@
             }
         }
 
+        // Les ventes commencent à charger dès l'ouverture de la page (pendant la saisie du mot de passe)
+        let salesPrefetch = { promise: loadRealizationsFromGSheets(), at: Date.now() };
         async function refreshRealizations() {
-            const raw = await loadRealizationsFromGSheets();
+            let raw;
+            if (salesPrefetch && Date.now() - salesPrefetch.at < 5 * 60 * 1000) { raw = await salesPrefetch.promise; salesPrefetch = null; }
+            else raw = await loadRealizationsFromGSheets();
             if (raw) {
                 RZ = buildRealizationsIndex(raw);
             } else {
