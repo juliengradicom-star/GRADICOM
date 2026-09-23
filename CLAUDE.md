@@ -12,6 +12,7 @@
   - Connexion : action `login` (vérifiée par le script) → renvoie la config SANS empreintes de mots de passe, primes validées limitées à l'utilisateur (dirigeants : toutes).
   - Admin : mot de passe vérifié par le script (`adminConfig`, empreinte PBKDF2) ; les modifs sont enregistrées automatiquement (`saveConfig`), qui reconstruit aussi les comptes de la messagerie. `ADMIN_KEY` ne sert plus qu'en secours.
   - Plus de `config.json` public. Aucun mot de passe en clair dans le code (données de démo sans mot de passe).
+- Adresse du script de messagerie : constante `DEFAULT_MSG_URL` dans `gradicom.html` + `SCRIPT_URL` dans `api/gs.js` (déploiement actif `AKfycbwAm_…`, accès « Tout le monde »). L'ancienne adresse `AKfycbwzt__…` a été archivée par Julien le 23/09/2026, ce qui a bloqué toutes les connexions : lui rappeler de ne JAMAIS archiver le déploiement actif (nouvelle version = « Gérer les déploiements → ✏️ → Nouvelle version »). Le champ URL de l'Admin a été retiré : l'adresse du code fait foi.
 - `api/gs.js` et `api/ventes.js` : relais Vercel vers les deux scripts Google. Certains iPhone ne joignent pas script.google.com (« Impossible d'ouvrir le fichier », même en navigation privée) : le portail essaie en direct puis passe par le relais (et s'en souvient pour la session). Limite Vercel ~4,5 Mo par requête : les grosses pièces jointes passent seulement en direct.
 - `sw.js`, `manifest.webmanifest`, icônes : application installable (PWA), stratégie réseau d'abord.
 - `vercel.json` : `/` → `gradicom.html`, pas de cache sur html/config/sw.

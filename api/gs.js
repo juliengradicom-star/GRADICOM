@@ -1,7 +1,7 @@
 // Relais vers le script Google de messagerie / réglages.
 // Utilisé par le portail quand un téléphone n'arrive pas à joindre script.google.com directement
 // (réseau, Relais privé iCloud, VPN…) : c'est Vercel qui contacte Google à sa place.
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwzt__5o0fINJ0wxUExOsu4FTTnnW2f_efu6pT2OmGscUdBszEEgMUJGjGT2f-zyz0Hvg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwAm_e6cjFlnWs5P6KGZzbfa3IRDepbEe7LIZVzJKfQsOdSfg5Ku7eHgPFj9wh57-jYWg/exec';
 
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');

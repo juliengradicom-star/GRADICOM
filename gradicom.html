@@ -1071,7 +1071,9 @@
         // Les réglages de l'Admin sont stockés en ligne par le script de messagerie (Google Sheets).
         // Rien n'est lisible sans connexion : « login » renvoie la version de l'utilisateur (sans empreintes
         // de mots de passe, primes validées limitées aux siennes), « adminConfig » la version complète.
-        const DEFAULT_MSG_URL = 'https://script.google.com/macros/s/AKfycbwzt__5o0fINJ0wxUExOsu4FTTnnW2f_efu6pT2OmGscUdBszEEgMUJGjGT2f-zyz0Hvg/exec';
+        // Adresse du déploiement ACTIF du script de messagerie (à modifier aussi dans api/gs.js).
+        // Ne jamais archiver ce déploiement : pour une nouvelle version, « Modifier » le déploiement existant (l'adresse reste la même).
+        const DEFAULT_MSG_URL = 'https://script.google.com/macros/s/AKfycbwAm_e6cjFlnWs5P6KGZzbfa3IRDepbEe7LIZVzJKfQsOdSfg5Ku7eHgPFj9wh57-jYWg/exec';
         const AUTH_KEY = 'gradicomAuth'; // empreinte du dernier mot de passe accepté (connexion hors ligne)
         let adminAuth = null;            // empreinte du mot de passe Admin, en mémoire le temps de la session Admin
         let adminSecret = null;          // ce qui a été tapé : accepté aussi par le script s'il s'agit de la clé ADMIN_KEY (secours)
@@ -1079,7 +1081,6 @@
         try { fetch(scriptUrl(), { mode: 'no-cors' }).catch(() => {}); } catch (e) {} // réveille le script Google pendant la saisie
 
         function scriptUrl() {
-            try { const d = JSON.parse(localStorage.getItem(STORAGE_KEY)); if (d && d.messaging && d.messaging.url) return d.messaging.url; } catch (e) {}
             return DEFAULT_MSG_URL;
         }
 
@@ -1143,7 +1144,7 @@
             for (const u of pub.users) {
                 if (u.password) { u.passwordHash = await pwHash(u.email, u.password); delete u.password; }
             }
-            if (!pub.messaging || !pub.messaging.url) pub.messaging = { url: DEFAULT_MSG_URL };
+            pub.messaging = { url: DEFAULT_MSG_URL };
             return pub;
         }
 
@@ -1237,7 +1238,7 @@
         let msgView = 'inbox', msgOpenId = null, msgDraft = null;
         const MSG_MAX_FILE = 30 * 1024 * 1024; // 30 Mo par fichier (limite Apps Script)
 
-        function msgUrl() { const d = getData(); return d.messaging && d.messaging.url ? d.messaging.url : null; }
+        function msgUrl() { return DEFAULT_MSG_URL; }
 
         async function msgApi(action, payload) {
             const url = msgUrl();
@@ -1517,19 +1518,9 @@
         function renderMessagingAdmin() {
             const el = document.getElementById('messagingAdmin');
             if (!el) return;
-            const d = getData();
-            el.innerHTML = `<div class="pe-top"><label>URL de l'application Web (…/exec) :<br><input class="pe-in wide" style="width:100%;max-width:640px" id="msgUrlInput" value="${esc((d.messaging && d.messaging.url) || '')}" placeholder="https://script.google.com/macros/s/…/exec"></label></div>
-                <div class="pe-actions">
-                    <button class="btn-add" onclick="saveMessagingUrl()">💾 Enregistrer l'URL</button>
-                </div>
+            el.innerHTML = `<p class="muted" style="font-size:13px;line-height:1.6;">La messagerie et les réglages passent par le script Google « Messagerie GRADICOM AMR ».<br>
+                ⚠️ Dans Google Apps Script, ne jamais <strong>archiver</strong> le déploiement actif : pour une nouvelle version, utiliser « Gérer les déploiements → ✏️ → Nouvelle version » (l'adresse reste la même).</p>
                 <p class="muted" style="font-size:12px;margin-top:10px;">Les comptes de la messagerie sont mis à jour automatiquement à chaque enregistrement en ligne.</p>`;
-        }
-
-        function saveMessagingUrl() {
-            const data = getData();
-            data.messaging = { url: document.getElementById('msgUrlInput').value.trim() };
-            saveData(data);
-            showImportStatus('✅ URL de la messagerie enregistrée.');
         }
 
         // ===== Animation du logo : les lettres arrivent une à une (G, R, A, D…), puis reflet doré =====
