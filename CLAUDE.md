@@ -30,6 +30,7 @@
 - Alertes : Taux Chubb < 42 % et Mix 2h > 17 %. Abos comptés seulement si Mix 2h strictement < 17 %.
 - Avance/retard au prorata des jours travaillés (fichier JT, 1 = travaillé) et des horaires magasin (Gradignan 9h30-18h30 fermé dim+lun ; Marmande 9h30-19h ; Cognac/Langon 9h30-19h30, fermés le dimanche).
 - Pourcentages tronqués à 1 décimale (jamais arrondis vers le haut).
+- Projection de fin de mois = réalisé ÷ jours travaillés × jours du mois, en comptant la journée en cours comme COMPLÈTE dès qu'elle a commencé (`doneProj`, voulu par Julien le 01/10/2026 ; avant, aucune projection tant qu'une journée entière n'était pas écoulée). L'avance/retard, elle, garde la part de journée écoulée selon les horaires du magasin (`done`).
 - Payplan : 4 grilles (Gradignan / autres × vendeur / responsable), bloc 1 (% de la marge, ×2 si R/O marge ≥ 100 % et Chubb ≥ 42 %) + bloc 2 (points → €). Modifiable chaque mois dans l'Admin. Primes affichées « sous réserve de vérification en fin de mois ».
 
 ## Façon de travailler avec Julien

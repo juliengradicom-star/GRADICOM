@@ -3310,22 +3310,25 @@
             const worked = cal.filter(c => c.worked && typeof c.day === 'number');
             const total = worked.length;
             const done = worked.filter(c => c.day < mi.today).length + (worked.some(c => c.day === mi.today) ? todayFraction(store) : 0);
-            return { total, done, remaining: total - done, source: 'planning' };
+            // Pour la projection de fin de mois : la journée en cours compte comme complète dès qu'elle a commencé
+            const doneProj = worked.filter(c => c.day <= mi.today).length;
+            return { total, done, doneProj, remaining: total - done, source: 'planning' };
         }
 
         // Jours d'ouverture du magasin dans le mois (fermetures selon STORE_HOURS)
         function standardDays(store) {
             const mi = monthInfo();
             const closed = hoursFor(store).closed;
-            let total = 0, done = 0;
+            let total = 0, done = 0, doneProj = 0;
             for (let d = 1; d <= mi.dim; d++) {
                 if (!closed.includes(new Date(mi.y, mi.m, d).getDay())) {
                     total++;
                     if (d < mi.today) done++;
                     else if (d === mi.today) done += todayFraction(store);
+                    if (d <= mi.today) doneProj++;
                 }
             }
-            return { total, done, remaining: total - done, source: 'standard' };
+            return { total, done, doneProj, remaining: total - done, source: 'standard' };
         }
 
         // Nb de jours prévu dans l'Excel d'objectifs, sans le détail : répartition au prorata lun→sam
@@ -3333,7 +3336,8 @@
             const std = standardDays(store);
             const total = Math.round(planned);
             const done = Math.min(total, total * std.done / std.total);
-            return { total, done, remaining: total - done, source: 'objectifs' };
+            const doneProj = Math.min(total, total * std.doneProj / std.total);
+            return { total, done, doneProj, remaining: total - done, source: 'objectifs' };
         }
 
         function workingDays(user) {
@@ -3378,7 +3382,9 @@
             const r = real || 0;
             const t = target || 0;
             const prorata = days.total > 0 ? t * days.done / days.total : 0;
-            const projection = days.done >= 1 ? r / days.done * days.total : r;
+            // Projection : la journée en cours compte comme complète dès qu'elle a commencé (doneProj), même le 1er jour du mois
+            const dp = days.doneProj !== undefined ? days.doneProj : days.done;
+            const projection = dp >= 1 ? r / dp * days.total : r;
             return {
                 real: r,
                 target: t,
