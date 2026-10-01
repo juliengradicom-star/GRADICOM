@@ -742,6 +742,15 @@
         ::-webkit-scrollbar-track { background: rgba(255,255,255,.07); border-radius: 6px; }
         ::-webkit-scrollbar-thumb { background: rgba(201,166,91,.8); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
         .chal-head { display: flex; align-items: center; gap: 14px; margin: 6px 0 4px; }
+        .bonus-search { width: 100%; max-width: 420px; padding: 11px 14px; margin: 4px 0 12px; background: var(--dark-gray); border: 1px solid var(--line); border-radius: 8px; color: var(--white); font-size: 14px; }
+        .bonus-brand { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+        .bonus-tier { display: flex; border-top: 1px solid rgba(201,166,91,.12); }
+        .bonus-tier:first-child { border-top: 0; }
+        .bonus-eur { flex: 0 0 90px; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 22px; font-weight: 600; color: var(--gold-2); background: rgba(201,166,91,.08); }
+        .bonus-models { flex: 1; }
+        .bonus-model { padding: 9px 14px; font-size: 14px; border-top: 1px solid rgba(201,166,91,.07); }
+        .bonus-model:first-child { border-top: 0; }
+        .bonus-anim { font-size: 11px; color: var(--gold-2); background: rgba(201,166,91,.14); border-radius: 10px; padding: 1px 7px; margin-left: 6px; white-space: nowrap; }
         .chal-banner { width: 100%; max-width: 520px; border-radius: 10px; display: block; margin: 8px 0 10px; border: 1px solid var(--line); }
         .chal-logo { background: #fff; border-radius: 10px; padding: 6px 10px; display: inline-flex; align-items: center; }
         .chal-logo img { height: 46px; width: auto; display: block; }
@@ -907,11 +916,15 @@
             <button class="tab-btn" id="payplanTabBtn" onclick="switchTab('payplan')">Points</button>
             <button class="tab-btn" id="primeTabBtn" onclick="switchTab('prime')">Prime</button>
             <button class="tab-btn" id="challengesTabBtn" onclick="switchTab('challenges')">Challenges</button>
+            <button class="tab-btn" id="bonusTabBtn" onclick="switchTab('bonus')">Bonus reprise</button>
             <button class="tab-btn" id="messagesTabBtn" onclick="switchTab('messages')">Messages <span class="msg-badge" id="msgBadge" style="display:none">0</span></button>
         </div>
 
         <!-- ACTUS -->
         <div id="actus-tab" class="tab-content"></div>
+
+        <!-- BONUS REPRISE -->
+        <div id="bonus-tab" class="tab-content"></div>
 
         <!-- CHALLENGES -->
         <div id="challenges-tab" class="tab-content"></div>
@@ -2006,7 +2019,7 @@
         function switchTab(tabName) {
             if (tabName !== 'actus' && actusReadRequired()) { tabName = 'actus'; actusLockNote = true; }
             if (tabName !== 'actus') actusConfirmShown = false;
-            const map = { home: ['homeTabBtn', 'home-tab'], vendeur: ['vendorTabBtn', 'vendeur-tab'], manager: ['managerTabBtn', 'manager-tab'], director: ['directorTabBtn', 'director-tab'], payplan: ['payplanTabBtn', 'payplan-tab'], prime: ['primeTabBtn', 'prime-tab'], messages: ['messagesTabBtn', 'messages-tab'], actus: ['actusTabBtn', 'actus-tab'], challenges: ['challengesTabBtn', 'challenges-tab'] };
+            const map = { home: ['homeTabBtn', 'home-tab'], vendeur: ['vendorTabBtn', 'vendeur-tab'], manager: ['managerTabBtn', 'manager-tab'], director: ['directorTabBtn', 'director-tab'], payplan: ['payplanTabBtn', 'payplan-tab'], prime: ['primeTabBtn', 'prime-tab'], messages: ['messagesTabBtn', 'messages-tab'], actus: ['actusTabBtn', 'actus-tab'], challenges: ['challengesTabBtn', 'challenges-tab'], bonus: ['bonusTabBtn', 'bonus-tab'] };
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             const [btn, tab] = map[tabName] || map.home;
@@ -2473,6 +2486,7 @@
             loadPayplanTab(u);
             loadPrimeTab(u);
             loadChallengesTab(u);
+            loadBonusTab();
             renderMessagesTab();
             updateMsgBadge();
         }
@@ -4370,6 +4384,65 @@
         function setChalSub(k) { chalSub = k; loadChallengesTab(currentUser); }
         let chalStore = null;
         function setChalStore(k) { chalStore = k; loadChallengesTab(currentUser); }
+
+
+        // ================= BONUS REPRISE (à mettre à jour chaque mois : période + grille) =================
+        // Source : document SFR « BONUS REPRISE ». anim = produit de l'animation mobile du mois (*).
+        const BONUS_REPRISE = {
+            period: 'Du 1er au 31 octobre 2026',
+            animLabel: 'Produits de l\'animation mobile du 01 au 31/10/2026',
+            brands: [
+                { name: 'Samsung', tiers: [
+                    { eur: 150, models: ['Z Fold8', 'Z Fold8 Ultra'] },
+                    { eur: 100, models: ['Galaxy S25 Edge', 'Galaxy S26+', 'Galaxy S26 Ultra', { n: 'Galaxy S26', anim: 1 }, { n: 'Galaxy Z Flip8', anim: 1 }, { n: 'Galaxy S26 FE', anim: 1 }] },
+                    { eur: 50, models: ['Galaxy S25', 'Pack S25 + Buds3', 'Pack S25 + Watch 7', 'Galaxy A57'] },
+                    { eur: 30, models: ['Galaxy A27', 'Galaxy A37'] }] },
+                { name: 'Apple', tiers: [
+                    { eur: 100, models: ['iPhone 17 Pro / 17 Pro Max', 'iPhone 18 Pro / 18 Pro Max'] }] },
+                { name: 'Google', tiers: [
+                    { eur: 200, models: ['Pixel 10 Pro Fold', { n: 'Pixel 11 Pro XL', anim: 1 }, 'Pixel 11 Pro Fold'] },
+                    { eur: 150, models: [{ n: 'Pixel 11 Pro', anim: 1 }, { n: 'Pixel 10 Pro', anim: 1 }, { n: 'Pixel 10 Pro XL', anim: 1 }] },
+                    { eur: 100, models: [{ n: 'Pixel 11', anim: 1 }, { n: 'Pixel 10', anim: 1 }, { n: 'Pixel 10A', anim: 1 }, 'Pack Pixel 10 + FitBit Charge 6'] },
+                    { eur: 50, models: ['Pixel 9A'] }] },
+                { name: 'Xiaomi', tiers: [
+                    { eur: 200, models: ['15', '17 Ultra'] },
+                    { eur: 150, models: ['17'] },
+                    { eur: 100, models: [{ n: '17T Pro', anim: 1 }, '15T', '15T Pro'] },
+                    { eur: 70, models: [{ n: '17T', anim: 1 }] },
+                    { eur: 50, models: [{ n: 'Redmi Note 15 Pro', anim: 1 }, { n: 'Redmi Note 15 Pro+', anim: 1 }, { n: 'Redmi Note 17 Pro', anim: 1 }, { n: 'Redmi Note 17 Pro Max', anim: 1 }] }] },
+                { name: 'Honor', tiers: [
+                    { eur: 100, models: ['Magic 8 Pro', 'Magic 8 Pro 512GO + PAD 10'] },
+                    { eur: 70, models: ['600', 'Pack Honor 600 5G + Earbuds X8i'] },
+                    { eur: 50, models: ['Honor 400', 'Pack 400 5G + Watch 2i'] }] },
+                { name: 'Oppo', tiers: [
+                    { eur: 100, models: ['Reno16', 'Reno16 F'] }] }
+            ]
+        };
+        let bonusBrand = 'all', bonusQuery = '';
+        function setBonusBrand(k) { bonusBrand = k; loadBonusTab(); }
+        function setBonusQuery(v) { bonusQuery = v; renderBonusList(); }
+        function renderBonusList() {
+            const el = document.getElementById('bonusList');
+            if (!el) return;
+            const q = norm(bonusQuery);
+            let html = '';
+            BONUS_REPRISE.brands.filter(b => bonusBrand === 'all' || b.name === bonusBrand).forEach(b => {
+                const tiers = b.tiers.map(t => ({ eur: t.eur, models: t.models.map(m => typeof m === 'string' ? { n: m } : m).filter(m => !q || norm(m.n + ' ' + b.name).includes(q)) })).filter(t => t.models.length);
+                if (!tiers.length) return;
+                html += `<h3 class="section-title">${esc(b.name)}</h3><div class="bonus-brand">` + tiers.map(t => `<div class="bonus-tier"><div class="bonus-eur">${t.eur} €</div><div class="bonus-models">${t.models.map(m => `<div class="bonus-model">${esc(m.n)}${m.anim ? ' <span class="bonus-anim" title="' + esc(BONUS_REPRISE.animLabel) + '">★ animation</span>' : ''}</div>`).join('')}</div></div>`).join('') + '</div>';
+            });
+            el.innerHTML = html || '<div class="banner">Aucun modèle ne correspond à ta recherche.</div>';
+        }
+        function loadBonusTab() {
+            const el = document.getElementById('bonus-tab');
+            if (!el) return;
+            const items = [{ key: 'all', label: 'Toutes les marques' }].concat(BONUS_REPRISE.brands.map(b => ({ key: b.name, label: b.name })));
+            el.innerHTML = `<div class="dash"><h2 class="dash-title">♻️ Bonus reprise</h2><div class="dash-sub">${esc(BONUS_REPRISE.period)}</div>
+                <p class="muted" style="font-size:12px">Bonus en € sur la reprise de l'ancien mobile, selon le mobile acheté. <span class="bonus-anim">★ animation</span> = ${esc(BONUS_REPRISE.animLabel.toLowerCase())}.</p>
+                <input class="bonus-search" type="search" placeholder="Chercher un mobile…" value="${esc(bonusQuery)}" oninput="setBonusQuery(this.value)">
+                ${subNav(items, bonusBrand, 'setBonusBrand')}<div id="bonusList"></div></div>`;
+            renderBonusList();
+        }
 
         // ================= DIRIGEANTS : VOLUME DE PRIMES VALIDÉES (par mois, magasin, année) =================
         let volYear = null;
