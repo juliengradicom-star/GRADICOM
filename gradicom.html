@@ -337,6 +337,8 @@
         .actu-push { background: rgba(201,166,91,.08); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 6px 0 4px; font-size: 13px; line-height: 1.5; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         .actu-push.ok { color: var(--text-dim); }
         .actu-push .btn-add { width: auto; }
+        .version-banner { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9998; background: #17150f; color: var(--gold-2); border-top: 1px solid var(--gold); padding: 12px 16px; display: flex; align-items: center; justify-content: center; gap: 14px; font-weight: 700; font-size: 14px; box-shadow: 0 -8px 24px rgba(0,0,0,.6); }
+        .version-banner button { background: var(--gold-grad, var(--gold)); color: #111; border: 0; border-radius: 8px; padding: 8px 16px; font-weight: 700; cursor: pointer; }
         .actu-toast { position: fixed; left: 12px; right: 12px; top: 12px; z-index: 9999; background: #17150f; color: var(--gold-2); border: 1px solid var(--gold); border-radius: 12px; padding: 14px 16px; font-weight: 700; box-shadow: 0 12px 32px rgba(0,0,0,.6); cursor: pointer; text-align: center; }
         .tab-btn.locked { opacity: .35; }
         .actu-confirm { background: rgba(201,166,91,.08); border: 1px solid var(--gold); border-radius: 12px; padding: 16px; margin: 6px 0 24px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-weight: 600; }
@@ -1853,6 +1855,35 @@
             handleLogout();
             alert('Nouvelle journée : reconnecte-toi avec ton mot de passe.');
         }
+
+        // ================= NOUVELLE VERSION DU PORTAIL : bandeau « Recharger » =================
+        // On compare le fichier en ligne à celui chargé au démarrage ; s'il a changé, on propose de recharger.
+        let versionBase = null, versionCheckAt = 0, versionBannerShown = false;
+        function quickHash(t) { let h = 5381; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return t.length + ':' + h; }
+        async function checkNewVersion() {
+            if (versionBannerShown || !location.protocol.startsWith('http')) return;
+            if (Date.now() - versionCheckAt < 30000) return;
+            versionCheckAt = Date.now();
+            try {
+                const r = await fetch('gradicom.html?v=' + Date.now(), { cache: 'no-store' });
+                if (!r.ok) return;
+                const h = quickHash(await r.text());
+                if (versionBase === null) { versionBase = h; return; }
+                if (h !== versionBase) showVersionBanner();
+            } catch (e) { /* hors ligne : on réessaiera */ }
+        }
+        function showVersionBanner() {
+            versionBannerShown = true;
+            const b = document.createElement('div');
+            b.className = 'version-banner';
+            b.innerHTML = '🔄 Nouvelle version disponible <button onclick="location.reload()">Recharger</button>';
+            document.body.appendChild(b);
+        }
+        setTimeout(checkNewVersion, 3000);
+        setInterval(() => { if (!document.hidden) checkNewVersion(); }, 120000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) checkNewVersion(); });
+        window.addEventListener('focus', checkNewVersion);
+
         setInterval(checkDailyReset, 60000);
         document.addEventListener('visibilitychange', () => { if (!document.hidden) checkDailyReset(); });
         window.addEventListener('focus', checkDailyReset);
