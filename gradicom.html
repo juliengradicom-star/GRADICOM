@@ -742,6 +742,7 @@
         ::-webkit-scrollbar-track { background: rgba(255,255,255,.07); border-radius: 6px; }
         ::-webkit-scrollbar-thumb { background: rgba(201,166,91,.8); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
         .chal-head { display: flex; align-items: center; gap: 14px; margin: 6px 0 4px; }
+        .chal-banner { width: 100%; max-width: 520px; border-radius: 10px; display: block; margin: 8px 0 10px; border: 1px solid var(--line); }
         .chal-logo { background: #fff; border-radius: 10px; padding: 6px 10px; display: inline-flex; align-items: center; }
         .chal-logo img { height: 46px; width: auto; display: block; }
         .chal-title { font-family: var(--serif); font-size: 22px; color: var(--gold-2); }
@@ -4313,10 +4314,10 @@
 
         let chalSub = null;
         function chalHead(kind, dates) {
-            const logo = kind === 'tcs'
-                ? '<span class="chal-logo"><img src="img/logo-telecablesat.png" alt="Télécâble Sat"></span>'
-                : '<span class="chal-logo"><img src="img/logo-google.png" alt="Google" onerror="this.parentNode.style.display=\'none\'"></span>';
-            return `<div class="chal-head">${logo}<div><div class="chal-title">${kind === 'tcs' ? 'Challenge Télécâble Sat' : 'Challenge Google'}</div><div class="dash-sub" style="margin:0">${dates}</div></div></div>`;
+            const title = kind === 'tcs' ? 'Challenge Télécâble Sat' : 'Challenge Google';
+            const logo = kind === 'tcs' ? '<span class="chal-logo"><img src="img/logo-telecablesat.png" alt="Télécâble Sat"></span>' : '';
+            const banner = kind === 'google' ? '<img class="chal-banner" src="img/google-pixel-11.png" alt="Google Pixel 11" onerror="this.style.display=\'none\'">' : '';
+            return `${banner}<div class="chal-head">${logo}<div><div class="chal-title">${title}</div><div class="dash-sub" style="margin:0">${dates}</div></div></div>`;
         }
         const CHAL_GOOGLE_DATES = 'Du 1er au 31 octobre 2026', CHAL_TCS_DATES = 'Du 1er octobre au 30 novembre 2026';
 
