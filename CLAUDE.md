@@ -65,3 +65,14 @@
   - Publication : Julien envoie ses images / PDF dans la conversation ; Claude recrée un visuel soigné (HTML → PNG avec Playwright, thème noir/or), le range dans `actus/` et ajoute une entrée EN TÊTE de `actus/actus.json` : `{ id, date: "AAAA-MM-JJ", title, text, images: ["actus/x.png"], pdf: "actus/x.pdf", pdfLabel, link, linkLabel }`. Les fichiers sont publics par leur adresse (comme le dépôt) : le dire à Julien si un contenu est confidentiel.
   - Notifications : l'Admin → onglet « 📰 Actus » a un bouton « Envoyer la notification » par actu → `api/push.js` (paquet `web-push`, clé secrète = variable Vercel `VAPID_PRIVATE_KEY` ; clé publique dans `gradicom.html` et `api/push.js`). Le script Google (`messagerie.gs`, actions `pushSub` / `pushList` / `pushPurge`, onglet PUSH) vérifie l'Admin et stocke les inscriptions ; chaque personne s'inscrit via le bouton « Activer les notifications » de l'onglet Actus. `sw.js` (v2) affiche la notification et ouvre l'onglet Actus. Sur iPhone : seulement si le raccourci a été ajouté à l'écran d'accueil depuis Safari (iOS 16.4+).
   - Le portail reste compatible avec l'ancien script : sans redéploiement, seul le bouton d'activation affiche « serveur pas prêt ».
+- 01/10/2026 (fin de journée) : classements / podiums triés par nombre d'items dans le vert (voir Règles métier), explication de la méthode affichée sous les podiums (`rankExplainHtml`). Julien a demandé de garder le ×3 marge pour le départage.
+
+## Reprise — à faire (état au 01/10/2026 18h20)
+- Notifications des Actus : le code est en ligne mais PAS encore activé. Étapes pour Julien, UNE À LA FOIS, en attendant son « fait » :
+  1. Vercel → projet gradicom → Settings → Environment Variables : ajouter `VAPID_PRIVATE_KEY` (clé secrète donnée à Julien dans la conversation du 01/10 ; si perdue, régénérer une paire avec `web-push generate-vapid-keys`, puis remplacer `VAPID_PUBLIC` dans `gradicom.html` ET `api/push.js`) → tous les environnements. Ne JAMAIS écrire la clé privée dans le dépôt.
+  2. Recoller `messagerie.gs` dans script.google.com (garder sa vraie `ADMIN_KEY` ligne 5), exécuter `initialiser` si besoin (crée l'onglet PUSH), puis Déployer → Gérer les déploiements → ✏️ → Nouvelle version (ne jamais archiver le déploiement actif).
+  3. Redéployer Vercel (Deployments → ⋯ → Redeploy) pour que la variable soit prise en compte.
+  4. Test sur un téléphone : onglet Actus → « Activer les notifications », puis Admin → Actus → « Envoyer la notification ».
+- Première vraie actu : Julien envoie images / PDF dans la conversation, Claude crée le visuel et l'ajoute dans `actus/actus.json` (actuellement vide `[]`).
+- Question restée sans réponse : où Julien voit-il des décimales sur les objectifs importés (import Excel) ? Probablement des affichages calculés (prorata / cadence), à vérifier avec lui.
+- Primes d'août 2026 de Dylan et Mathilda = données de test : suppression conseillée (Admin → Primes).
