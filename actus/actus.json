@@ -3,6 +3,7 @@
     "id": "2026-10-01-test-notifications",
     "date": "2026-10-01",
     "title": "Test des notifications",
+    "lecture": false,
     "text": "Ceci est un test : si tu reçois la notification sur ton téléphone, tout fonctionne."
   }
 ]

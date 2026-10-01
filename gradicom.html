@@ -1285,7 +1285,7 @@
         function actusReadRequired() {
             if (!currentUser || currentUser.isDirector || actusError || !actusList || !actusList.length) return false;
             const done = actusRead();
-            return actusList.some(a => !done.includes(a.id));
+            return actusList.some(a => a.lecture !== false && !done.includes(a.id)); // une actu avec "lecture": false n'impose pas la case
         }
         function confirmActusRead(on) {
             if (!on) return;

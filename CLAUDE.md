@@ -68,7 +68,7 @@
 - 01/10/2026 (fin de journée) : classements / podiums triés par nombre d'items dans le vert (voir Règles métier), explication de la méthode affichée sous les podiums (`rankExplainHtml`). Julien a demandé de garder le ×3 marge pour le départage.
 - 01/10/2026 (soir, suite) : sécurité / lecture des actus.
   - Déconnexion automatique chaque jour à 8 h (heure de l'appareil) : la connexion ne vaut que jusqu'au prochain 8 h (`gradicomLoginAt`, `loginExpired`, `checkDailyReset`) ; le mot de passe mémorisé est effacé, l'email reste. Vérifié toutes les minutes, au retour dans l'appli et au chargement.
-  - Après connexion, la 1re page est TOUJOURS l'onglet Actus. Vendeurs et responsables (pas les dirigeants) doivent cocher « J'ai lu toutes les actus » tant qu'il y a une actu pas encore cochée sur cet appareil (`actusReadRequired`, clé `gradicom_actus_read_<email>`) : les autres onglets sont verrouillés (`switchTab`, `.locked`). Pas de verrou si les actus n'ont pas pu être chargées.
+  - Après connexion, la 1re page est TOUJOURS l'onglet Actus. Vendeurs et responsables (pas les dirigeants) doivent cocher « J'ai lu toutes les actus » tant qu'il y a une actu pas encore cochée sur cet appareil (`actusReadRequired`, clé `gradicom_actus_read_<email>`) : les autres onglets sont verrouillés (`switchTab`, `.locked`). Pas de verrou si les actus n'ont pas pu être chargées, ni pour une actu marquée `"lecture": false` dans `actus.json`.
 
 ## Reprise — à faire (état au 01/10/2026 18h20)
 - Notifications des Actus : le code est en ligne mais PAS encore activé. Étapes pour Julien, UNE À LA FOIS, en attendant son « fait » :
