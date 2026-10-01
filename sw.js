@@ -1,6 +1,6 @@
 // GRADICOM AMR — service worker : l'appli charge toujours la DERNIÈRE version en ligne
 // (réseau d'abord), et garde une copie de secours si la connexion coupe.
-const CACHE = 'gradicom-amr-v2';
+const CACHE = 'gradicom-amr-v3';
 const CORE = ['/', '/gradicom.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -27,11 +27,15 @@ self.addEventListener('fetch', e => {
 self.addEventListener('push', e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (err) { d = { body: e.data && e.data.text() }; }
-  e.waitUntil(self.registration.showNotification(d.title || 'GRADICOM AMR', {
-    body: d.body || 'Une nouvelle actu est disponible.',
-    icon: '/icon-192.png', badge: '/icon-192.png',
-    data: { url: d.url || '/?actus=1' }
-  }));
+  e.waitUntil(Promise.all([
+    self.registration.showNotification(d.title || 'GRADICOM AMR', {
+      body: d.body || 'Une nouvelle actu est disponible.',
+      icon: '/icon-192.png', badge: '/icon-192.png',
+      data: { url: d.url || '/?actus=1' }
+    }),
+    // appli ouverte : on la prévient aussi pour qu'elle affiche la nouveauté tout de suite
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => list.forEach(c => c.postMessage({ type: 'new-actu', title: d.title || '' })))
+  ]));
 });
 
 self.addEventListener('notificationclick', e => {

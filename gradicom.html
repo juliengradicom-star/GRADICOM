@@ -337,6 +337,7 @@
         .actu-push { background: rgba(201,166,91,.08); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 6px 0 4px; font-size: 13px; line-height: 1.5; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         .actu-push.ok { color: var(--text-dim); }
         .actu-push .btn-add { width: auto; }
+        .actu-toast { position: fixed; left: 12px; right: 12px; top: 12px; z-index: 9999; background: #17150f; color: var(--gold-2); border: 1px solid var(--gold); border-radius: 12px; padding: 14px 16px; font-weight: 700; box-shadow: 0 12px 32px rgba(0,0,0,.6); cursor: pointer; text-align: center; }
         .tab-btn.locked { opacity: .35; }
         .actu-confirm { background: rgba(201,166,91,.08); border: 1px solid var(--gold); border-radius: 12px; padding: 16px; margin: 6px 0 24px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-weight: 600; }
         .actu-confirm label { display: flex; gap: 10px; align-items: center; cursor: pointer; }
@@ -1377,6 +1378,18 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.addEventListener('message', e => {
                 if (e.data && e.data.type === 'open-actus' && currentUser) { loadActus().then(() => switchTab('actus')); }
+                if (e.data && e.data.type === 'new-actu' && currentUser) {
+                    loadActus().then(() => {
+                        updateTabLocks();
+                        if (document.getElementById('actus-tab').classList.contains('active')) renderActus();
+                        const t = document.createElement('div');
+                        t.className = 'actu-toast';
+                        t.textContent = '📰 ' + (e.data.title || 'Nouvelle actu') + ' — touche pour voir';
+                        t.onclick = () => { t.remove(); switchTab('actus'); };
+                        document.body.appendChild(t);
+                        setTimeout(() => t.remove(), 12000);
+                    });
+                }
             });
         }
 
