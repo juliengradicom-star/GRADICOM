@@ -76,12 +76,10 @@
   - Envoi AUTOMATIQUE des notifications (demandé par Julien) : `scripts/notify-actus.js` est la commande de build Vercel (`vercel.json` : `buildCommand` + `outputDirectory: "."`). À chaque déploiement de production, elle envoie la notification des actus de `actus.json` pas encore notifiées (date des 3 derniers jours, `notify` ≠ false ; texte = `notifyText` sinon `text`). Mémoire des actus déjà notifiées = action `pushClaim` du script Google (propriété ACTUS_NOTIFIED). Le bouton manuel de l'Admin marque aussi l'actu comme notifiée. Variables Vercel : `VAPID_PRIVATE_KEY` + `GRADICOM_ADMIN_KEY` (= `ADMIN_KEY` du script Google). Sans ces variables ou en cas d'erreur : le déploiement continue normalement, rien n'est envoyé. Code d'envoi partagé : `lib/push.js`. Pour une actu sans notification : `"notify": false`. Si un déploiement Vercel échouait à cause de ce build, retirer `buildCommand`/`outputDirectory` de `vercel.json`.
   - Conséquence pour Claude : publier une actu (push sur `main`) = notification envoyée toute seule ~2 min après (le build part avant que le site soit en ligne : l'actu peut apparaître avec ~1 min de retard).
 
-## Reprise — à faire (état au 01/10/2026 18h20)
-- Notifications des Actus : le code est en ligne mais PAS encore activé. Étapes pour Julien, UNE À LA FOIS, en attendant son « fait » :
-  1. Vercel → projet gradicom → Settings → Environment Variables : ajouter `VAPID_PRIVATE_KEY` (clé secrète donnée à Julien dans la conversation du 01/10 ; si perdue, régénérer une paire avec `web-push generate-vapid-keys`, puis remplacer `VAPID_PUBLIC` dans `gradicom.html` ET `api/push.js`) → tous les environnements. Ne JAMAIS écrire la clé privée dans le dépôt.
-  2. Recoller `messagerie.gs` dans script.google.com (garder sa vraie `ADMIN_KEY` ligne 5), exécuter `initialiser` si besoin (crée l'onglet PUSH), puis Déployer → Gérer les déploiements → ✏️ → Nouvelle version (ne jamais archiver le déploiement actif).
-  3. Redéployer Vercel (Deployments → ⋯ → Redeploy) pour que la variable soit prise en compte.
-  4. Test sur un téléphone : onglet Actus → « Activer les notifications », puis Admin → Actus → « Envoyer la notification ».
-- Première vraie actu : Julien envoie images / PDF dans la conversation, Claude crée le visuel et l'ajoute dans `actus/actus.json` (actuellement vide `[]`).
+## Reprise — à faire (état au 01/10/2026 20h25)
+- Notifications des Actus : ACTIVÉES (variables Vercel `VAPID_PRIVATE_KEY` + `GRADICOM_ADMIN_KEY` ajoutées, script Google redéployé sur `AKfycbwAm_…` avec `pushClaim`, Julien inscrit sur son téléphone). Une nouvelle actu publiée sur `main` est notifiée automatiquement au déploiement. À confirmer avec Julien : la notification du plan merch est bien arrivée sur son téléphone.
+- Prochaine actu : Julien envoie images / PDF dans la conversation, Claude crée le visuel et l'ajoute EN TÊTE de `actus/actus.json` (voir Historique).
+- Les vendeurs doivent s'inscrire une fois (onglet Actus → « Activer les notifications »), sur iPhone depuis l'icône ajoutée à l'écran d'accueil.
 - Question restée sans réponse : où Julien voit-il des décimales sur les objectifs importés (import Excel) ? Probablement des affichages calculés (prorata / cadence), à vérifier avec lui.
 - Primes d'août 2026 de Dylan et Mathilda = données de test : suppression conseillée (Admin → Primes).
+- `ADMIN_KEY` du script Google courte : proposer plus tard une clé plus longue (à changer aussi dans la variable Vercel `GRADICOM_ADMIN_KEY`).
