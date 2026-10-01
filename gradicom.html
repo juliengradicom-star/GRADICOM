@@ -3646,8 +3646,10 @@
         function daysFromPlanned(planned, store) {
             const std = standardDays(store);
             const total = Math.round(planned);
-            const done = Math.min(total, total * std.done / std.total);
-            const doneProj = Math.min(total, total * std.doneProj / std.total);
+            // Toujours des journées ENTIÈRES (jamais 0,9) : au moins 1 dès que le mois a commencé
+            const whole = x => Math.min(total, Math.max(x > 0 ? 1 : 0, Math.round(total * x / std.total)));
+            const done = whole(std.done);
+            const doneProj = whole(std.doneProj);
             return { total, done, doneProj, remaining: total - done, source: 'objectifs' };
         }
 

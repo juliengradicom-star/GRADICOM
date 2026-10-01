@@ -69,6 +69,7 @@
 - 01/10/2026 (soir, suite) : sécurité / lecture des actus.
   - Déconnexion automatique chaque jour à 8 h (heure de l'appareil) : la connexion ne vaut que jusqu'au prochain 8 h (`gradicomLoginAt`, `loginExpired`, `checkDailyReset`) ; le mot de passe mémorisé est effacé, l'email reste. Vérifié toutes les minutes, au retour dans l'appli et au chargement.
   - Après connexion, la 1re page est TOUJOURS l'onglet Actus. Vendeurs et responsables (pas les dirigeants) doivent cocher « J'ai lu toutes les actus » tant qu'il y a une actu pas encore cochée sur cet appareil (`actusReadRequired`, clé `gradicom_actus_read_<email>`) : les autres onglets sont verrouillés (`switchTab`, `.locked`). Pas de verrou si les actus n'ont pas pu être chargées, ni pour une actu marquée `"lecture": false` dans `actus.json`.
+  - Correctif : quand le nombre de jours vient de l'Excel d'objectifs (pas du planning JT), `daysFromPlanned` répartissait au prorata (ex. 24/27 → 0,9 jour le 1er). Maintenant toujours des journées ENTIÈRES (arrondi, minimum 1 dès que le mois a commencé). Même fonction pour toutes les vues (vendeur, responsable, dirigeant, classements, primes).
 
 ## Reprise — à faire (état au 01/10/2026 18h20)
 - Notifications des Actus : le code est en ligne mais PAS encore activé. Étapes pour Julien, UNE À LA FOIS, en attendant son « fait » :
