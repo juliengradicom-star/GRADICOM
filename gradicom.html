@@ -325,6 +325,11 @@
             background: rgba(201, 166, 91, 0.1);
         }
 
+        /* Administration en onglets : chaque bloc porte data-atab="<onglet>" et ne s'affiche que dans son onglet */
+        #adminScreen [data-atab] { display: none; }
+        #adminScreen[data-tab="global"] [data-atab~="global"], #adminScreen[data-tab="obj"] [data-atab~="obj"], #adminScreen[data-tab="payplan"] [data-atab~="payplan"],
+        #adminScreen[data-tab="prime"] [data-atab~="prime"], #adminScreen[data-tab="team"] [data-atab~="team"], #adminScreen[data-tab="msg"] [data-atab~="msg"] { display: block; }
+        #adminScreen .admin-tabs { position: sticky; top: 0; z-index: 15; max-width: 1200px; margin: 0 auto 22px; padding: 10px 16px 8px; background: rgba(11,10,8,0.96); }
         .admin-sections {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -804,15 +809,23 @@
     </div>
 
     <!-- ADMIN SCREEN -->
-    <div id="adminScreen">
+    <div id="adminScreen" data-tab="global">
         <div class="admin-header">
             <h1>Administration</h1>
             <button class="admin-back-btn" onclick="backToLogin()">← Retour Login</button>
         </div>
+        <div class="subnav admin-tabs" id="adminTabs">
+            <button class="sub-btn active" data-k="global" onclick="setAdminTab('global')">📊 Vue globale</button>
+            <button class="sub-btn" data-k="obj" onclick="setAdminTab('obj')">🎯 Objectifs &amp; import</button>
+            <button class="sub-btn" data-k="payplan" onclick="setAdminTab('payplan')">💶 Payplan</button>
+            <button class="sub-btn" data-k="prime" onclick="setAdminTab('prime')">🏆 Primes</button>
+            <button class="sub-btn" data-k="team" onclick="setAdminTab('team')">👥 Équipe &amp; accès</button>
+            <button class="sub-btn" data-k="msg" onclick="setAdminTab('msg')">✉️ Messagerie</button>
+        </div>
         <div id="adminPanel"></div>
-        
+
         <!-- IMPORT SECTION -->
-        <div style="max-width: 1200px; margin: 50px auto; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 4px;">
+        <div data-atab="obj" style="max-width: 1200px; margin: 50px auto; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 4px;">
             <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 25px;">📥 Import Excel</h2>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 30px;">
@@ -2642,12 +2655,25 @@
             document.getElementById('loginScreen').style.display = 'flex';
         }
 
+        // Onglets de l'Administration (le dernier onglet ouvert est conservé)
+        let adminTab = 'global';
+        function setAdminTab(k) {
+            adminTab = k;
+            const scr = document.getElementById('adminScreen');
+            if (scr) scr.dataset.tab = k;
+            document.querySelectorAll('#adminTabs .sub-btn').forEach(b => b.classList.toggle('active', b.dataset.k === k));
+            // l'onglet choisi reste bien visible dans la barre (téléphone)
+            const bar = document.getElementById('adminTabs'), act = bar && bar.querySelector('.sub-btn.active');
+            if (act && bar.clientWidth) bar.scrollLeft = Math.max(0, act.offsetLeft - (bar.clientWidth - act.offsetWidth) / 2);
+            window.scrollTo({ top: 0 });
+        }
+
         function renderAdmin() {
             const data = getData();
             const html = `
                 <div class="admin-sections">
                     <!-- STORES -->
-                    <div class="admin-section">
+                    <div class="admin-section" data-atab="team">
                         <h2>🏪 Magasins</h2>
                         <form onsubmit="addStore(event)">
                             <div class="form-group">
@@ -2664,7 +2690,7 @@
                     </div>
 
                     <!-- USERS -->
-                    <div class="admin-section">
+                    <div class="admin-section" data-atab="team">
                         <h2>👥 Comptes</h2>
                         <form onsubmit="addUser(event)">
                             <div class="form-group">
@@ -2698,14 +2724,14 @@
                     </div>
 
                     <!-- OBJECTIVES -->
-                    <div class="admin-section">
+                    <div class="admin-section" data-atab="obj">
                         <h2>🎯 Objectifs</h2>
                         <p style="color: var(--text-dim); font-size: 12px; margin-bottom: 15px;">Les objectifs sont créés via l'import Excel. Vous pouvez les supprimer ici.</p>
                         <div class="list-items" id="objectivesList"></div>
                     </div>
 
                     <!-- MOTS DE PASSE -->
-                    <div class="admin-section">
+                    <div class="admin-section" data-atab="team">
                         <h2>🔐 Mots de Passe</h2>
                         <button class="btn-add" style="margin-bottom: 15px;" onclick="renewWeakPasswords()">🔑 Renouveler les anciens mots de passe par défaut</button>
                         <div class="list-items" id="passwordsList"></div>
@@ -2713,60 +2739,61 @@
                 </div>
 
                 <!-- MESSAGERIE -->
-                <div style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
+                <div data-atab="msg" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
                     <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">✉️ Messagerie</h2>
                     <div id="messagingAdmin"></div>
                 </div>
 
                 <!-- MOT DE PASSE ADMIN -->
-                <div style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
+                <div data-atab="team" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
                     <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">🔐 Mot de passe de l'Admin</h2>
                     <p class="muted" style="font-size:12px;margin-bottom:12px;">Choisis un mot de passe d'au moins 10 caractères. Il est enregistré en ligne sous forme codée et vaut pour tous les appareils.</p>
                     <button class="btn-add" style="max-width: 360px;" onclick="changeAdminPassword()">🔐 Changer le mot de passe Admin</button>
                 </div>
 
                 <!-- ESTIMATIONS DE PRIMES -->
-                <div style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
+                <div data-atab="prime" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
                     <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">💶 Estimations de primes du mois</h2>
                     <p class="muted" style="font-size:12px;margin-bottom:12px;">Estimations automatiques, sous réserve de vérification en fin de mois.</p>
                     <div id="primeEstimates"><p class="muted">Chargement des ventes...</p></div>
                 </div>
 
                 <!-- PRIMES VALIDÉES -->
-                <div style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
+                <div data-atab="prime" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
                     <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">📜 Primes validées (historique)</h2>
                     <p class="muted" style="font-size:12px;margin-bottom:12px;">En fin de mois, une fois les primes réellement calculées, saisis ici le montant de chacun puis « Valider » : c'est publié automatiquement. Chaque collaborateur voit uniquement son propre historique dans l'onglet Prime.</p>
                     <div id="primeHistoryAdmin"></div>
                 </div>
 
                 <!-- PAYPLAN DU MOIS -->
-                <div style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
+                <div data-atab="payplan" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
                     <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">💶 Payplan du mois</h2>
                     <p class="muted" style="font-size:12px;margin-bottom:12px;">Chaque mois, change ici les chiffres qui bougent (%, seuils, points, montants), puis « Enregistrer » : c'est publié automatiquement. Si la structure change (nouvel item, nouvelle condition), envoie-moi le PDF.</p>
                     <div id="payplanEditor"></div>
                 </div>
 
                 <!-- NOTES CLIENTS -->
-                <div style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 4px;">
+                <div data-atab="payplan" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 4px;">
                     <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">⭐ Notes clients — Payplan bloc 2</h2>
                     <p class="muted" style="font-size:12px;margin-bottom:12px;">Goodays (trimestre de référence) : 4,7 et plus = 10 pts • 4,6 à 4,69 = 5 pts. Google (mois en cours, 30 avis minimum) : 4,9 et plus = 5 pts • 4,8 à 4,89 = 2,5 pts. Les points s'appliquent au magasin et à chacun de ses vendeurs.</p>
                     <div id="ratingsForm"></div>
                 </div>
 
                 <!-- VUE GLOBALE -->
-                <div style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 4px;">
+                <div data-atab="global" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 4px;">
                     <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 15px;">📊 Vue globale — objectifs & réalisations</h2>
                     <div id="adminPodiums"></div>
                     <div id="adminGlobal"><p class="muted">Chargement des ventes...</p></div>
                 </div>
 
                 <!-- VÉRIFICATION OBJECTIFS -->
-                <div style="max-width: 1200px; margin: 30px auto; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 4px;">
+                <div data-atab="obj" style="max-width: 1200px; margin: 30px auto; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 4px;">
                     <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 25px;">✅ Vérification Objectifs</h2>
                     <div id="objectiveVerification" style="font-size: 13px;"></div>
                 </div>
             `;
             document.getElementById('adminPanel').innerHTML = html;
+            setAdminTab(adminTab);
             renderRatingsForm();
             ppEdit = null;
             renderPayplanEditor();
