@@ -71,6 +71,8 @@
   - Après connexion, la 1re page est TOUJOURS l'onglet Actus. Vendeurs et responsables (pas les dirigeants) doivent cocher « J'ai lu toutes les actus » tant qu'il y a une actu pas encore cochée sur cet appareil (`actusReadRequired`, clé `gradicom_actus_read_<email>`) : les autres onglets sont verrouillés (`switchTab`, `.locked`). Pas de verrou si les actus n'ont pas pu être chargées, ni pour une actu marquée `"lecture": false` dans `actus.json`.
   - Correctif : quand le nombre de jours vient de l'Excel d'objectifs (pas du planning JT), `daysFromPlanned` répartissait au prorata (ex. 24/27 → 0,9 jour le 1er). Maintenant toujours des journées ENTIÈRES (arrondi, minimum 1 dès que le mois a commencé). Même fonction pour toutes les vues (vendeur, responsable, dirigeant, classements, primes).
 
+  - 1re actu publiée (01/10/2026) : « Plan merch mobiles — Octobre 2026 », résumé en 3 visuels (`actus/plan-merch-octobre-2026-*.png`) fait à partir du PDF SFR « Réseau Partenaires » (document confidentiel SFR : seul un résumé est publié, pas le PDF). Logo SFR repris tel quel depuis le PDF fourni par Julien (jamais redessiné). Visuels générés en HTML → PNG (Playwright, largeur 1080 px).
+
 ## Reprise — à faire (état au 01/10/2026 18h20)
 - Notifications des Actus : le code est en ligne mais PAS encore activé. Étapes pour Julien, UNE À LA FOIS, en attendant son « fait » :
   1. Vercel → projet gradicom → Settings → Environment Variables : ajouter `VAPID_PRIVATE_KEY` (clé secrète donnée à Julien dans la conversation du 01/10 ; si perdue, régénérer une paire avec `web-push generate-vapid-keys`, puis remplacer `VAPID_PUBLIC` dans `gradicom.html` ET `api/push.js`) → tous les environnements. Ne JAMAIS écrire la clé privée dans le dépôt.

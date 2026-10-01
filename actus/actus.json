@@ -1,9 +1,13 @@
 [
   {
-    "id": "2026-10-01-test-notifications",
+    "id": "2026-10-01-plan-merch-mobiles-octobre",
     "date": "2026-10-01",
-    "title": "Test des notifications",
-    "lecture": false,
-    "text": "Ceci est un test : si tu reçois la notification sur ton téléphone, tout fonctionne."
+    "title": "Plan merch mobiles — Octobre 2026",
+    "text": "Les nouvelles recommandations SFR pour l'implantation des mobiles en magasin : meuble Actu, meubles constructeurs, table d'expérience, étiquettes et signalétique. Les points à retenir sont dans les 3 visuels ci-dessous (touche une image pour l'agrandir).",
+    "images": [
+      "actus/plan-merch-octobre-2026-1.png",
+      "actus/plan-merch-octobre-2026-2.png",
+      "actus/plan-merch-octobre-2026-3.png"
+    ]
   }
 ]
