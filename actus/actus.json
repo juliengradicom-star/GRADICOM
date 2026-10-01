@@ -1,1 +1,14 @@
-[{"id": "2026-10-02-test", "date": "2026-10-01", "title": "Nouvelle test"}, {"id": "2026-10-01-plan-merch-mobiles-octobre", "date": "2026-10-01", "title": "Plan merch mobiles — Octobre 2026", "text": "Les nouvelles recommandations SFR pour l'implantation des mobiles en magasin : meuble Actu, meubles constructeurs, table d'expérience, étiquettes et signalétique. Les points à retenir sont dans les 3 visuels ci-dessous (touche une image pour l'agrandir).", "images": ["actus/plan-merch-octobre-2026-1.png", "actus/plan-merch-octobre-2026-2.png", "actus/plan-merch-octobre-2026-3.png"], "notifyText": "Nouvelles consignes SFR : meubles, table d'expérience, étiquettes. À lire avant d'aller plus loin !"}]
+[
+  {
+    "id": "2026-10-01-plan-merch-mobiles-octobre",
+    "date": "2026-10-01",
+    "title": "Plan merch mobiles — Octobre 2026",
+    "text": "Les nouvelles recommandations SFR pour l'implantation des mobiles en magasin : meuble Actu, meubles constructeurs, table d'expérience, étiquettes et signalétique. Les points à retenir sont dans les 3 visuels ci-dessous (touche une image pour l'agrandir).",
+    "images": [
+      "actus/plan-merch-octobre-2026-1.png",
+      "actus/plan-merch-octobre-2026-2.png",
+      "actus/plan-merch-octobre-2026-3.png"
+    ],
+    "notifyText": "Nouvelles consignes SFR : meubles, table d'expérience, étiquettes. À lire avant d'aller plus loin !"
+  }
+]
