@@ -4246,7 +4246,7 @@
         const tcsGain = (n, rule, rate) => n >= rule.qualif ? n * rate : 0;
 
         function googleBlock(nrow, days, isStore) {
-            if (!googleOn()) return '<div class="banner">Le challenge Google était limité à octobre 2026.</div>';
+            if (!googleOn()) return '<div class="banner">Le challenge Google était limité à la période du 1er au 31 octobre 2026.</div>';
             const g = googleGain(nrow, isStore);
             if (!g) return '<div class="banner">Aucune vente trouvée pour l\'instant.</div>';
             const rows = isStore
@@ -4302,6 +4302,7 @@
                 </tbody></table></div>`;
             };
             return `<h3 class="section-title">💰 Mon total (vendeur + responsable)</h3>
+                <div class="dash-sub">Google : du 1er au 31 octobre 2026 • TCS : du 1er octobre au 30 novembre 2026</div>
                 <p class="muted" style="font-size:12px">Gains Google certains ; TCS estimé selon le taux de passage en 1er prélèvement (colonnes), sous réserve de la qualification (${TCS_VENDOR.qualif} contrats en vendeur, ${TCS_RPV.qualif} pour le magasin).</p>
                 ${build(false)}${build(true)}`;
         }
@@ -4312,13 +4313,13 @@
             let h = `<div class="dash">${errorBanner()}<h2 class="dash-title">🏆 Challenges</h2>`;
             const vendorSection = (usr) => {
                 const nrow = findVendorRow(usr), days = workingDays(usr);
-                return `<h3 class="section-title">🔵 Challenge Google — mes gains</h3>${googleBlock(nrow, days, false)}
-                    <h3 class="section-title">📡 Challenge TCS (Télécâble Sat) — mon estimation</h3>${tcsBlock(nrow, days, TCS_VENDOR, '(mon espace)', tcsCarryFor('vendors', usr.email))}`;
+                return `<h3 class="section-title">🔵 Challenge Google — mes gains</h3><div class="dash-sub">Du 1er au 31 octobre 2026</div>${googleBlock(nrow, days, false)}
+                    <h3 class="section-title">📡 Challenge TCS (Télécâble Sat) — mon estimation</h3><div class="dash-sub">Du 1er octobre au 30 novembre 2026</div>${tcsBlock(nrow, days, TCS_VENDOR, '(mon espace)', tcsCarryFor('vendors', usr.email))}`;
             };
             const storeSection = (store, title) => {
                 const nrow = findStoreRow(store), days = storeWorkingDays(data, store);
-                return `<h3 class="section-title">🔵 Challenge Google — ${title}</h3>${googleBlock(nrow, days, true)}
-                    <h3 class="section-title">📡 Challenge TCS — ${title}</h3>${tcsBlock(nrow, days, TCS_RPV, '(espace SFR)', tcsCarryFor('stores', store))}`;
+                return `<h3 class="section-title">🔵 Challenge Google — ${title}</h3><div class="dash-sub">Du 1er au 31 octobre 2026</div>${googleBlock(nrow, days, true)}
+                    <h3 class="section-title">📡 Challenge TCS — ${title}</h3><div class="dash-sub">Du 1er octobre au 30 novembre 2026</div>${tcsBlock(nrow, days, TCS_RPV, '(espace SFR)', tcsCarryFor('stores', store))}`;
             };
             if (u.isDirector) {
                 const stores = data.stores.map(s => s.name);
