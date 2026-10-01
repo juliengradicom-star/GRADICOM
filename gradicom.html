@@ -1322,6 +1322,7 @@
                 if (!r.ok) throw new Error('http');
                 const l = await r.json();
                 actusList = (Array.isArray(l) ? l : []).filter(a => a && a.id && a.title).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+                actusList = actusList.slice(0, 1); // seule l'actu la plus récente est affichée : une nouvelle actu remplace l'ancienne
                 actusError = false;
             } catch (e) { if (!actusList) actusList = []; actusError = true; }
             updateActusBadge();
