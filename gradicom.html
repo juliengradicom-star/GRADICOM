@@ -1897,7 +1897,8 @@
             'OPTIONS': 'ajoute une option à chaque acte (cyber, cloud, multi-SIM…)',
             'TCS': 'fais-en un réflexe sur chaque acte éligible',
             'TAUX CHUBB': "propose l'assurance sur chaque mobile vendu en expliquant la franchise",
-            'MIX 2H': 'garde un œil sur ce taux à chaque vente'
+            'MIX 2H': 'garde un œil sur ce taux à chaque vente',
+            'VOLUME DE SERVICES': 'propose un service payant du comptoir à chaque client en boutique'
         };
         function tipFor(obj) {
             const d = findDef(obj.name);
@@ -3101,7 +3102,8 @@
             { names: ['OPTIONS', 'POINTS OPTIONS', 'PTS OPTIONS'], colMatch: k => k.includes('PTSOPTION') || k.includes('POINTSOPTION') },
             { names: ['TCS'], cols: ['TCS'] },
             { names: ['TAUX CHUBB'], colMatch: k => k.startsWith('TAUXCHUBB') },
-            { names: ['MIX 2H'], cols: ['Mix 2H'], lowerIsBetter: true }
+            { names: ['MIX 2H'], cols: ['Mix 2H'], lowerIsBetter: true },
+            { names: ['VOLUME DE SERVICES', 'VOLUME DE SERVICE', 'VOLUME SERVICES', 'VOLUME SERVICE', 'SERVICES', 'SERVICE'], cols: ['VOLUME DE SERVICES', 'VOLUME DE SERVICE', 'VOLUME SERVICES', 'VOLUME SERVICE', 'SERVICES'] }
         ];
         KPI_DEFS.forEach((d, i) => {
             d.id = i;
@@ -3458,7 +3460,6 @@
             { label: 'Abos (mix 2h < 17 %)', obj: 'TOTAL ABO', tiers: [[110, 2.5], [100, 1.25]], needMix: 17 },
             { label: 'Canal +', obj: 'CANAL+', tiers: [[120, 2], [100, 1]] },
             { label: 'Maisons sécurisées', obj: 'MAISON SECURISEE', tiers: [[120, 2], [100, 1]] },
-            { label: 'Mig Fibre VR', obj: 'MIGRATION FIBRE VR', tiers: [[120, 3], [100, 1.5]] },
             { label: 'Offres PRO', obj: 'OFFRES PRO', tiers: [[120, 3], [100, 1.5]] },
             { label: 'Options', obj: 'OPTIONS', tiers: [[120, 5], [100, 3]] }
         ];
@@ -3472,28 +3473,28 @@
         ];
         const NOTES_STD = { goodays: [[4.7, 10], [4.6, 5]], google: [[4.9, 5], [4.8, 2.5]], googleMin: 30 };
         const DEFAULT_PAYPLAN = {
-            version: 2,
-            month: 'Septembre 2026',
+            version: 3,
+            month: 'Octobre 2026',
             grids: {
                 'AUTRES|VENDEUR': {
                     title: 'Gradicom & AMR — Vendeur',
                     bloc1: { mode: 'sum', base: 'self', lines: [
                         { label: 'R/O Fixe conquête VV + R/O Fixe conquête VR + R/O TCS', pct: 2, conds: [{ kpi: 'CONQUETE FIXE VV', min: 100 }, { kpi: 'VR FIXE CONQUETE', min: 100 }, { kpi: 'TCS', min: 100 }] },
                         { label: 'R/O Terminaux', pct: 1.5, conds: [{ kpi: 'VOLUME TERMINAUX', min: 100 }] },
-                        { label: 'R/O RM (avec ou sans eng.)', pct: 1, conds: [{ kpi: 'VOLUME RM', min: 100 }] },
-                        { label: 'R/O Abos (mix 2h < 17 %) et R/O Accessoires', pct: 1, conds: [{ kpi: 'TOTAL ABO', min: 100 }, { kpi: 'MIX 2H', under: 17 }, { kpi: 'MARGE ACESSOIRE', min: 100 }] }
+                        { label: 'R/O Accessoires et R/O Services', pct: 1.5, conds: [{ kpi: 'MARGE ACESSOIRE', min: 100 }, { kpi: 'VOLUME DE SERVICES', min: 100 }] },
+                        { label: 'R/O Abos (mix 2h < 17 %)', pct: 1, conds: [{ kpi: 'TOTAL ABO', min: 100 }, { kpi: 'MIX 2H', under: 17 }] }
                     ], doubler: { label: 'R/O marge ≥ 100 % et Taux Chubb ≥ 42 %', conds: [{ kpi: 'MARGE TOTALE', min: 100 }, { kpi: 'TAUX CHUBB', over: 42 }] } },
-                    bloc2: { scope: 'self', items: ITEMS_STD, notes: NOTES_STD, prizes: [[17, 80], [20, 150], [24, 220], [27, 300], [33, 400]], margeMin: 90, margeFromPts: 24 }
+                    bloc2: { scope: 'self', items: ITEMS_STD, notes: NOTES_STD, prizes: [[17, 50], [20, 100], [24, 150], [27, 200], [32, 300]], margeMin: 90, margeFromPts: 24 }
                 },
                 'AUTRES|RESPONSABLE': {
                     title: 'Gradicom & AMR — Responsable',
                     bloc1: { mode: 'sum', base: 'store', lines: [
                         { label: 'R/O Fixe conquête VR et R/O TCS', pct: 0.85, conds: [{ kpi: 'VR FIXE CONQUETE', min: 100 }, { kpi: 'TCS', min: 100 }] },
                         { label: 'R/O Terminaux', pct: 0.60, conds: [{ kpi: 'VOLUME TERMINAUX', min: 100 }] },
-                        { label: 'R/O RM (avec ou sans eng.)', pct: 0.45, conds: [{ kpi: 'VOLUME RM', min: 100 }] },
-                        { label: 'R/O Abos (mix 2h < 17 %) et R/O Accessoires', pct: 0.45, conds: [{ kpi: 'TOTAL ABO', min: 100 }, { kpi: 'MIX 2H', under: 17 }, { kpi: 'MARGE ACESSOIRE', min: 100 }] }
+                        { label: 'R/O Accessoires et R/O Services', pct: 0.60, conds: [{ kpi: 'MARGE ACESSOIRE', min: 100 }, { kpi: 'VOLUME DE SERVICES', min: 100 }] },
+                        { label: 'R/O Abos (mix 2h < 17 %)', pct: 0.45, conds: [{ kpi: 'TOTAL ABO', min: 100 }, { kpi: 'MIX 2H', under: 17 }] }
                     ], doubler: { label: 'R/O marge ≥ 100 % et Taux Chubb ≥ 42 %', conds: [{ kpi: 'MARGE TOTALE', min: 100 }, { kpi: 'TAUX CHUBB', over: 42 }] } },
-                    bloc2: { scope: 'store', items: ITEMS_STD, notes: NOTES_STD, prizes: [[17, 200], [20, 275], [24, 350], [27, 450], [33, 550]], margeMin: 0, margeFromPts: 0 }
+                    bloc2: { scope: 'store', items: ITEMS_STD, notes: NOTES_STD, prizes: [[17, 100], [20, 175], [24, 250], [27, 350], [32, 450]], margeMin: 0, margeFromPts: 0 }
                 },
                 'GRADIGNAN|VENDEUR': {
                     title: 'Gradicom Gradignan — Vendeur',
@@ -3502,7 +3503,7 @@
                         { label: 'R/O marge ≥ 100 % + 22 pts magasin (bloc 2)', pct: 4, conds: [{ kpi: 'MARGE TOTALE', min: 100 }, { storePts: 22 }] },
                         { label: 'R/O marge ≥ 110 % + 24 pts magasin (bloc 2)', pct: 5, conds: [{ kpi: 'MARGE TOTALE', min: 110 }, { storePts: 24 }] },
                         { label: 'R/O marge ≥ 120 % + 24 pts magasin (bloc 2)', pct: 6, conds: [{ kpi: 'MARGE TOTALE', min: 120 }, { storePts: 24 }] }
-                    ], doubler: { label: 'TCS individuel + Taux Chubb ≥ 42 % magasin + R/O marge accessoire individuel', conds: [{ kpi: 'TCS', min: 100 }, { kpi: 'TAUX CHUBB', over: 42, scope: 'store' }, { kpi: 'MARGE ACESSOIRE', min: 100 }] } },
+                    ], doubler: { label: 'TCS individuel + Taux Chubb ≥ 42 % magasin + R/O accessoires magasin + R/O services magasin', conds: [{ kpi: 'TCS', min: 100 }, { kpi: 'TAUX CHUBB', over: 42, scope: 'store' }, { kpi: 'MARGE ACESSOIRE', min: 100, scope: 'store' }, { kpi: 'VOLUME DE SERVICES', min: 100, scope: 'store' }] } },
                     bloc2: { scope: 'store', items: ITEMS_GRAD, notes: NOTES_STD, prizes: [[17, 50], [22, 100], [27, 150], [32, 200]], margeMin: 90, margeFromPts: 22 }
                 },
                 'GRADIGNAN|RESPONSABLE': {
@@ -3512,15 +3513,15 @@
                         { label: 'R/O marge ≥ 100 % + 22 pts (bloc 2)', pct: 2, conds: [{ kpi: 'MARGE TOTALE', min: 100 }, { storePts: 22 }] },
                         { label: 'R/O marge ≥ 105 % + 24 pts (bloc 2)', pct: 2.35, conds: [{ kpi: 'MARGE TOTALE', min: 105 }, { storePts: 24 }] },
                         { label: 'R/O marge ≥ 110 % + 24 pts (bloc 2)', pct: 2.6, conds: [{ kpi: 'MARGE TOTALE', min: 110 }, { storePts: 24 }] }
-                    ], doubler: { label: 'TCS + Taux Chubb ≥ 42 % + R/O marge accessoire', conds: [{ kpi: 'TCS', min: 100 }, { kpi: 'TAUX CHUBB', over: 42 }, { kpi: 'MARGE ACESSOIRE', min: 100 }] } },
+                    ], doubler: { label: 'TCS + Taux Chubb ≥ 42 % + R/O accessoires + R/O services', conds: [{ kpi: 'TCS', min: 100 }, { kpi: 'TAUX CHUBB', over: 42 }, { kpi: 'MARGE ACESSOIRE', min: 100 }, { kpi: 'VOLUME DE SERVICES', min: 100 }] } },
                     bloc2: { scope: 'store', items: ITEMS_GRAD, notes: NOTES_STD, prizes: [[17, 100], [22, 200], [27, 300], [32, 400]], margeMin: 0, margeFromPts: 0 }
                 }
             }
         };
 
         function getPayplan(data) {
-            // Un payplan enregistré avant la correction du bloc 1 (septembre, sans version) est remplacé par la version corrigée
-            if (data && data.payplan && data.payplan.grids && (data.payplan.version >= 2 || data.payplan.month !== 'Septembre 2026')) return data.payplan;
+            // Un payplan enregistré avec une version plus ancienne que celui du code (ex. septembre) est remplacé par celui du code
+            if (data && data.payplan && data.payplan.grids && (data.payplan.version >= DEFAULT_PAYPLAN.version || (data.payplan.month && data.payplan.month !== 'Septembre 2026'))) return data.payplan;
             return DEFAULT_PAYPLAN;
         }
 
@@ -3961,7 +3962,7 @@
                 </div></details>`;
             });
             html += `<div class="pe-actions"><button class="btn-add" onclick="savePayplan()">💾 Enregistrer le payplan</button>
-                <button class="logout-btn" onclick="resetPayplan()">↺ Revenir au payplan de septembre 2026</button></div>`;
+                <button class="logout-btn" onclick="resetPayplan()">↺ Revenir au payplan d'octobre 2026</button></div>`;
             el.innerHTML = html;
             el.querySelectorAll('.pe-in').forEach(inp => inp.addEventListener('change', () => {
                 const parts = inp.dataset.path.split('.');
@@ -3985,7 +3986,7 @@
         }
 
         function resetPayplan() {
-            if (!confirm('Revenir au payplan de septembre 2026 (celui des PDF) ?')) return;
+            if (!confirm('Revenir au payplan d\'octobre 2026 (celui des PDF) ?')) return;
             const data = getData();
             delete data.payplan;
             saveData(data);
