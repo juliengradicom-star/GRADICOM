@@ -30,7 +30,7 @@
 - Alertes : Taux Chubb < 42 % et Mix 2h > 17 %. Abos comptés seulement si Mix 2h strictement < 17 %.
 - Avance/retard au prorata des jours travaillés (fichier JT, 1 = travaillé) et des horaires magasin (Gradignan 9h30-18h30 fermé dim+lun ; Marmande 9h30-19h ; Cognac/Langon 9h30-19h30, fermés le dimanche).
 - Pourcentages tronqués à 1 décimale (jamais arrondis vers le haut).
-- Projection de fin de mois = réalisé ÷ jours travaillés × jours du mois, en comptant la journée en cours comme COMPLÈTE dès qu'elle a commencé (`doneProj`, voulu par Julien le 01/10/2026 ; avant, aucune projection tant qu'une journée entière n'était pas écoulée). L'avance/retard, elle, garde la part de journée écoulée selon les horaires du magasin (`done`).
+- La journée en cours compte comme une journée COMPLÈTE dès le matin (jour 1/27 le 1er au matin), pour l'affichage, l'avance/retard et la projection : `todayFraction()` renvoie toujours 1 (voulu par Julien le 01/10/2026 ; avant, part de journée écoulée selon les horaires du magasin). Projection de fin de mois = réalisé ÷ jours travaillés × jours du mois (`doneProj`).
 - Payplan : 4 grilles (Gradignan / autres × vendeur / responsable), bloc 1 (% de la marge, ×2 si R/O marge ≥ 100 % et Chubb ≥ 42 %) + bloc 2 (points → €). Modifiable chaque mois dans l'Admin. Primes affichées « sous réserve de vérification en fin de mois ».
 
 ## Façon de travailler avec Julien
@@ -54,6 +54,6 @@
   - Payplans d'octobre 2026 intégrés (`DEFAULT_PAYPLAN`, version 3) : RM retiré ; « Accessoires + Services » (1,5 % vendeur / 0,60 % responsable, « autres » magasins) ; Abos seuls ; Mig Fibre VR retirée du bloc 2 des « autres » magasins ; paliers € du bloc 2 relevés (vendeur 50/100/150/200/300 € à 17/20/24/27/32 pts ; responsable 100/175/250/350/450 €) ; Gradignan : x2 = TCS individuel + Chubb ≥ 42 % magasin + R/O accessoires magasin + R/O services magasin (vendeur ; responsable idem à l'échelle magasin).
   - Nouvel objectif `VOLUME DE SERVICES` (colonne Google Sheets du même nom, singulier/pluriel acceptés) ; `VOLUME RM` conservé dans le code (anciens mois) mais plus utilisé par le payplan.
   - Un payplan enregistré dans l'Admin avec une version plus ancienne que celle du code (ex. septembre) est ignoré au profit de celui du code ; un payplan enregistré depuis l'Admin avec la version actuelle prime.
-  - Projection de fin de mois : la journée en cours compte comme complète (voir Règles métier).
+  - La journée en cours compte comme complète dès le matin, partout (voir Règles métier).
   - Gradignan : bloc « 🎯 Paliers de marge » (`margeLadderHtml`) sur les tableaux de bord = objectifs de marge en € à 100/110/120 % (vendeur) et 100/105/110 % (responsable/magasin) avec le reste à faire. Le palier 90 % n'apparaît (là et dans l'onglet Prime) que s'il est atteint ou quand il reste 2 jours travaillés ou moins (journée en cours comprise, `isLastDays`) ; s'il n'est pas atteint à ce moment-là : alerte « Objectif ramené à 90 % ».
   - Import Excel des objectifs : le portail lit le chiffre AFFICHÉ de la cellule (arrondi par le format, ex. 12,4 affiché « 12 » → 12), pas la valeur exacte du calcul (`shownNumber` / `sheetRowsShown`). Pour les pourcentages, dates et notations scientifiques : valeur exacte.

@@ -3302,12 +3302,10 @@
         }
 
         // Part de la journée écoulée si les ventes sont celles d'aujourd'hui (selon les horaires du magasin)
+        // Voulu par Julien (01/10/2026) : la journée en cours compte comme une journée COMPLÈTE dès le matin
+        // (jour 1/27 dès le 1er au matin), pour l'affichage, l'avance/retard et les projections.
         function todayFraction(store) {
-            const asOf = RZ.periodEnd, now = new Date();
-            if (!asOf || asOf.toDateString() !== now.toDateString()) return 1;
-            const hrs = hoursFor(store);
-            const h = now.getHours() + now.getMinutes() / 60;
-            return Math.max(0, Math.min(1, (h - hrs.open) / (hrs.close - hrs.open)));
+            return 1;
         }
 
         function daysFromCalendar(cal, store) {
