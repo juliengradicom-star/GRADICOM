@@ -4156,6 +4156,32 @@
             return cand;
         }
 
+        // Valeur AFFICHÉE d'une cellule Excel (ex. cellule qui contient 12,4 mais affichée « 12 » par son format) :
+        // on prend ce que Julien voit, pas le résultat exact du calcul. Dates, pourcentages et autres formats : valeur exacte.
+        function shownNumber(cell) {
+            if (!cell || typeof cell.v !== 'number') return null;
+            const w = typeof cell.w === 'string' ? cell.w.trim() : '';
+            if (w && !/[%\/:#]|\d[eE][+-]?\d/.test(w)) {
+                const n = parseFloat(w.replace(/[\s  €$£,]/g, ''));
+                if (isFinite(n)) return n;
+            }
+            return cell.v;
+        }
+        // Lignes de la feuille (comme sheet_to_json en header:1) avec les nombres remplacés par leur valeur affichée
+        function sheetRowsShown(ws) {
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: true });
+            const r0 = ws['!ref'] ? XLSX.utils.decode_range(ws['!ref']) : { s: { r: 0, c: 0 } };
+            rows.forEach((row, i) => {
+                if (!Array.isArray(row)) return;
+                for (let j = 0; j < row.length; j++) {
+                    if (typeof row[j] !== 'number') continue;
+                    const n = shownNumber(ws[XLSX.utils.encode_cell({ r: r0.s.r + i, c: r0.s.c + j })]);
+                    if (n !== null) row[j] = n;
+                }
+            });
+            return rows;
+        }
+
         function importObjectifs() {
             const file = document.getElementById('objectifsFile').files[0];
             if (!file) {
@@ -4167,7 +4193,7 @@
             reader.onload = (e) => {
                 try {
                     const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+                    const rows = sheetRowsShown(workbook.Sheets[workbook.SheetNames[0]]);
                     const data = getData();
 
                     // 1) Ligne des noms d'objectifs = celle qui contient « MARGE… »
