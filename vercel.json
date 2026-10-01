@@ -23,6 +23,15 @@
           "value": "no-cache"
         }
       ]
+    },
+    {
+      "source": "/actus/actus.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
     }
   ]
 }

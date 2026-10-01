@@ -325,10 +325,22 @@
             background: rgba(201, 166, 91, 0.1);
         }
 
+        /* Actus */
+        .actu-card { background: linear-gradient(180deg, #17150f 0%, #100f0c 100%); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 18px; }
+        .actu-card.new { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(201,166,91,.25); }
+        .actu-date { font-size: 11px; letter-spacing: 1.5px; color: var(--text-dim); text-transform: uppercase; }
+        .actu-new { background: var(--gold); color: #0b0a08; padding: 2px 8px; border-radius: 10px; font-weight: 800; letter-spacing: 1px; }
+        .actu-title { font-family: var(--serif); color: var(--gold-2); font-size: 22px; margin: 8px 0 12px; }
+        .actu-img { display: block; width: 100%; height: auto; border-radius: 8px; margin: 0 0 12px; }
+        .actu-text { white-space: pre-line; line-height: 1.6; margin: 0 0 12px; }
+        .actu-pdf { display: inline-block; width: auto; margin: 0 8px 4px 0; text-decoration: none; }
+        .actu-push { background: rgba(201,166,91,.08); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 6px 0 4px; font-size: 13px; line-height: 1.5; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .actu-push.ok { color: var(--text-dim); }
+        .actu-push .btn-add { width: auto; }
         /* Administration en onglets : chaque bloc porte data-atab="<onglet>" et ne s'affiche que dans son onglet */
         #adminScreen [data-atab] { display: none; }
         #adminScreen[data-tab="global"] [data-atab~="global"], #adminScreen[data-tab="obj"] [data-atab~="obj"], #adminScreen[data-tab="payplan"] [data-atab~="payplan"],
-        #adminScreen[data-tab="prime"] [data-atab~="prime"], #adminScreen[data-tab="team"] [data-atab~="team"], #adminScreen[data-tab="msg"] [data-atab~="msg"] { display: block; }
+        #adminScreen[data-tab="prime"] [data-atab~="prime"], #adminScreen[data-tab="team"] [data-atab~="team"], #adminScreen[data-tab="msg"] [data-atab~="msg"], #adminScreen[data-tab="actus"] [data-atab~="actus"] { display: block; }
         #adminScreen .admin-tabs { position: sticky; top: 0; z-index: 15; max-width: 1200px; margin: 0 auto 22px; padding: 10px 16px 8px; background: rgba(11,10,8,0.96); }
         .admin-sections {
             display: grid;
@@ -821,6 +833,7 @@
             <button class="sub-btn" data-k="prime" onclick="setAdminTab('prime')">🏆 Primes</button>
             <button class="sub-btn" data-k="team" onclick="setAdminTab('team')">👥 Équipe &amp; accès</button>
             <button class="sub-btn" data-k="msg" onclick="setAdminTab('msg')">✉️ Messagerie</button>
+            <button class="sub-btn" data-k="actus" onclick="setAdminTab('actus')">📰 Actus</button>
         </div>
         <div id="adminPanel"></div>
 
@@ -875,6 +888,7 @@
         </div>
 
         <div class="tabs-container">
+            <button class="tab-btn" id="actusTabBtn" onclick="switchTab('actus')">Actus <span class="msg-badge" id="actusBadge" style="display:none">0</span></button>
             <button class="tab-btn active" id="homeTabBtn" onclick="switchTab('home')">Accueil</button>
             <button class="tab-btn" id="vendorTabBtn" onclick="switchTab('vendeur')">Mes objectifs</button>
             <button class="tab-btn" id="managerTabBtn" onclick="switchTab('manager')">Mon magasin</button>
@@ -883,6 +897,9 @@
             <button class="tab-btn" id="primeTabBtn" onclick="switchTab('prime')">Prime</button>
             <button class="tab-btn" id="messagesTabBtn" onclick="switchTab('messages')">Messages <span class="msg-badge" id="msgBadge" style="display:none">0</span></button>
         </div>
+
+        <!-- ACTUS -->
+        <div id="actus-tab" class="tab-content"></div>
 
         <!-- MESSAGERIE -->
         <div id="messages-tab" class="tab-content"></div>
@@ -1250,6 +1267,152 @@
         async function pwHash(email, password) {
             const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(PW_SALT + '|' + String(email).toLowerCase().trim() + '|' + String(password)));
             return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // ================= ACTUS (nouveautés + notifications téléphone) =================
+        // Les actus sont dans actus/actus.json (publiées par Claude à la demande de Julien) : { id, date, title, text, images:[…], pdf, pdfLabel }
+        const VAPID_PUBLIC = 'BLm4gqRgIN2u7RysCC6EN1VJuVI_tQvWvD9BNKBruY-HQNQ2-vLHplXybyRKuE7oFrOyb0JX_8m7Xy0Nme_NMC4';
+        let actusList = null, actusError = false, actusNewShown = [], pushMsg = '';
+
+        function actusSeenKey() { return 'gradicom_actus_seen_' + (currentUser ? String(currentUser.email).toLowerCase() : ''); }
+        function actusSeen() { try { return JSON.parse(localStorage.getItem(actusSeenKey())) || []; } catch (e) { return []; } }
+        function actusUnseenIds() { const seen = actusSeen(); return (actusList || []).filter(a => !seen.includes(a.id)).map(a => a.id); }
+        function markActusSeen() {
+            try { localStorage.setItem(actusSeenKey(), JSON.stringify((actusList || []).map(a => a.id))); } catch (e) {}
+            updateActusBadge();
+        }
+        function updateActusBadge() {
+            const b = document.getElementById('actusBadge');
+            if (!b) return;
+            const n = actusUnseenIds().length;
+            b.textContent = n > 99 ? '99+' : String(n);
+            b.style.display = n ? '' : 'none';
+        }
+        async function loadActus() {
+            try {
+                const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 8000);
+                const r = await fetch('actus/actus.json?t=' + Date.now(), { cache: 'no-store', signal: ctl.signal });
+                clearTimeout(to);
+                if (!r.ok) throw new Error('http');
+                const l = await r.json();
+                actusList = (Array.isArray(l) ? l : []).filter(a => a && a.id && a.title).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+                actusError = false;
+            } catch (e) { if (!actusList) actusList = []; actusError = true; }
+            updateActusBadge();
+        }
+        function actuDateFr(d) {
+            const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || ''));
+            if (!m) return '';
+            return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+        function actuFile(p) { return /^(https?:)?\/\//i.test(p) ? p : String(p).replace(/^\/+/, ''); }
+
+        function pushState() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+                return isIOS() && !isStandalone() ? 'ios-install' : 'unsupported';
+            }
+            return Notification.permission; // default | granted | denied
+        }
+        function pushBannerHtml() {
+            const st = pushState();
+            if (st === 'granted') return `<div class="actu-push ok">🔔 Notifications activées sur cet appareil${pushMsg ? ' · ' + esc(pushMsg) : ''}</div>`;
+            if (st === 'default') return `<div class="actu-push"><span>🔔 Reçois une alerte sur ton téléphone à chaque nouvelle actu.</span><button class="btn-add" onclick="enablePush()">Activer les notifications</button>${pushMsg ? `<div class="muted" style="margin-top:6px">${esc(pushMsg)}</div>` : ''}</div>`;
+            if (st === 'denied') return `<div class="actu-push">🔕 Notifications bloquées sur cet appareil : autorise-les dans les réglages du téléphone (Notifications → GRADICOM AMR).</div>`;
+            if (st === 'ios-install') return `<div class="actu-push">📲 Pour recevoir les notifications sur iPhone : ouvre le portail dans Safari, appuie sur Partager → « Sur l'écran d'accueil », puis lance l'appli depuis cette icône (iOS 16.4 ou plus).</div>`;
+            return '';
+        }
+        function urlB64ToU8(b64) {
+            const pad = '='.repeat((4 - b64.length % 4) % 4);
+            const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+            return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+        }
+        async function registerPush(askPermission) {
+            if (pushState() === 'ios-install' || pushState() === 'unsupported') return false;
+            let perm = Notification.permission;
+            if (perm === 'default' && askPermission) perm = await Notification.requestPermission();
+            if (perm !== 'granted') return false;
+            const reg = await navigator.serviceWorker.ready;
+            let sub = await reg.pushManager.getSubscription();
+            if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToU8(VAPID_PUBLIC) });
+            await msgApi('pushSub', { sub: sub.toJSON() });
+            return true;
+        }
+        async function enablePush() {
+            pushMsg = '';
+            try { await registerPush(true); }
+            catch (e) { pushMsg = isOldScript(e) ? 'Le serveur n\'est pas encore prêt pour les notifications, réessaie plus tard.' : 'Activation impossible pour le moment.'; }
+            renderActus();
+        }
+        let pushSynced = false;
+        async function syncPushSilently() {
+            if (pushSynced || !currentUser || pushState() !== 'granted') return;
+            pushSynced = true;
+            try { await registerPush(false); } catch (e) {}
+        }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', e => {
+                if (e.data && e.data.type === 'open-actus' && currentUser) { loadActus().then(() => switchTab('actus')); }
+            });
+        }
+
+        function renderActus() {
+            const el = document.getElementById('actus-tab');
+            if (!el) return;
+            if (!actusList) { el.innerHTML = '<div class="dash"><p class="muted">Chargement…</p></div>'; loadActus().then(renderActus); return; }
+            // « Nouveau » reste affiché pendant cette visite, puis les actus sont marquées comme lues
+            const fresh = actusUnseenIds();
+            if (fresh.length) actusNewShown = fresh;
+            const cards = actusList.map(a => {
+                const isNew = actusNewShown.includes(a.id);
+                const imgs = (a.images || []).map(src => `<a href="${esc(actuFile(src))}" target="_blank" rel="noopener"><img class="actu-img" loading="lazy" src="${esc(actuFile(src))}" alt="${esc(a.title)}"></a>`).join('');
+                const pdf = a.pdf ? `<a class="btn-add actu-pdf" href="${esc(actuFile(a.pdf))}" target="_blank" rel="noopener">📄 ${esc(a.pdfLabel || 'Ouvrir le PDF')}</a>` : '';
+                const link = a.link ? `<a class="btn-add actu-pdf" href="${esc(a.link)}" target="_blank" rel="noopener">🔗 ${esc(a.linkLabel || 'Voir le lien')}</a>` : '';
+                return `<article class="actu-card ${isNew ? 'new' : ''}">
+                    <div class="actu-date">${isNew ? '<span class="actu-new">NOUVEAU</span> ' : ''}${esc(actuDateFr(a.date))}</div>
+                    <h3 class="actu-title">${esc(a.title)}</h3>
+                    ${imgs}
+                    ${a.text ? `<p class="actu-text">${esc(a.text)}</p>` : ''}
+                    ${pdf}${link}
+                </article>`;
+            }).join('');
+            el.innerHTML = `<div class="dash">${pushBannerHtml()}
+                <h3 class="section-title">📰 Les actus</h3>
+                ${cards || `<p class="muted">${actusError ? 'Actus indisponibles pour le moment (connexion).' : 'Aucune actu pour le moment.'}</p>`}</div>`;
+            if (fresh.length) markActusSeen();
+        }
+
+        // ----- Admin : envoi de la notification d'une actu -----
+        function sentActuKey(id) { return 'gradicom_actu_notified_' + id; }
+        async function renderActusAdmin() {
+            const el = document.getElementById('actusAdmin');
+            if (!el) return;
+            if (!actusList) { await loadActus(); }
+            const rows = (actusList || []).map(a => {
+                let sentAt = null; try { sentAt = localStorage.getItem(sentActuKey(a.id)); } catch (e) {}
+                return `<div class="pp-row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px;padding:10px 12px;">
+                    <div style="flex:1;min-width:200px"><b>${esc(a.title)}</b><div class="muted" style="font-size:12px">${esc(actuDateFr(a.date))}${sentAt ? ' · 🔔 notifiée le ' + esc(sentAt) : ''}</div></div>
+                    <button class="btn-add" style="width:auto" onclick="sendActuPush('${esc(a.id)}')">🔔 ${sentAt ? 'Renvoyer' : 'Envoyer'} la notification</button>
+                </div>`;
+            }).join('');
+            el.innerHTML = `<p class="muted" style="margin-bottom:14px;line-height:1.6">Les actus sont publiées par Claude (envoie-lui tes images / PDF dans la conversation). Une fois l'actu en ligne, appuie sur « Envoyer la notification » : tous les téléphones inscrits reçoivent l'alerte.</p>
+                ${rows || '<p class="muted">Aucune actu publiée pour le moment.</p>'}
+                <div id="actusAdminStatus" class="muted" style="margin-top:10px"></div>`;
+        }
+        async function sendActuPush(id) {
+            const a = (actusList || []).find(x => x.id === id);
+            const st = document.getElementById('actusAdminStatus');
+            if (!a || !adminAuth) { if (st) st.textContent = 'Reconnecte-toi à l\'Admin pour envoyer.'; return; }
+            if (!confirm('Envoyer la notification « ' + a.title + ' » à tous les téléphones inscrits ?')) return;
+            if (st) st.textContent = '⏳ Envoi en cours…';
+            try {
+                const r = await fetch('/api/push', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminHash: adminAuth, adminKey: adminSecret, title: '📰 ' + a.title, body: (a.text || 'Nouvelle actu GRADICOM AMR').slice(0, 120), url: '/?actus=1' }) });
+                const j = await r.json();
+                if (!j.ok) throw new Error(j.error || 'Erreur');
+                try { localStorage.setItem(sentActuKey(id), new Date().toLocaleString('fr-FR')); } catch (e) {}
+                if (st) st.textContent = `✅ Notification envoyée à ${j.sent} téléphone(s)${j.failed ? ` (${j.failed} non joignable(s))` : ''}${j.total === 0 ? ' — personne n\'est encore inscrit.' : '.'}`;
+                renderActusAdmin();
+            } catch (e) { if (st) st.textContent = '⚠️ ' + (e.message || 'Envoi impossible'); }
         }
 
         // ================= MESSAGERIE =================
@@ -1687,7 +1850,13 @@
             renderAll();
             refreshMessages(true);
 
-            switchTab('home');
+            let landing = 'home';
+            try {
+                await loadActus();
+                if (new URLSearchParams(location.search).has('actus') || actusUnseenIds().length) landing = 'actus';
+            } catch (e) {}
+            switchTab(landing);
+            syncPushSilently();
         }
 
         function updateUserInfo() {
@@ -1741,6 +1910,7 @@
             currentUser = null;
             currentPassword = null;
             salesCreds = null; salesPrefetch = null;
+            actusNewShown = []; pushSynced = false; pushMsg = '';
             msgCache = { messages: null, contacts: null, error: null, loading: false };
             msgView = 'inbox'; msgOpenId = null; msgDraft = null;
             mgrSub = 'store';
@@ -1756,7 +1926,7 @@
         }
 
         function switchTab(tabName) {
-            const map = { home: ['homeTabBtn', 'home-tab'], vendeur: ['vendorTabBtn', 'vendeur-tab'], manager: ['managerTabBtn', 'manager-tab'], director: ['directorTabBtn', 'director-tab'], payplan: ['payplanTabBtn', 'payplan-tab'], prime: ['primeTabBtn', 'prime-tab'], messages: ['messagesTabBtn', 'messages-tab'] };
+            const map = { home: ['homeTabBtn', 'home-tab'], vendeur: ['vendorTabBtn', 'vendeur-tab'], manager: ['managerTabBtn', 'manager-tab'], director: ['directorTabBtn', 'director-tab'], payplan: ['payplanTabBtn', 'payplan-tab'], prime: ['primeTabBtn', 'prime-tab'], messages: ['messagesTabBtn', 'messages-tab'], actus: ['actusTabBtn', 'actus-tab'] };
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             const [btn, tab] = map[tabName] || map.home;
@@ -1764,6 +1934,7 @@
             document.getElementById(tab).classList.add('active');
             window.scrollTo(0, 0);
             if (tabName === 'messages') { renderMessagesTab(); refreshMessages(true); }
+            if (tabName === 'actus') { renderActus(); }
         }
 
         // ================= AFFICHAGE =================
@@ -2769,6 +2940,12 @@
                     <div id="messagingAdmin"></div>
                 </div>
 
+                <!-- ACTUS : notifications -->
+                <div data-atab="actus" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
+                    <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">📰 Actus &amp; notifications</h2>
+                    <div id="actusAdmin"></div>
+                </div>
+
                 <!-- MOT DE PASSE ADMIN -->
                 <div data-atab="team" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
                     <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">🔐 Mot de passe de l'Admin</h2>
@@ -2825,6 +3002,7 @@
             histMonth = null;
             renderPrimeHistoryAdmin();
             renderMessagingAdmin();
+            renderActusAdmin();
             refreshLists();
             updateStoreSelects();
         }

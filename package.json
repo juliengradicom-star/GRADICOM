@@ -1,0 +1,23 @@
+{
+  "name": "gradicom",
+  "version": "1.0.0",
+  "description": "",
+  "main": "sw.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/juliengradicom-star/gradicom.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/juliengradicom-star/gradicom/issues"
+  },
+  "homepage": "https://github.com/juliengradicom-star/gradicom#readme",
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

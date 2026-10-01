@@ -20,6 +20,7 @@ function setup_() {
   sheet_(ss, 'MESSAGES', ['id', 'date', 'from', 'fromName', 'to', 'subject', 'body', 'attachments', 'links']);
   sheet_(ss, 'READS', ['id', 'email', 'date']);
   sheet_(ss, 'DELETES', ['id', 'email', 'date']);
+  sheet_(ss, 'PUSH', ['endpoint', 'email', 'sub', 'date']);
   sheet_(ss, 'CONFIG', ['part', 'data']);
   sheet_(ss, 'CONFIG_PRECEDENTE', ['part', 'data']);
   return { ss: ss, folder: DriveApp.getFolderById(folderId) };
@@ -310,6 +311,37 @@ function handle_(req) {
     case 'markRead': {
       const me = auth_(ss, req);
       ss.getSheetByName('READS').appendRow([String(req.id), me.email, new Date()]);
+      return { ok: true };
+    }
+
+    // ----- Notifications sur les téléphones (onglet Actus) -----
+    case 'pushSub': {
+      const me = auth_(ss, req);
+      const sub = req.sub;
+      if (!sub || !sub.endpoint) throw new Error('Inscription invalide');
+      const sh = ss.getSheetByName('PUSH');
+      const v = sh.getDataRange().getValues();
+      let row = 0;
+      for (let i = 1; i < v.length; i++) { if (String(v[i][0]) === String(sub.endpoint)) { row = i + 1; break; } }
+      const vals = [[sub.endpoint, me.email, JSON.stringify(sub), new Date()]];
+      if (row) sh.getRange(row, 1, 1, 4).setValues(vals); else sh.appendRow(vals[0]);
+      return { ok: true };
+    }
+
+    case 'pushList': {
+      if (!isAdmin_(ss, req)) throw new Error('Mot de passe Admin incorrect');
+      const v = ss.getSheetByName('PUSH').getDataRange().getValues();
+      v.shift();
+      const subs = v.filter(function (r) { return r[0] && r[2]; }).map(function (r) { return { email: String(r[1]), sub: JSON.parse(r[2]) }; });
+      return { ok: true, subs: subs };
+    }
+
+    case 'pushPurge': {
+      if (!isAdmin_(ss, req)) throw new Error('Mot de passe Admin incorrect');
+      const dead = {}; (req.endpoints || []).forEach(function (e) { dead[String(e)] = true; });
+      const sh = ss.getSheetByName('PUSH');
+      const v = sh.getDataRange().getValues();
+      for (let i = v.length - 1; i >= 1; i--) { if (dead[String(v[i][0])]) sh.deleteRow(i + 1); }
       return { ok: true };
     }
 
