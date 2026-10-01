@@ -2201,6 +2201,7 @@
                     ${!nrow && !RZ.error ? '<div class="banner">Aucune vente trouvée à ton nom dans Google Sheets pour l\'instant.</div>' : ''}
                     ${renderQualityAlerts(alertItemsFor(fresh.objectiveTargets, nrow, data.objectives))}
                     ${renderSummaryCards(fresh.objectiveTargets, nrow, data.objectives, days, rankCard + renderPayplanCard(pp))}
+                    ${margeLadderHtml(data, fresh, fresh.store, false)}
                     ${renderKpiTable(fresh.objectiveTargets, nrow, data.objectives, days)}
                 </div>`;
         }
@@ -2372,6 +2373,7 @@
                     <div class="dash-sub">${periodLabel(days)}</div>
                     ${renderQualityAlerts(alertItemsFor(targets, nrow, data.objectives))}
                     ${renderSummaryCards(targets, nrow, data.objectives, days, storeRankCard + renderPayplanCard(payplanPoints(targets, nrow, data, store, days, true)))}
+                    ${margeLadderHtml(data, null, store, true)}
                     <h3 class="section-title">🧭 Équipe à accompagner</h3>${helpHtml}
                     <h3 class="section-title">🏆 Classement de l'équipe</h3><div class="rank-list">${teamRows}</div>
                     <h3 class="section-title">📋 Objectifs du magasin</h3>
@@ -2389,6 +2391,7 @@
                     ${renderQualityAlerts(v.co.alerts)}
                     ${renderCoaching(v.user, v.co)}
                     ${renderSummaryCards(v.user.objectiveTargets, v.nrow, data.objectives, v.days, rankCard + renderPayplanCard(pp, true))}
+                    ${margeLadderHtml(data, v.user, v.user.store, false)}
                     ${renderKpiTable(v.user.objectiveTargets, v.nrow, data.objectives, v.days)}`;
             }
             document.getElementById('manager-tab').innerHTML = `<div class="dash">${errorBanner()}${nav}${body}</div>`;
@@ -2466,6 +2469,7 @@
                 if (st) body += `<h2 class="dash-title">🏪 ${esc(st.store.name)}</h2><div class="dash-sub">${periodLabel(st.days)}</div>
                     ${renderQualityAlerts(alertItemsFor(st.targets, st.nrow, data.objectives))}
                     ${renderSummaryCards(st.targets, st.nrow, data.objectives, st.days, '')}
+                    ${margeLadderHtml(data, null, st.store.name, true)}
                     ${renderKpiTable(st.targets, st.nrow, data.objectives, st.days)}`;
             } else if (dirSub === 'vendeurs') {
                 if (!vendors.some(v => v.user.email === dirVendor)) dirVendor = vendors.length ? vendors[0].user.email : null;
@@ -2474,6 +2478,7 @@
                 if (v) body += `<h2 class="dash-title">👤 ${esc(v.user.name)} <span class="muted" style="font-size:16px">${esc(v.user.store || '')}</span></h2><div class="dash-sub">${periodLabel(v.days)}</div>
                     ${renderQualityAlerts(alertItemsFor(v.user.objectiveTargets, v.nrow, data.objectives))}
                     ${renderSummaryCards(v.user.objectiveTargets, v.nrow, data.objectives, v.days, '')}
+                    ${margeLadderHtml(data, v.user, v.user.store, false)}
                     ${renderKpiTable(v.user.objectiveTargets, v.nrow, data.objectives, v.days)}`;
             } else {
                 body = `<div id="primeVolumes">${renderPrimeVolumes(data)}</div>`;
@@ -3703,7 +3708,46 @@
                 return { marge, margeRatio: mt > 0 ? marge / mt * 100 : null, lines, doubler: { label: grid.bloc1.doubler.label, ok: doubled, conds: dcs }, pct, pctFinal, bloc1,
                     points: p, pointsMax: pts.max, tier, next, margeBlock, selfRatio, bloc2, total: bloc1 + bloc2 };
             };
-            return { grid, gridKey: gridKeyFor(user, store, isStore), now: run(false), proj: run(true) };
+            return { grid, gridKey: gridKeyFor(user, store, isStore), lastDays: isLastDays(ents.base.days), now: run(false), proj: run(true) };
+        }
+
+        // Fin de mois : il reste 2 jours travaillés ou moins (journée en cours comprise)
+        function isLastDays(days) {
+            return !!days && days.total > 0 && Math.ceil(days.remaining - 1e-9) <= 2;
+        }
+
+        // Gradignan : objectifs de marge en € pour chaque palier du payplan (vendeur 100/110/120 %, responsable 100/105/110 %).
+        // Le palier 90 % n'apparaît que 2 jours avant la fin du mois s'il n'est pas atteint (alerte « objectif ramené à 90 % »).
+        function margeLadderHtml(data, user, store, isStore) {
+            if (!store || !String(gridKeyFor(user, store, isStore)).startsWith('GRADIGNAN')) return '';
+            const grid = gridFor(data, user, store, isStore);
+            const se = storeEntity(data, store);
+            const self = isStore || !user ? se : { targets: user.objectiveTargets, nrow: findVendorRow(user), days: workingDays(user) };
+            const ent = grid.bloc1.base === 'store' ? se : self;
+            const margeObj = objFor(data, 'MARGE TOTALE');
+            const mt = targetFor(ent.targets, margeObj) || 0;
+            if (mt <= 0) return '';
+            const mr = getRealization(ent.nrow, margeObj.name) || 0;
+            const mins = [...new Set(grid.bloc1.lines.map(l => (l.conds.find(c => c.kpi === 'MARGE TOTALE' && c.min !== undefined) || {}).min).filter(v => v > 0))].sort((a, b) => a - b);
+            const last = isLastDays(ent.days);
+            const rows = mins.map(min => {
+                const target = mt * min / 100;
+                return { min, target, ok: mr >= target - 1e-9, reste: Math.max(0, target - mr) };
+            });
+            const low = rows.find(r => r.min < 100);
+            const showLow = low && (low.ok || last);
+            const shown = rows.filter(r => r.min >= 100 || (r === low && showLow));
+            const alert = low && last && !low.ok
+                ? `<div class="q-alert small"><div class="q-alert-icon">!</div><div><div class="q-alert-title">Objectif ramené à ${low.min} %<span>Il reste ${fmt(low.reste, '€')} de marge pour atteindre ${low.min} % de l'objectif (${fmt(low.target, '€')})</span></div></div></div>` : '';
+            const rowHtml = r => `<div class="pr-line ${r.ok ? 'on' : ''}">
+                    <div class="pr-l-main"><span>${r.ok ? '<span class="ok">✔</span>' : '<span class="ko">✘</span>'} Marge ${r.min} %</span><strong>${fmt(r.target, '€')}</strong></div>
+                    <div class="pr-l-conds"><span class="${r.ok ? 'ok' : 'ko'}">${r.ok ? 'atteint' : 'encore ' + fmt(r.reste, '€')}</span></div>
+                </div>`;
+            return `<div class="pr-block">
+                <div class="pr-head"><span>🎯 Paliers de marge${isStore || !user ? ' du magasin' : ''}</span><strong>${fmt(mr, '€')}</strong></div>
+                <div class="pr-sub">Marge réalisée • objectif du mois (100 %) : ${fmt(mt, '€')}</div>
+                ${alert}${shown.map(rowHtml).join('')}
+            </div>`;
         }
 
         // ================= ONGLET PRIME =================
@@ -3726,7 +3770,12 @@
                 <div class="pr-block">
                     <div class="pr-head"><span>Bloc 1 — % de la marge</span><strong>${fmtEur(n.bloc1)}</strong></div>
                     <div class="pr-sub">Marge de référence : <strong>${fmtEur(n.marge)}</strong>${n.margeRatio !== null ? ` (R/O ${fmtPct(n.margeRatio)})` : ''} • ${pr.grid.bloc1.mode === 'max' ? 'le palier le plus haut atteint compte' : 'les % atteints s\'additionnent'}</div>
-                    ${n.lines.map((l, i) => lineRow(l, p.lines[i])).join('')}
+                    ${n.lines.map((l, i) => ({ l, i })).filter(x => {
+                        // Gradignan : le palier 90 % n'est affiché que s'il est atteint ou 2 jours avant la fin du mois
+                        if (!String(pr.gridKey).startsWith('GRADIGNAN')) return true;
+                        const mc = (pr.grid.bloc1.lines[x.i].conds || []).find(c => c.kpi === 'MARGE TOTALE' && c.min !== undefined);
+                        return !(mc && mc.min < 100) || x.l.ok || pr.lastDays;
+                    }).map(x => lineRow(x.l, p.lines[x.i])).join('')}
                     <div class="pr-line doubler ${n.doubler.ok ? 'on' : ''}">
                         <div class="pr-l-main"><span>${mark(n.doubler.ok)} ×2 si ${esc(n.doubler.label)}</span><strong>${n.doubler.ok ? '×2' : '×1'}</strong></div>
                         <div class="pr-l-conds">${n.doubler.conds.map(c => `<span class="${c.ok ? 'ok' : 'ko'}">${esc(c.txt)}</span>`).join(' • ')}</div>
