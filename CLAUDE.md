@@ -66,6 +66,9 @@
   - Notifications : l'Admin → onglet « 📰 Actus » a un bouton « Envoyer la notification » par actu → `api/push.js` (paquet `web-push`, clé secrète = variable Vercel `VAPID_PRIVATE_KEY` ; clé publique dans `gradicom.html` et `api/push.js`). Le script Google (`messagerie.gs`, actions `pushSub` / `pushList` / `pushPurge`, onglet PUSH) vérifie l'Admin et stocke les inscriptions ; chaque personne s'inscrit via le bouton « Activer les notifications » de l'onglet Actus. `sw.js` (v2) affiche la notification et ouvre l'onglet Actus. Sur iPhone : seulement si le raccourci a été ajouté à l'écran d'accueil depuis Safari (iOS 16.4+).
   - Le portail reste compatible avec l'ancien script : sans redéploiement, seul le bouton d'activation affiche « serveur pas prêt ».
 - 01/10/2026 (fin de journée) : classements / podiums triés par nombre d'items dans le vert (voir Règles métier), explication de la méthode affichée sous les podiums (`rankExplainHtml`). Julien a demandé de garder le ×3 marge pour le départage.
+- 01/10/2026 (soir, suite) : sécurité / lecture des actus.
+  - Déconnexion automatique chaque jour à 8 h (heure de l'appareil) : la connexion ne vaut que jusqu'au prochain 8 h (`gradicomLoginAt`, `loginExpired`, `checkDailyReset`) ; le mot de passe mémorisé est effacé, l'email reste. Vérifié toutes les minutes, au retour dans l'appli et au chargement.
+  - Après connexion, la 1re page est TOUJOURS l'onglet Actus. Vendeurs et responsables (pas les dirigeants) doivent cocher « J'ai lu toutes les actus » tant qu'il y a une actu pas encore cochée sur cet appareil (`actusReadRequired`, clé `gradicom_actus_read_<email>`) : les autres onglets sont verrouillés (`switchTab`, `.locked`). Pas de verrou si les actus n'ont pas pu être chargées.
 
 ## Reprise — à faire (état au 01/10/2026 18h20)
 - Notifications des Actus : le code est en ligne mais PAS encore activé. Étapes pour Julien, UNE À LA FOIS, en attendant son « fait » :

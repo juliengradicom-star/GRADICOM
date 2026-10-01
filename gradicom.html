@@ -337,6 +337,11 @@
         .actu-push { background: rgba(201,166,91,.08); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 6px 0 4px; font-size: 13px; line-height: 1.5; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         .actu-push.ok { color: var(--text-dim); }
         .actu-push .btn-add { width: auto; }
+        .tab-btn.locked { opacity: .35; }
+        .actu-confirm { background: rgba(201,166,91,.08); border: 1px solid var(--gold); border-radius: 12px; padding: 16px; margin: 6px 0 24px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-weight: 600; }
+        .actu-confirm label { display: flex; gap: 10px; align-items: center; cursor: pointer; }
+        .actu-confirm input[type=checkbox] { width: 22px; height: 22px; accent-color: #c9a65b; }
+        .actu-confirm .btn-add { width: auto; }
         /* Administration en onglets : chaque bloc porte data-atab="<onglet>" et ne s'affiche que dans son onglet */
         #adminScreen [data-atab] { display: none; }
         #adminScreen[data-tab="global"] [data-atab~="global"], #adminScreen[data-tab="obj"] [data-atab~="obj"], #adminScreen[data-tab="payplan"] [data-atab~="payplan"],
@@ -1272,7 +1277,27 @@
         // ================= ACTUS (nouveautés + notifications téléphone) =================
         // Les actus sont dans actus/actus.json (publiées par Claude à la demande de Julien) : { id, date, title, text, images:[…], pdf, pdfLabel }
         const VAPID_PUBLIC = 'BLm4gqRgIN2u7RysCC6EN1VJuVI_tQvWvD9BNKBruY-HQNQ2-vLHplXybyRKuE7oFrOyb0JX_8m7Xy0Nme_NMC4';
-        let actusList = null, actusError = false, actusNewShown = [], pushMsg = '';
+        let actusList = null, actusError = false, actusNewShown = [], pushMsg = '', actusLockNote = false, actusConfirmShown = false;
+
+        // Lecture obligatoire (vendeurs et responsables) : tant que les actus du moment ne sont pas cochées « lues », le reste du portail est verrouillé
+        function actusReadKey() { return 'gradicom_actus_read_' + (currentUser ? String(currentUser.email).toLowerCase() : ''); }
+        function actusRead() { try { return JSON.parse(localStorage.getItem(actusReadKey())) || []; } catch (e) { return []; } }
+        function actusReadRequired() {
+            if (!currentUser || currentUser.isDirector || actusError || !actusList || !actusList.length) return false;
+            const done = actusRead();
+            return actusList.some(a => !done.includes(a.id));
+        }
+        function confirmActusRead(on) {
+            if (!on) return;
+            try { localStorage.setItem(actusReadKey(), JSON.stringify((actusList || []).map(a => a.id))); } catch (e) {}
+            actusLockNote = false;
+            updateTabLocks();
+            renderActus();
+        }
+        function updateTabLocks() {
+            const lock = actusReadRequired();
+            document.querySelectorAll('.tabs-container .tab-btn').forEach(b => b.classList.toggle('locked', lock && b.id !== 'actusTabBtn'));
+        }
 
         function actusSeenKey() { return 'gradicom_actus_seen_' + (currentUser ? String(currentUser.email).toLowerCase() : ''); }
         function actusSeen() { try { return JSON.parse(localStorage.getItem(actusSeenKey())) || []; } catch (e) { return []; } }
@@ -1375,9 +1400,16 @@
                     ${pdf}${link}
                 </article>`;
             }).join('');
-            el.innerHTML = `<div class="dash">${pushBannerHtml()}
+            const pending = actusReadRequired();
+            if (pending) actusConfirmShown = true;
+            const lockBanner = pending ? `<div class="actu-push" style="border-color:var(--gold)">📌 ${actusLockNote ? 'Avant d\'aller ailleurs, ' : ''}lis les actus ci-dessous puis coche la case « J'ai lu » en bas de page pour accéder au reste du portail.</div>` : '';
+            const confirmBox = actusConfirmShown ? `<div class="actu-confirm">
+                    <label><input type="checkbox" id="actuReadBox" ${pending ? '' : 'checked disabled'} onchange="confirmActusRead(this.checked)"> <span>J'ai lu toutes les actus</span></label>
+                    ${pending ? '' : '<button class="btn-add" onclick="switchTab(\'home\')">Continuer vers l\'accueil →</button>'}
+                </div>` : '';
+            el.innerHTML = `<div class="dash">${lockBanner}${pushBannerHtml()}
                 <h3 class="section-title">📰 Les actus</h3>
-                ${cards || `<p class="muted">${actusError ? 'Actus indisponibles pour le moment (connexion).' : 'Aucune actu pour le moment.'}</p>`}</div>`;
+                ${cards || `<p class="muted">${actusError ? 'Actus indisponibles pour le moment (connexion).' : 'Aucune actu pour le moment.'}</p>`}${confirmBox}</div>`;
             if (fresh.length) markActusSeen();
         }
 
@@ -1764,6 +1796,27 @@
 
         // ===== Œil pour afficher le mot de passe + « Se souvenir de moi » =====
         const REMEMBER_KEY = 'gradicomRemember';
+        // Déconnexion automatique chaque jour à 8 h : la connexion ne vaut que jusqu'au prochain 8 h
+        const LOGIN_AT_KEY = 'gradicomLoginAt';
+        function lastResetBoundary() {
+            const d = new Date(); d.setHours(8, 0, 0, 0);
+            if (Date.now() < d.getTime()) d.setDate(d.getDate() - 1);
+            return d.getTime();
+        }
+        function loginExpired() {
+            let t = 0;
+            try { t = +localStorage.getItem(LOGIN_AT_KEY) || 0; } catch (e) {}
+            if (!t) { try { localStorage.setItem(LOGIN_AT_KEY, String(Date.now())); } catch (e) {} return false; } // appareil déjà connecté avant cette règle
+            return t < lastResetBoundary();
+        }
+        function checkDailyReset() {
+            if (!currentUser || !loginExpired()) return;
+            handleLogout();
+            alert('Nouvelle journée : reconnecte-toi avec ton mot de passe.');
+        }
+        setInterval(checkDailyReset, 60000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) checkDailyReset(); });
+        window.addEventListener('focus', checkDailyReset);
         function togglePassword() {
             const inp = document.getElementById('password');
             const btn = document.getElementById('pwEye');
@@ -1783,6 +1836,7 @@
             const r = readRemember();
             if (!r || !r.email) return;
             document.getElementById('email').value = r.email;
+            if (r.password && loginExpired()) { writeRemember({ email: r.email }); return; } // nouvelle journée (8 h) : mot de passe à retaper
             if (r.password) {
                 document.getElementById('password').value = r.password;
                 handleLogin({ preventDefault() {} }, true);
@@ -1832,6 +1886,7 @@
                 alert('Email ou mot de passe incorrect');
                 return;
             }
+            if (!auto) { try { localStorage.setItem(LOGIN_AT_KEY, String(Date.now())); } catch (e) {} }
             const rememberBox = document.getElementById('rememberMe');
             if (auto || (rememberBox && rememberBox.checked)) writeRemember({ email: user.email, password });
             else writeRemember(null);
@@ -1853,7 +1908,7 @@
             let landing = 'home';
             try {
                 await loadActus();
-                if (new URLSearchParams(location.search).has('actus') || actusUnseenIds().length) landing = 'actus';
+                landing = 'actus';
             } catch (e) {}
             switchTab(landing);
             syncPushSilently();
@@ -1910,7 +1965,7 @@
             currentUser = null;
             currentPassword = null;
             salesCreds = null; salesPrefetch = null;
-            actusNewShown = []; pushSynced = false; pushMsg = '';
+            actusNewShown = []; pushSynced = false; pushMsg = ''; actusLockNote = false; actusConfirmShown = false;
             msgCache = { messages: null, contacts: null, error: null, loading: false };
             msgView = 'inbox'; msgOpenId = null; msgDraft = null;
             mgrSub = 'store';
@@ -1926,6 +1981,8 @@
         }
 
         function switchTab(tabName) {
+            if (tabName !== 'actus' && actusReadRequired()) { tabName = 'actus'; actusLockNote = true; }
+            if (tabName !== 'actus') actusConfirmShown = false;
             const map = { home: ['homeTabBtn', 'home-tab'], vendeur: ['vendorTabBtn', 'vendeur-tab'], manager: ['managerTabBtn', 'manager-tab'], director: ['directorTabBtn', 'director-tab'], payplan: ['payplanTabBtn', 'payplan-tab'], prime: ['primeTabBtn', 'prime-tab'], messages: ['messagesTabBtn', 'messages-tab'], actus: ['actusTabBtn', 'actus-tab'] };
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -1935,6 +1992,7 @@
             window.scrollTo(0, 0);
             if (tabName === 'messages') { renderMessagesTab(); refreshMessages(true); }
             if (tabName === 'actus') { renderActus(); }
+            updateTabLocks();
         }
 
         // ================= AFFICHAGE =================
