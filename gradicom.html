@@ -2118,6 +2118,11 @@
             return `<div class="podium podium-${count}">${cols}</div>`;
         }
 
+        // Valeur affichée dans les classements : le R/O marge en grand (comparable d'un magasin / vendeur à l'autre), le montant en petit
+        function rankMargeVal(k, mr) {
+            return `${k.ratio !== null ? fmtPct(k.ratio) : '—'} <span class="muted" style="font-weight:400;font-size:.85em">${fmt(mr, '€')}</span>`;
+        }
+
         function renderRankList(items, nameFn, subFn, meFn) {
             return `<div class="rank-list">` + items.map((it, i) => `<div class="rank-row ${meFn && meFn(it) ? 'me' : ''}">
                     <div class="rank-pos">${rankLabel(i)}</div>
@@ -2380,7 +2385,7 @@
                     return `<div class="rank-row" ${click}>
                         <div class="rank-pos">${rankLabel(i)}</div>
                         <div class="rank-name">${esc(item.user.name)}</div>
-                        <div class="rank-val ${paceClass(k)}">${fmt(mr, '€')}${k.ratio !== null ? ' • ' + fmtPct(k.ratio) : ''}</div>
+                        <div class="rank-val ${paceClass(k)}">${rankMargeVal(k, mr)}</div>
                     </div>`;
                 }).join('');
                 const toHelp = team.filter(v => v.co.top.length).sort((a, b) => (b.co.level === 'ko') - (a.co.level === 'ko'));
@@ -2446,7 +2451,7 @@
                 storesHtml += `<div class="rank-row">
                     <div class="rank-pos">${rankLabel(i)}</div>
                     <div class="rank-name">${esc(s.store.name)}</div>
-                    <div class="rank-val ${paceClass(k)}">${fmt(mr, '€')}${k.ratio !== null ? ' • ' + fmtPct(k.ratio) : ''}</div>
+                    <div class="rank-val ${paceClass(k)}">${rankMargeVal(k, mr)}</div>
                 </div>`;
             });
             storesHtml += `</div>`;
@@ -2458,7 +2463,7 @@
                 vendorsHtml += `<div class="rank-row">
                     <div class="rank-pos">${rankLabel(i)}</div>
                     <div class="rank-name">${esc(v.user.name)} <span class="muted">${esc(v.user.store || '')}</span></div>
-                    <div class="rank-val ${paceClass(k)}">${fmt(mr, '€')}${k.ratio !== null ? ' • ' + fmtPct(k.ratio) : ''}</div>
+                    <div class="rank-val ${paceClass(k)}">${rankMargeVal(k, mr)}</div>
                 </div>`;
             });
             vendorsHtml += `</div>`;
@@ -2481,7 +2486,7 @@
                         <div><h3 class="section-title">🏢 Classement magasins</h3>${storesHtml}</div>
                         <div><h3 class="section-title">🏆 Classement vendeurs</h3>${vendorsHtml}</div>
                     </div>
-                    <p class="muted" style="margin-top:8px;font-size:11px;">Classement = atteinte moyenne des objectifs au prorata du jour (marge ×3 ; fixe, abos, terminaux ×2). Montant affiché : marge réalisée • % de l'objectif mensuel.</p>`;
+                    <p class="muted" style="margin-top:8px;font-size:11px;">Classement = atteinte moyenne des objectifs au prorata du jour (marge ×3 ; fixe, abos, terminaux ×2). Chiffre affiché : R/O marge (marge réalisée ÷ objectif de marge du mois), la marge réalisée en € est indiquée en petit.</p>`;
             } else if (dirSub === 'magasins') {
                 if (!stores.some(x => x.store.name === dirStore)) dirStore = stores.length ? stores[0].store.name : null;
                 const st = stores.find(x => x.store.name === dirStore);
