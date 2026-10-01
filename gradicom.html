@@ -901,11 +901,15 @@
             <button class="tab-btn" id="directorTabBtn" style="display: none;" onclick="switchTab('director')">Vue Dirigeant</button>
             <button class="tab-btn" id="payplanTabBtn" onclick="switchTab('payplan')">Points</button>
             <button class="tab-btn" id="primeTabBtn" onclick="switchTab('prime')">Prime</button>
+            <button class="tab-btn" id="challengesTabBtn" onclick="switchTab('challenges')">Challenges</button>
             <button class="tab-btn" id="messagesTabBtn" onclick="switchTab('messages')">Messages <span class="msg-badge" id="msgBadge" style="display:none">0</span></button>
         </div>
 
         <!-- ACTUS -->
         <div id="actus-tab" class="tab-content"></div>
+
+        <!-- CHALLENGES -->
+        <div id="challenges-tab" class="tab-content"></div>
 
         <!-- MESSAGERIE -->
         <div id="messages-tab" class="tab-content"></div>
@@ -1997,7 +2001,7 @@
         function switchTab(tabName) {
             if (tabName !== 'actus' && actusReadRequired()) { tabName = 'actus'; actusLockNote = true; }
             if (tabName !== 'actus') actusConfirmShown = false;
-            const map = { home: ['homeTabBtn', 'home-tab'], vendeur: ['vendorTabBtn', 'vendeur-tab'], manager: ['managerTabBtn', 'manager-tab'], director: ['directorTabBtn', 'director-tab'], payplan: ['payplanTabBtn', 'payplan-tab'], prime: ['primeTabBtn', 'prime-tab'], messages: ['messagesTabBtn', 'messages-tab'], actus: ['actusTabBtn', 'actus-tab'] };
+            const map = { home: ['homeTabBtn', 'home-tab'], vendeur: ['vendorTabBtn', 'vendeur-tab'], manager: ['managerTabBtn', 'manager-tab'], director: ['directorTabBtn', 'director-tab'], payplan: ['payplanTabBtn', 'payplan-tab'], prime: ['primeTabBtn', 'prime-tab'], messages: ['messagesTabBtn', 'messages-tab'], actus: ['actusTabBtn', 'actus-tab'], challenges: ['challengesTabBtn', 'challenges-tab'] };
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             const [btn, tab] = map[tabName] || map.home;
@@ -2463,6 +2467,7 @@
             if (u.isDirector) loadDirectorDashboard();
             loadPayplanTab(u);
             loadPrimeTab(u);
+            loadChallengesTab(u);
             renderMessagesTab();
             updateMsgBadge();
         }
@@ -4190,6 +4195,107 @@
             }
             document.getElementById('prime-tab').innerHTML = html + '</div>';
         }
+
+
+        // ================= CHALLENGES (octobre 2026) : Google + TCS =================
+        const GOOGLE_RPV_EUR = 5;
+        const GOOGLE_LINES = [
+            { key: 'p10a', label: 'Pixel 10A', eur: 15, re: /^GOOGLEPIXEL10A/ },
+            { key: 'p10', label: 'Pixel 10', eur: 20, re: /^GOOGLEPIXEL10(?!A)/ },
+            { key: 's11', label: 'Pixel Series 11', eur: 20, re: /^GOOGLEPIXELSERIES?11/ }
+        ];
+        const TCS_VENDOR = { qualif: 14, lo: 4, hi: 5 };
+        const TCS_RPV = { qualif: 32, lo: 2.5, hi: 3.5 };
+        function chalCol(nrow, re) {
+            if (!nrow) return null;
+            for (const k in nrow) if (re.test(k)) { const v = parseNum(nrow[k]); if (v !== null && !isNaN(v)) return v; }
+            return null;
+        }
+        function chalEur(v) { return (Math.round(v * 100) / 100).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' €'; }
+        function chalProj(v, days) { return days && days.total > 0 ? computeKPIs(v, 0, days).projection : v; }
+
+        function googleBlock(nrow, days, isStore) {
+            if (!nrow) return '<div class="banner">Aucune vente trouvée pour l\'instant.</div>';
+            const lines = GOOGLE_LINES.map(l => ({ ...l, q: chalCol(nrow, l.re) || 0 }));
+            const total = chalCol(nrow, /^TOTALGOOGLE/);
+            const totalQ = total !== null ? total : lines.reduce((a, l) => a + l.q, 0);
+            let gain, rows;
+            if (isStore) {
+                gain = totalQ * GOOGLE_RPV_EUR;
+                rows = `<tr><td>Mobiles Google vendus (toutes gammes)</td><td>${fmt(totalQ)}</td><td>${chalEur(GOOGLE_RPV_EUR)}</td><td>${chalEur(gain)}</td></tr>`;
+            } else {
+                gain = lines.reduce((a, l) => a + l.q * l.eur, 0);
+                rows = lines.map(l => `<tr><td>${l.label}</td><td>${fmt(l.q)}</td><td>${chalEur(l.eur)}</td><td>${chalEur(l.q * l.eur)}</td></tr>`).join('');
+            }
+            const proj = chalProj(gain, days);
+            return `<div class="cards">
+                    <div class="card prime-card"><div class="card-label">${isStore ? 'Gain du magasin' : 'Mon gain'} à date</div><div class="card-value">${chalEur(gain)}</div><div class="card-sub">${isStore ? 'à ' + GOOGLE_RPV_EUR + ' € par mobile Google' : 'en chèque cadeau'}</div></div>
+                    <div class="card prime-card proj"><div class="card-label">Projection fin de mois</div><div class="card-value">${chalEur(proj)}</div><div class="card-sub">si le rythme actuel se maintient</div></div>
+                </div>
+                <div class="tbl-wrap"><table class="kpi"><thead><tr><th>Gamme</th><th>Vendus</th><th>Gain unitaire</th><th>Gain</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        }
+
+        function tcsBlock(nrow, days, rule, who) {
+            const n = nrow ? (getRealization(nrow, 'TCS') || 0) : 0;
+            if (!nrow) return '<div class="banner">Aucune vente trouvée pour l\'instant.</div>';
+            const proj = Math.floor(chalProj(n, days) + 1e-9);
+            const pct = Math.min(100, n / rule.qualif * 100);
+            const projPct = Math.min(100, proj / rule.qualif * 100);
+            const qualifNow = n >= rule.qualif, qualifProj = proj >= rule.qualif;
+            const gl = (c, rate) => chalEur(c * rate);
+            const row = (label, rate) => `<tr><td>${label}</td><td>${chalEur(rate)} / contrat</td><td>${qualifNow ? gl(n, rate) : '<span class="dim">après qualification</span>'}</td><td>${qualifProj ? gl(proj, rate) : '<span class="ko">qualification non atteinte</span>'}</td></tr>`;
+            return `<div class="cards">
+                    <div class="card"><div class="card-label">Contrats TCS à date</div><div class="card-value">${fmt(n)}<span class="card-unit"> / ${rule.qualif}</span></div>
+                        <div class="bar"><div class="bar-fill ${qualifNow ? 'ok' : 'warn'}" style="width:${pct}%"></div></div><div class="card-sub">qualification : ${rule.qualif} contrats validés</div></div>
+                    <div class="card"><div class="card-label">Projection fin de mois</div><div class="card-value">${fmt(proj)}<span class="card-unit"> / ${rule.qualif}</span></div>
+                        <div class="bar"><div class="bar-fill ${qualifProj ? 'ok' : 'ko'}" style="width:${projPct}%"></div></div><div class="card-sub">${qualifProj ? 'qualification atteinte au rythme actuel' : 'il manque ' + (rule.qualif - proj) + ' contrat(s) au rythme actuel'}</div></div>
+                </div>
+                <div class="tbl-wrap"><table class="kpi"><thead><tr><th>Taux 1er prélèv. ${who}</th><th>Bonus</th><th>Gain à date</th><th>Gain projeté</th></tr></thead><tbody>
+                    <tr><td>Moins de 55 %</td><td>—</td><td>${chalEur(0)}</td><td>${chalEur(0)}</td></tr>
+                    ${row('55 à 59 %', rule.lo)}
+                    ${row('60 % et plus', rule.hi)}
+                </tbody></table></div>
+                <p class="muted" style="font-size:12px">Estimation : le taux de passage en 1er prélèvement n'est connu que plus tard, on suppose ici que tous les contrats vendus seront validés. Aucun gain sur la seule quantité. Qualification sur toute la durée du challenge (1er octobre au 30 novembre).</p>`;
+        }
+
+        function loadChallengesTab(user) {
+            const data = getData();
+            const u = data.users.find(x => x.email === user.email) || user;
+            let h = `<div class="dash">${errorBanner()}<h2 class="dash-title">🏆 Challenges</h2>`;
+            const vendorSection = (usr) => {
+                const nrow = findVendorRow(usr), days = workingDays(usr);
+                return `<h3 class="section-title">🔵 Challenge Google — mes gains</h3>${googleBlock(nrow, days, false)}
+                    <h3 class="section-title">📡 Challenge TCS (Télécâble Sat) — mon estimation</h3>${tcsBlock(nrow, days, TCS_VENDOR, '(mon espace)')}`;
+            };
+            const storeSection = (store, title) => {
+                const nrow = findStoreRow(store), days = storeWorkingDays(data, store);
+                return `<h3 class="section-title">🔵 Challenge Google — ${title}</h3>${googleBlock(nrow, days, true)}
+                    <h3 class="section-title">📡 Challenge TCS — ${title}</h3>${tcsBlock(nrow, days, TCS_RPV, '(espace SFR)')}`;
+            };
+            if (u.isDirector) {
+                const stores = data.stores.map(s => s.name);
+                if (!stores.includes(chalStore)) chalStore = stores[0] || null;
+                h += `<div class="dash-sub">Vue par magasin</div>` + subNav(stores.map(s => ({ key: s, label: s })), chalStore, 'setChalStore');
+                if (chalStore) {
+                    h += storeSection(chalStore, esc(chalStore));
+                    const vs = vendorRanking(data, chalStore);
+                    if (vs.length) {
+                        h += `<h3 class="section-title">Détail par vendeur — ${esc(chalStore)}</h3>`;
+                        vs.forEach(v => {
+                            const g = GOOGLE_LINES.reduce((a, l) => a + (chalCol(v.nrow, l.re) || 0) * l.eur, 0);
+                            const t = v.nrow ? (getRealization(v.nrow, 'TCS') || 0) : 0;
+                            h += `<details class="vendor-detail"><summary>${esc(v.user.name)} <span class="muted">— Google ${chalEur(g)} • TCS ${fmt(t)} contrat(s)</span></summary>${vendorSection(v.user)}</details>`;
+                        });
+                    }
+                }
+            } else {
+                if (u.isManager) h += storeSection(u.store, 'mon magasin ' + esc(u.store));
+                if (isVendorProfile(u)) h += vendorSection(u);
+            }
+            document.getElementById('challenges-tab').innerHTML = h + '</div>';
+        }
+        let chalStore = null;
+        function setChalStore(k) { chalStore = k; loadChallengesTab(currentUser); }
 
         // ================= DIRIGEANTS : VOLUME DE PRIMES VALIDÉES (par mois, magasin, année) =================
         let volYear = null;
