@@ -1451,7 +1451,7 @@
             if (st) st.textContent = '⏳ Envoi en cours…';
             try {
                 const r = await fetch('/api/push', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ adminHash: adminAuth, adminKey: adminSecret, title: '📰 ' + a.title, body: (a.text || 'Nouvelle actu GRADICOM AMR').slice(0, 120), url: '/?actus=1' }) });
+                    body: JSON.stringify({ adminHash: adminAuth, adminKey: adminSecret, actuId: a.id, title: '📰 ' + a.title, body: (a.text || 'Nouvelle actu GRADICOM AMR').slice(0, 120), url: '/?actus=1' }) });
                 const j = await r.json();
                 if (!j.ok) throw new Error(j.error || 'Erreur');
                 try { localStorage.setItem(sentActuKey(id), new Date().toLocaleString('fr-FR')); } catch (e) {}

@@ -336,6 +336,20 @@ function handle_(req) {
       return { ok: true, subs: subs };
     }
 
+    // Marque des actus comme « notifiées » et renvoie celles qui ne l'étaient pas encore (envoi automatique à chaque nouvelle actu)
+    case 'pushClaim': {
+      if (!isAdmin_(ss, req)) throw new Error('Mot de passe Admin incorrect');
+      const lock = LockService.getScriptLock();
+      lock.waitLock(20000);
+      try {
+        const props = PropertiesService.getScriptProperties();
+        let done = []; try { done = JSON.parse(props.getProperty('ACTUS_NOTIFIED') || '[]'); } catch (e) {}
+        const fresh = (req.ids || []).map(String).filter(function (id) { return done.indexOf(id) < 0; });
+        if (fresh.length) props.setProperty('ACTUS_NOTIFIED', JSON.stringify(done.concat(fresh).slice(-300)));
+        return { ok: true, fresh: fresh };
+      } finally { lock.releaseLock(); }
+    }
+
     case 'pushPurge': {
       if (!isAdmin_(ss, req)) throw new Error('Mot de passe Admin incorrect');
       const dead = {}; (req.endpoints || []).forEach(function (e) { dead[String(e)] = true; });

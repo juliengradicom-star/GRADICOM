@@ -33,5 +33,7 @@
         }
       ]
     }
-  ]
+  ],
+  "buildCommand": "node scripts/notify-actus.js",
+  "outputDirectory": "."
 }
