@@ -2402,6 +2402,12 @@
         // Explication de la méthode de classement, affichée sous les podiums
         function rankExplainHtml(kind) {
             const who = kind === 'store' ? 'magasin' : 'vendeur';
+            if (kind === 'store') return `<details class="vendor-detail rank-explain" open><summary>ℹ️ Comment est calculé ce classement ?</summary>
+                <div class="muted" style="font-size:12px;line-height:1.6;margin-top:8px;">
+                    <p><b>Le classement des magasins se fait sur le R/O de marge</b> : marge réalisée ÷ objectif de marge du mois du magasin. Le magasin qui a le plus gros pourcentage est premier. C'est comparable entre tous, même avec des objectifs différents.</p>
+                    <p><b>En cas d'égalité</b> : on regarde le nombre d'items dans le vert (« 🟢 8/11 »), puis l'atteinte moyenne de tous les objectifs.</p>
+                    <p><b>Chiffres affichés</b> : 🟢 items verts sur items suivis, le R/O marge en %, puis la marge en € en petit.</p>
+                </div></details>`;
             return `<details class="vendor-detail rank-explain" open><summary>ℹ️ Comment est calculé ce classement ?</summary>
                 <div class="muted" style="font-size:12px;line-height:1.6;margin-top:8px;">
                     <p><b>1. On compte les items dans le vert.</b> Chaque ligne du tableau « R/O » (marge, fixe, terminaux, abos, accessoires, services, Chubb, Mix 2h…) qui a un objectif pour ce ${who} est un item. Plus il y a d'items dans le vert, mieux le ${who} est classé. Affiché « 🟢 8/11 » = 8 items verts sur 11 suivis.</p>
@@ -4441,7 +4447,7 @@
             if (!el) return;
             const items = [{ key: 'all', label: 'Toutes les marques' }].concat(BONUS_REPRISE.brands.map(b => ({ key: b.name, label: b.name })));
             el.innerHTML = `<div class="dash"><h2 class="dash-title">♻️ Bonus reprise</h2><div class="dash-sub">${esc(BONUS_REPRISE.period)}</div>
-                <p class="muted" style="font-size:12px">Bonus en € sur la reprise de l'ancien mobile, selon le mobile acheté. <span class="bonus-anim">★ animation</span> = ${esc(BONUS_REPRISE.animLabel.toLowerCase())}.</p>
+                <p class="muted" style="font-size:12px">Bonus en € sur la reprise de l'ancien mobile, selon le mobile acheté. <span class="bonus-anim">★ animation</span> = ${esc(BONUS_REPRISE.animLabel)}.</p>
                 <input class="bonus-search" type="search" placeholder="Chercher un mobile…" value="${esc(bonusQuery)}" oninput="setBonusQuery(this.value)">
                 ${subNav(items, bonusBrand, 'setBonusBrand')}<div id="bonusList"></div></div>`;
             renderBonusList();
@@ -4806,14 +4812,20 @@
             showImportStatus('✅ Notes enregistrées et publiées.');
         }
 
+        // Classement des MAGASINS (voulu par Julien, 01/10/2026) : par R/O de marge (marge réalisée ÷ objectif de marge du mois),
+        // le plus gros pourcentage devant ; départage : items verts puis indice de performance.
         function storeRanking(data) {
+            const margeObj = uniqueObjectives(data.objectives).find(o => { const d = findDef(o.name); return d && d.isMarge; });
             return data.stores.map(s => {
                 const nrow = findStoreRow(s.name);
                 const targets = storeTargetsFor(data, s.name);
                 const days = storeWorkingDays(data, s.name);
                 const g = greenCount(targets, nrow, data.objectives, days);
-                return { store: s, nrow, targets, days, green: g.green, total: g.total, index: performanceIndex(targets, nrow, data.objectives, days) };
-            }).sort(rankSort);
+                const mr = margeObj ? getRealization(nrow, margeObj.name) : null;
+                const mt = margeObj ? targetFor(targets, margeObj) : null;
+                const margeRatio = (mr !== null && mt > 0) ? mr / mt : -1;
+                return { store: s, nrow, targets, days, green: g.green, total: g.total, margeRatio, index: performanceIndex(targets, nrow, data.objectives, days) };
+            }).sort((a, b) => (b.margeRatio - a.margeRatio) || rankSort(a, b));
         }
 
         // Mapping des managers par magasin
