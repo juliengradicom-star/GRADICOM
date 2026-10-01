@@ -3037,6 +3037,13 @@
                     <div id="primeEstimates"><p class="muted">Chargement des ventes...</p></div>
                 </div>
 
+                <!-- TCS : CUMUL OCTOBRE -->
+                <div data-atab="prime" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
+                    <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">📡 Challenge TCS — contrats d'octobre</h2>
+                    <p class="muted" style="font-size:12px;margin-bottom:12px;">Le tableau des ventes repart de zéro le 1er novembre, mais le challenge court jusqu'au 30 novembre. Le dernier jour d'octobre (ou le 1er novembre avant que les ventes ne soient remises à zéro), clique sur « Reprendre depuis les ventes » puis « Enregistrer » : en novembre, ces contrats seront ajoutés automatiquement à ceux de novembre pour la qualification.</p>
+                    <div id="tcsCarryAdmin"></div>
+                </div>
+
                 <!-- PRIMES VALIDÉES -->
                 <div data-atab="prime" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
                     <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">📜 Primes validées (historique)</h2>
@@ -3078,6 +3085,7 @@
             renderPayplanEditor();
             histMonth = null;
             renderPrimeHistoryAdmin();
+            renderTcsCarryAdmin();
             renderMessagingAdmin();
             renderActusAdmin();
             refreshLists();
@@ -4214,48 +4222,88 @@
         function chalEur(v) { return (Math.round(v * 100) / 100).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' €'; }
         function chalProj(v, days) { return days && days.total > 0 ? computeKPIs(v, 0, days).projection : v; }
 
-        function googleBlock(nrow, days, isStore) {
-            if (!nrow) return '<div class="banner">Aucune vente trouvée pour l\'instant.</div>';
+        // Cumul TCS : le Sheets repart de zéro chaque mois, le challenge court du 1er octobre au 30 novembre.
+        // En novembre, on ajoute les contrats d'octobre enregistrés dans l'Admin (data.tcsCarry).
+        function tcsCarryFor(kind, key) {
+            const mi = monthInfo();
+            if (!(mi.y === 2026 && mi.m === 10)) return 0;
+            const c = getData().tcsCarry;
+            const v = c && c[kind] ? parseFloat(c[kind][key]) : 0;
+            return isNaN(v) ? 0 : v;
+        }
+        function googleOn() { const mi = monthInfo(); return mi.y === 2026 && mi.m === 9; } // challenge Google : octobre 2026 seulement
+        function googleGain(nrow, isStore) {
+            if (!nrow || !googleOn()) return null;
             const lines = GOOGLE_LINES.map(l => ({ ...l, q: chalCol(nrow, l.re) || 0 }));
             const total = chalCol(nrow, /^TOTALGOOGLE/);
             const totalQ = total !== null ? total : lines.reduce((a, l) => a + l.q, 0);
-            let gain, rows;
-            if (isStore) {
-                gain = totalQ * GOOGLE_RPV_EUR;
-                rows = `<tr><td>Mobiles Google vendus (toutes gammes)</td><td>${fmt(totalQ)}</td><td>${chalEur(GOOGLE_RPV_EUR)}</td><td>${chalEur(gain)}</td></tr>`;
-            } else {
-                gain = lines.reduce((a, l) => a + l.q * l.eur, 0);
-                rows = lines.map(l => `<tr><td>${l.label}</td><td>${fmt(l.q)}</td><td>${chalEur(l.eur)}</td><td>${chalEur(l.q * l.eur)}</td></tr>`).join('');
-            }
-            const proj = chalProj(gain, days);
+            return { lines, totalQ, gain: isStore ? totalQ * GOOGLE_RPV_EUR : lines.reduce((a, l) => a + l.q * l.eur, 0) };
+        }
+        function tcsNums(nrow, days, carry) {
+            const cur = nrow ? (getRealization(nrow, 'TCS') || 0) : 0;
+            return { cur, carry, n: cur + carry, proj: Math.floor(chalProj(cur, days) + 1e-9) + carry };
+        }
+        const tcsGain = (n, rule, rate) => n >= rule.qualif ? n * rate : 0;
+
+        function googleBlock(nrow, days, isStore) {
+            if (!googleOn()) return '<div class="banner">Le challenge Google était limité à octobre 2026.</div>';
+            const g = googleGain(nrow, isStore);
+            if (!g) return '<div class="banner">Aucune vente trouvée pour l\'instant.</div>';
+            const rows = isStore
+                ? `<tr><td>Mobiles Google vendus (toutes gammes)</td><td>${fmt(g.totalQ)}</td><td>${chalEur(GOOGLE_RPV_EUR)}</td><td>${chalEur(g.gain)}</td></tr>`
+                : g.lines.map(l => `<tr><td>${l.label}</td><td>${fmt(l.q)}</td><td>${chalEur(l.eur)}</td><td>${chalEur(l.q * l.eur)}</td></tr>`).join('');
             return `<div class="cards">
-                    <div class="card prime-card"><div class="card-label">${isStore ? 'Gain du magasin' : 'Mon gain'} à date</div><div class="card-value">${chalEur(gain)}</div><div class="card-sub">${isStore ? 'à ' + GOOGLE_RPV_EUR + ' € par mobile Google' : 'en chèque cadeau'}</div></div>
-                    <div class="card prime-card proj"><div class="card-label">Projection fin de mois</div><div class="card-value">${chalEur(proj)}</div><div class="card-sub">si le rythme actuel se maintient</div></div>
+                    <div class="card prime-card"><div class="card-label">${isStore ? 'Gain du magasin' : 'Mon gain'} à date</div><div class="card-value">${chalEur(g.gain)}</div><div class="card-sub">${isStore ? 'à ' + GOOGLE_RPV_EUR + ' € par mobile Google' : 'en chèque cadeau'}</div></div>
+                    <div class="card prime-card proj"><div class="card-label">Gain projeté fin de mois</div><div class="card-value">${chalEur(chalProj(g.gain, days))}</div><div class="card-sub">si le rythme actuel se maintient</div></div>
                 </div>
                 <div class="tbl-wrap"><table class="kpi"><thead><tr><th>Gamme</th><th>Vendus</th><th>Gain unitaire</th><th>Gain</th></tr></thead><tbody>${rows}</tbody></table></div>`;
         }
 
-        function tcsBlock(nrow, days, rule, who) {
-            const n = nrow ? (getRealization(nrow, 'TCS') || 0) : 0;
+        function tcsBlock(nrow, days, rule, who, carry) {
             if (!nrow) return '<div class="banner">Aucune vente trouvée pour l\'instant.</div>';
-            const proj = Math.floor(chalProj(n, days) + 1e-9);
-            const pct = Math.min(100, n / rule.qualif * 100);
-            const projPct = Math.min(100, proj / rule.qualif * 100);
-            const qualifNow = n >= rule.qualif, qualifProj = proj >= rule.qualif;
-            const gl = (c, rate) => chalEur(c * rate);
-            const row = (label, rate) => `<tr><td>${label}</td><td>${chalEur(rate)} / contrat</td><td>${qualifNow ? gl(n, rate) : '<span class="dim">après qualification</span>'}</td><td>${qualifProj ? gl(proj, rate) : '<span class="ko">qualification non atteinte</span>'}</td></tr>`;
+            const t = tcsNums(nrow, days, carry || 0);
+            const pct = Math.min(100, t.n / rule.qualif * 100);
+            const qualifNow = t.n >= rule.qualif, qualifProj = t.proj >= rule.qualif;
+            const row = (label, rate) => `<tr><td>${label}</td><td>${chalEur(rate)} / contrat</td><td>${qualifNow ? chalEur(t.n * rate) : '<span class="dim">après qualification</span>'}</td><td>${qualifProj ? chalEur(t.proj * rate) : '<span class="ko">qualification non atteinte</span>'}</td></tr>`;
             return `<div class="cards">
-                    <div class="card"><div class="card-label">Contrats TCS à date</div><div class="card-value">${fmt(n)}<span class="card-unit"> / ${rule.qualif}</span></div>
-                        <div class="bar"><div class="bar-fill ${qualifNow ? 'ok' : 'warn'}" style="width:${pct}%"></div></div><div class="card-sub">qualification : ${rule.qualif} contrats validés</div></div>
-                    <div class="card"><div class="card-label">Projection fin de mois</div><div class="card-value">${fmt(proj)}<span class="card-unit"> / ${rule.qualif}</span></div>
-                        <div class="bar"><div class="bar-fill ${qualifProj ? 'ok' : 'ko'}" style="width:${projPct}%"></div></div><div class="card-sub">${qualifProj ? 'qualification atteinte au rythme actuel' : 'il manque ' + (rule.qualif - proj) + ' contrat(s) au rythme actuel'}</div></div>
+                    <div class="card"><div class="card-label">Contrats TCS à date</div><div class="card-value">${fmt(t.n)}<span class="card-unit"> / ${rule.qualif}</span></div>
+                        <div class="bar"><div class="bar-fill ${qualifNow ? 'ok' : 'warn'}" style="width:${pct}%"></div></div><div class="card-sub">qualification : ${rule.qualif} contrats validés${t.carry ? ` • dont ${fmt(t.carry)} en octobre` : ''}</div></div>
                 </div>
                 <div class="tbl-wrap"><table class="kpi"><thead><tr><th>Taux 1er prélèv. ${who}</th><th>Bonus</th><th>Gain à date</th><th>Gain projeté</th></tr></thead><tbody>
                     <tr><td>Moins de 55 %</td><td>—</td><td>${chalEur(0)}</td><td>${chalEur(0)}</td></tr>
                     ${row('55 à 59 %', rule.lo)}
                     ${row('60 % et plus', rule.hi)}
                 </tbody></table></div>
-                <p class="muted" style="font-size:12px">Estimation : le taux de passage en 1er prélèvement n'est connu que plus tard, on suppose ici que tous les contrats vendus seront validés. Aucun gain sur la seule quantité. Qualification sur toute la durée du challenge (1er octobre au 30 novembre).</p>`;
+                <p class="muted" style="font-size:12px">Estimation : le taux de passage en 1er prélèvement n'est connu que plus tard, on suppose ici que tous les contrats vendus seront validés. Le gain projeté suit le rythme actuel de vente. Aucun gain sur la seule quantité. Qualification sur toute la durée du challenge (1er octobre au 30 novembre).</p>`;
+        }
+
+        // Dylan (responsable + vendeur) : total de ses gains cumulés
+        function dylanTotalBlock(data, u) {
+            const vRow = findVendorRow(u), vDays = workingDays(u);
+            const sRow = findStoreRow(u.store), sDays = storeWorkingDays(data, u.store);
+            const gv = googleGain(vRow, false), gs = googleGain(sRow, true);
+            const tv = tcsNums(vRow, vDays, tcsCarryFor('vendors', u.email));
+            const ts = tcsNums(sRow, sDays, tcsCarryFor('stores', u.store));
+            const rates = [0, 'lo', 'hi'];
+            const build = (proj) => {
+                const gvN = gv ? (proj ? chalProj(gv.gain, vDays) : gv.gain) : 0;
+                const gsN = gs ? (proj ? chalProj(gs.gain, sDays) : gs.gain) : 0;
+                const nv = proj ? tv.proj : tv.n, ns = proj ? ts.proj : ts.n;
+                const tcsV = rates.map(r => r ? tcsGain(nv, TCS_VENDOR, TCS_VENDOR[r]) : 0);
+                const tcsS = rates.map(r => r ? tcsGain(ns, TCS_RPV, TCS_RPV[r]) : 0);
+                const tot = rates.map((_, i) => gvN + gsN + tcsV[i] + tcsS[i]);
+                const td = arr => arr.map(x => `<td>${chalEur(x)}</td>`).join('');
+                return `<div class="tbl-wrap"><table class="kpi"><thead><tr><th>${proj ? 'Gains projetés' : 'Gains à date'}</th><th>Taux &lt; 55 %</th><th>55 à 59 %</th><th>60 % et +</th></tr></thead><tbody>
+                    <tr><td>Google — vendeur</td>${td([gvN, gvN, gvN])}</tr>
+                    <tr><td>Google — magasin (RPV)</td>${td([gsN, gsN, gsN])}</tr>
+                    <tr><td>TCS — vendeur</td>${td(tcsV)}</tr>
+                    <tr><td>TCS — magasin (RPV)</td>${td(tcsS)}</tr>
+                    <tr><td><strong>TOTAL</strong></td>${tot.map(x => `<td><strong class="ok">${chalEur(x)}</strong></td>`).join('')}</tr>
+                </tbody></table></div>`;
+            };
+            return `<h3 class="section-title">💰 Mon total (vendeur + responsable)</h3>
+                <p class="muted" style="font-size:12px">Gains Google certains ; TCS estimé selon le taux de passage en 1er prélèvement (colonnes), sous réserve de la qualification (${TCS_VENDOR.qualif} contrats en vendeur, ${TCS_RPV.qualif} pour le magasin).</p>
+                ${build(false)}${build(true)}`;
         }
 
         function loadChallengesTab(user) {
@@ -4265,12 +4313,12 @@
             const vendorSection = (usr) => {
                 const nrow = findVendorRow(usr), days = workingDays(usr);
                 return `<h3 class="section-title">🔵 Challenge Google — mes gains</h3>${googleBlock(nrow, days, false)}
-                    <h3 class="section-title">📡 Challenge TCS (Télécâble Sat) — mon estimation</h3>${tcsBlock(nrow, days, TCS_VENDOR, '(mon espace)')}`;
+                    <h3 class="section-title">📡 Challenge TCS (Télécâble Sat) — mon estimation</h3>${tcsBlock(nrow, days, TCS_VENDOR, '(mon espace)', tcsCarryFor('vendors', usr.email))}`;
             };
             const storeSection = (store, title) => {
                 const nrow = findStoreRow(store), days = storeWorkingDays(data, store);
                 return `<h3 class="section-title">🔵 Challenge Google — ${title}</h3>${googleBlock(nrow, days, true)}
-                    <h3 class="section-title">📡 Challenge TCS — ${title}</h3>${tcsBlock(nrow, days, TCS_RPV, '(espace SFR)')}`;
+                    <h3 class="section-title">📡 Challenge TCS — ${title}</h3>${tcsBlock(nrow, days, TCS_RPV, '(espace SFR)', tcsCarryFor('stores', store))}`;
             };
             if (u.isDirector) {
                 const stores = data.stores.map(s => s.name);
@@ -4289,6 +4337,7 @@
                     }
                 }
             } else {
+                if (u.isManager && isVendorProfile(u)) h += dylanTotalBlock(data, u);
                 if (u.isManager) h += storeSection(u.store, 'mon magasin ' + esc(u.store));
                 if (isVendorProfile(u)) h += vendorSection(u);
             }
@@ -4357,6 +4406,44 @@
             });
             el.innerHTML = `<div class="tbl-wrap"><table class="kpi est-table"><thead><tr><th>Collaborateur</th><th>Rôle</th><th>Prime à date</th><th>Projection fin de mois</th></tr></thead>
                 <tbody>${body}<tr class="row-total"><td>TOTAL</td><td></td><td>${fmtEur(totNow)}</td><td>${fmtEur(totProj)}</td></tr></tbody></table></div>`;
+        }
+
+        // ================= ADMIN : TCS, CONTRATS D'OCTOBRE (cumul de novembre) =================
+        function renderTcsCarryAdmin() {
+            const el = document.getElementById('tcsCarryAdmin');
+            if (!el) return;
+            const data = getData();
+            const c = data.tcsCarry || { vendors: {}, stores: {} };
+            const val = (kind, k) => (c[kind] && c[kind][k] !== undefined) ? c[kind][k] : '';
+            const vend = data.users.filter(u => isVendorProfile(u)).sort((a, b) => (a.store || '').localeCompare(b.store || '') || a.name.localeCompare(b.name));
+            el.innerHTML = `<div class="tbl-wrap"><table class="kpi ratings"><thead><tr><th>Magasin / vendeur</th><th>Contrats TCS d'octobre</th></tr></thead><tbody>` +
+                data.stores.map(s => `<tr><td><strong>${esc(s.name)}</strong> <span class="muted">(magasin)</span></td><td><input class="rt-input tcs-in" type="number" step="1" min="0" data-kind="stores" data-key="${esc(s.name)}" value="${val('stores', s.name)}" placeholder="—"></td></tr>`).join('') +
+                vend.map(u => `<tr><td>${esc(u.name)} <span class="muted">${esc(u.store || '')}</span></td><td><input class="rt-input tcs-in" type="number" step="1" min="0" data-kind="vendors" data-key="${esc(u.email)}" value="${val('vendors', u.email)}" placeholder="—"></td></tr>`).join('') +
+                `</tbody></table></div>
+                <div class="pe-actions"><button class="logout-btn" onclick="tcsCarryFromSales()">📥 Reprendre depuis les ventes</button>
+                <button class="btn-add" onclick="saveTcsCarry()">💾 Enregistrer</button></div>
+                ${c.savedAt ? `<p class="muted" style="font-size:12px">Dernier enregistrement : ${new Date(c.savedAt).toLocaleString('fr-FR')}</p>` : ''}`;
+        }
+        function tcsCarryFromSales() {
+            const data = getData();
+            const mi = monthInfo();
+            if (!(mi.y === 2026 && mi.m === 9) && !confirm('Les ventes affichées ne sont pas celles d\'octobre 2026. Les reprendre quand même ?')) return;
+            document.querySelectorAll('.tcs-in').forEach(inp => {
+                const row = inp.dataset.kind === 'stores' ? findStoreRow(inp.dataset.key) : findVendorRow(data.users.find(u => u.email === inp.dataset.key));
+                const v = row ? getRealization(row, 'TCS') : null;
+                inp.value = v === null ? '' : v;
+            });
+        }
+        function saveTcsCarry() {
+            const data = getData();
+            const c = { vendors: {}, stores: {}, savedAt: Date.now() };
+            document.querySelectorAll('.tcs-in').forEach(inp => {
+                if (String(inp.value).trim() !== '') c[inp.dataset.kind][inp.dataset.key] = parseFloat(inp.value) || 0;
+            });
+            data.tcsCarry = c;
+            saveData(data);
+            renderTcsCarryAdmin();
+            showImportStatus('✅ Contrats TCS d\'octobre enregistrés et publiés.');
         }
 
         // ================= ADMIN : PRIMES VALIDÉES (saisie manuelle mois par mois) =================
