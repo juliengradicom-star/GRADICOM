@@ -2119,8 +2119,9 @@
         }
 
         // Valeur affichée dans les classements : le R/O marge en grand (comparable d'un magasin / vendeur à l'autre), le montant en petit
-        function rankMargeVal(k, mr) {
-            return `${k.ratio !== null ? fmtPct(k.ratio) : '—'} <span class="muted" style="font-weight:400;font-size:.85em">${fmt(mr, '€')}</span>`;
+        function rankMargeVal(k, mr, it) {
+            const gv = it && it.total ? `<span style="font-weight:700">🟢 ${it.green}/${it.total}</span> · ` : '';
+            return `${gv}${k.ratio !== null ? fmtPct(k.ratio) : '—'} <span class="muted" style="font-weight:400;font-size:.85em">${fmt(mr, '€')}</span>`;
         }
 
         function renderRankList(items, nameFn, subFn, meFn) {
@@ -2385,7 +2386,7 @@
                     return `<div class="rank-row" ${click}>
                         <div class="rank-pos">${rankLabel(i)}</div>
                         <div class="rank-name">${esc(item.user.name)}</div>
-                        <div class="rank-val ${paceClass(k)}">${rankMargeVal(k, mr)}</div>
+                        <div class="rank-val ${paceClass(k)}">${rankMargeVal(k, mr, item)}</div>
                     </div>`;
                 }).join('');
                 const toHelp = team.filter(v => v.co.top.length).sort((a, b) => (b.co.level === 'ko') - (a.co.level === 'ko'));
@@ -2451,7 +2452,7 @@
                 storesHtml += `<div class="rank-row">
                     <div class="rank-pos">${rankLabel(i)}</div>
                     <div class="rank-name">${esc(s.store.name)}</div>
-                    <div class="rank-val ${paceClass(k)}">${rankMargeVal(k, mr)}</div>
+                    <div class="rank-val ${paceClass(k)}">${rankMargeVal(k, mr, s)}</div>
                 </div>`;
             });
             storesHtml += `</div>`;
@@ -2463,7 +2464,7 @@
                 vendorsHtml += `<div class="rank-row">
                     <div class="rank-pos">${rankLabel(i)}</div>
                     <div class="rank-name">${esc(v.user.name)} <span class="muted">${esc(v.user.store || '')}</span></div>
-                    <div class="rank-val ${paceClass(k)}">${rankMargeVal(k, mr)}</div>
+                    <div class="rank-val ${paceClass(k)}">${rankMargeVal(k, mr, v)}</div>
                 </div>`;
             });
             vendorsHtml += `</div>`;
@@ -2486,7 +2487,7 @@
                         <div><h3 class="section-title">🏢 Classement magasins</h3>${storesHtml}</div>
                         <div><h3 class="section-title">🏆 Classement vendeurs</h3>${vendorsHtml}</div>
                     </div>
-                    <p class="muted" style="margin-top:8px;font-size:11px;">Classement = atteinte moyenne des objectifs au prorata du jour (marge ×3 ; fixe, abos, terminaux ×2). Chiffre affiché : R/O marge (marge réalisée ÷ objectif de marge du mois), la marge réalisée en € est indiquée en petit.</p>`;
+                    <p class="muted" style="margin-top:8px;font-size:11px;">Classement = nombre d'items dans le vert dans les R/O (en cas d'égalité : atteinte moyenne des objectifs, marge ×3). Chiffre affiché : R/O marge (marge réalisée ÷ objectif de marge du mois), la marge réalisée en € est indiquée en petit.</p>`;
             } else if (dirSub === 'magasins') {
                 if (!stores.some(x => x.store.name === dirStore)) dirStore = stores.length ? stores[0].store.name : null;
                 const st = stores.find(x => x.store.name === dirStore);
@@ -3466,6 +3467,23 @@
             return w ? sum / w : 0;
         }
 
+        // Nombre d'items "dans le vert" dans le R/O (même règle que le tableau Admin) : sert à classer les podiums
+        function greenCount(targets, nrow, objectives, days) {
+            let green = 0, total = 0;
+            uniqueObjectives(objectives).forEach(obj => {
+                const t = targetFor(targets, obj);
+                if (!t || t <= 0) return;
+                const r = getRealization(nrow, obj.name);
+                total++;
+                if (obj.unit === '%') {
+                    if (r === null) return;
+                    if (isLowerBetter(obj) ? r <= t : r >= t) green++;
+                } else if (paceClass(computeKPIs(r || 0, t || 0, days)) === 'ok') green++;
+            });
+            return { green, total };
+        }
+        function rankSort(a, b) { return (b.green - a.green) || (b.index - a.index); }
+
         // Seuls ces managers sont aussi vendeurs (leurs chiffres perso comptent). Les autres : objectifs magasin uniquement.
         const MANAGERS_VENDEURS = ['DYLAN'];
         function hasVendorLine(u) {
@@ -3494,9 +3512,10 @@
                 .map(u => {
                     const nrow = findVendorRow(u);
                     const days = workingDays(u);
-                    return { user: u, nrow, days, index: performanceIndex(u.objectiveTargets, nrow, data.objectives, days) };
+                    const g = greenCount(u.objectiveTargets, nrow, data.objectives, days);
+                    return { user: u, nrow, days, green: g.green, total: g.total, index: performanceIndex(u.objectiveTargets, nrow, data.objectives, days) };
                 })
-                .sort((a, b) => b.index - a.index);
+                .sort(rankSort);
         }
 
         // ================= PAYPLAN DU MOIS (modifiable dans l'Admin) =================
@@ -4227,8 +4246,9 @@
                 const nrow = findStoreRow(s.name);
                 const targets = storeTargetsFor(data, s.name);
                 const days = storeWorkingDays(data, s.name);
-                return { store: s, nrow, targets, days, index: performanceIndex(targets, nrow, data.objectives, days) };
-            }).sort((a, b) => b.index - a.index);
+                const g = greenCount(targets, nrow, data.objectives, days);
+                return { store: s, nrow, targets, days, green: g.green, total: g.total, index: performanceIndex(targets, nrow, data.objectives, days) };
+            }).sort(rankSort);
         }
 
         // Mapping des managers par magasin

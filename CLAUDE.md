@@ -26,7 +26,7 @@
 - Dirigeants : Julien (voit toutes les primes) et Anthony (ne voit aucune prime individuelle).
 
 ## Règles métier clés
-- Items essentiels : marge (×3 dans le classement), conquête fixe VV, abos, terminaux (×2).
+- Items essentiels : marge, conquête fixe VV, abos, terminaux. Classement/podiums : par nombre d'items dans le vert dans les R/O (`greenCount`), départage par `performanceIndex` (marge ×3, fixe/abos/terminaux ×2).
 - Alertes : Taux Chubb < 42 % et Mix 2h > 17 %. Abos comptés seulement si Mix 2h strictement < 17 %.
 - Avance/retard au prorata des jours travaillés (fichier JT, 1 = travaillé) et des horaires magasin (Gradignan 9h30-18h30 fermé dim+lun ; Marmande 9h30-19h ; Cognac/Langon 9h30-19h30, fermés le dimanche).
 - Pourcentages tronqués à 1 décimale (jamais arrondis vers le haut).
@@ -59,5 +59,5 @@
   - Onglet Points (bloc 2) : sous chaque item à plusieurs paliers (magasins hors Gradignan), déclinaison 100 % / 110 % ou 120 % = quantité à atteindre (arrondie au-dessus), points gagnés et reste à faire (`renderPayplanTable`). Gradignan (un seul palier à 100 %) : pas de déclinaison.
   - Défilement (bas de `gradicom.html`) : les listes horizontales `.subnav` (vendeurs, magasins…) gardent leur position au changement de vendeur et ramènent le vendeur choisi dans la vue ; message « Fais glisser » au-dessus des listes/tableaux qui défilent (disparaît après un défilement) ; barres de défilement épaisses et visibles. Ne pas remettre `scrollbar-width` sur `.subnav` (il désactive le style des barres sous Chrome).
   - Administration en 6 onglets (barre `#adminTabs`, `setAdminTab`) : Vue globale / Objectifs & import / Payplan (payplan du mois + notes clients) / Primes (estimations + validées) / Équipe & accès (magasins, comptes, mots de passe, mot de passe Admin) / Messagerie. Chaque bloc porte `data-atab="<onglet>"` ; tout nouveau bloc Admin doit en avoir un, sinon il n'est jamais affiché.
-  - Classements magasins / vendeurs (vue dirigeant, vue manager) : affichent le R/O marge en grand et le montant en petit (`rankMargeVal`). L'ORDRE reste l'atteinte moyenne pondérée de tous les objectifs au prorata (`performanceIndex`, marge ×3), pas le montant de marge.
+  - Classements magasins / vendeurs (vue dirigeant, vue manager) : affichent le R/O marge en grand et le montant en petit (`rankMargeVal`). Affiche aussi « 🟢 x/y ». L'ORDRE (02/10/2026, voulu par Julien) = nombre d'items dans le vert (`greenCount` : % ok si r ≥ t, ou r ≤ t pour Mix 2h ; autres objectifs ok si avance ≥ prorata ; seulement les objectifs ayant une cible), puis départage par `performanceIndex`.
   - Import Excel des objectifs : le portail lit le chiffre AFFICHÉ de la cellule (arrondi par le format, ex. 12,4 affiché « 12 » → 12), pas la valeur exacte du calcul (`shownNumber` / `sheetRowsShown`). Pour les pourcentages, dates et notations scientifiques : valeur exacte.
