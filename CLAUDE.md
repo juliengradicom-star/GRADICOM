@@ -26,7 +26,7 @@
 - Dirigeants : Julien (voit toutes les primes) et Anthony (ne voit aucune prime individuelle).
 
 ## Règles métier clés
-- Items essentiels : marge, conquête fixe VV, abos, terminaux. Classement/podiums : par nombre d'items dans le vert dans les R/O (`greenCount`), départage par `performanceIndex` (marge ×3, fixe/abos/terminaux ×2).
+- Items essentiels : marge, conquête fixe VV, abos, terminaux. Classement/podiums (méthode expliquée sous les podiums par `rankExplainHtml`, à tenir à jour si la règle change) : par nombre d'items dans le vert dans les R/O (`greenCount`), départage par `performanceIndex` (marge ×3, fixe/abos/terminaux ×2).
 - Alertes : Taux Chubb < 42 % et Mix 2h > 17 %. Abos comptés seulement si Mix 2h strictement < 17 %.
 - Avance/retard au prorata des jours travaillés (fichier JT, 1 = travaillé) et des horaires magasin (Gradignan 9h30-18h30 fermé dim+lun ; Marmande 9h30-19h ; Cognac/Langon 9h30-19h30, fermés le dimanche).
 - Pourcentages tronqués à 1 décimale (jamais arrondis vers le haut).

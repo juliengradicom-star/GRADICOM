@@ -2131,13 +2131,31 @@
                 </div>`).join('') + `</div>`;
         }
 
+        // Explication de la méthode de classement, affichée sous les podiums
+        function rankExplainHtml(kind) {
+            const who = kind === 'store' ? 'magasin' : 'vendeur';
+            return `<details class="vendor-detail rank-explain" open><summary>ℹ️ Comment est calculé ce classement ?</summary>
+                <div class="muted" style="font-size:12px;line-height:1.6;margin-top:8px;">
+                    <p><b>1. On compte les items dans le vert.</b> Chaque ligne du tableau « R/O » (marge, fixe, terminaux, abos, accessoires, services, Chubb, Mix 2h…) qui a un objectif pour ce ${who} est un item. Plus il y a d'items dans le vert, mieux le ${who} est classé. Affiché « 🟢 8/11 » = 8 items verts sur 11 suivis.</p>
+                    <p><b>2. Quand un item est-il vert ?</b></p>
+                    <ul style="margin:4px 0 8px 18px;">
+                        <li>Pour les objectifs en quantité ou en € : le réalisé est supérieur ou égal à ce qu'il devrait être aujourd'hui (objectif du mois × jours travaillés écoulés ÷ jours travaillés du mois). La journée en cours compte comme complète.</li>
+                        <li>Pour les taux : Taux Chubb vert s'il est au moins égal à l'objectif ; Mix 2h vert s'il est inférieur ou égal à l'objectif.</li>
+                        <li>Un objectif sans cible n'est pas compté.</li>
+                    </ul>
+                    <p><b>3. En cas d'égalité</b> (même nombre d'items verts) : on départage avec l'atteinte moyenne de tous les objectifs au prorata, où la marge compte ×3 et fixe, abos, terminaux ×2 (plafonnée à 150 % par item).</p>
+                    <p><b>4. Chiffres affichés</b> à droite : R/O marge = marge réalisée ÷ objectif de marge du mois (comparable entre tous, même avec des objectifs différents), puis la marge en € en petit.</p>
+                </div></details>`;
+        }
+
         function vendorPodiumSection(data, meEmail) {
             const vr = vendorRanking(data);
             const me = it => meEmail && it.user.email === meEmail;
             return `<h3 class="section-title">🏆 Classement vendeurs</h3>
                 ${renderPodium(vr, 4, it => firstNameOf(it.user.name), it => it.user.store || '', me)}
                 <details class="vendor-detail"><summary>Voir le classement complet (${vr.length})</summary>
-                ${renderRankList(vr, it => it.user.name, it => it.user.store || '', me)}</details>`;
+                ${renderRankList(vr, it => it.user.name, it => it.user.store || '', me)}</details>
+                ${rankExplainHtml('vendor')}`;
         }
 
         function storePodiumSection(data, myStore) {
@@ -2145,7 +2163,8 @@
             const me = it => myStore && it.store.name === myStore;
             return `<h3 class="section-title">🏢 Classement magasins</h3>
                 ${renderPodium(sr, 3, it => it.store.name, null, me)}
-                ${renderRankList(sr, it => it.store.name, null, me)}`;
+                ${renderRankList(sr, it => it.store.name, null, me)}
+                ${rankExplainHtml('store')}`;
         }
 
         function loadHome(user) {
