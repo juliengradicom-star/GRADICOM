@@ -741,6 +741,10 @@
         ::-webkit-scrollbar { height: 10px; width: 10px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,.07); border-radius: 6px; }
         ::-webkit-scrollbar-thumb { background: rgba(201,166,91,.8); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+        .chal-head { display: flex; align-items: center; gap: 14px; margin: 6px 0 4px; }
+        .chal-logo { background: #fff; border-radius: 10px; padding: 6px 10px; display: inline-flex; align-items: center; }
+        .chal-logo img { height: 46px; width: auto; display: block; }
+        .chal-title { font-family: var(--serif); font-size: 22px; color: var(--gold-2); }
         .scroll-hint { display: flex; align-items: center; gap: 6px; font-size: 11.5px; letter-spacing: .3px; color: var(--gold-2); margin: 0 0 5px; transition: opacity .25s; }
         .scroll-hint::after { content: '→'; font-size: 14px; animation: hintNudge 1.4s ease-in-out infinite; }
         .scroll-hint.off { display: none; }
@@ -4307,43 +4311,62 @@
                 ${build(false)}${build(true)}`;
         }
 
+        let chalSub = null;
+        function chalHead(kind, dates) {
+            const logo = kind === 'tcs'
+                ? '<span class="chal-logo"><img src="img/logo-telecablesat.png" alt="Télécâble Sat"></span>'
+                : '<span class="chal-logo"><img src="img/logo-google.png" alt="Google" onerror="this.parentNode.style.display=\'none\'"></span>';
+            return `<div class="chal-head">${logo}<div><div class="chal-title">${kind === 'tcs' ? 'Challenge Télécâble Sat' : 'Challenge Google'}</div><div class="dash-sub" style="margin:0">${dates}</div></div></div>`;
+        }
+        const CHAL_GOOGLE_DATES = 'Du 1er au 31 octobre 2026', CHAL_TCS_DATES = 'Du 1er octobre au 30 novembre 2026';
+
         function loadChallengesTab(user) {
             const data = getData();
             const u = data.users.find(x => x.email === user.email) || user;
-            let h = `<div class="dash">${errorBanner()}<h2 class="dash-title">🏆 Challenges</h2>`;
-            const vendorSection = (usr) => {
+            const hasTotal = !u.isDirector && u.isManager && isVendorProfile(u);
+            const items = [];
+            if (hasTotal) items.push({ key: 'total', label: '💰 Mon total' });
+            items.push({ key: 'google', label: 'Google' }, { key: 'tcs', label: 'TCS' });
+            if (!items.some(i => i.key === chalSub)) chalSub = items[0].key;
+            let h = `<div class="dash">${errorBanner()}<h2 class="dash-title">🏆 Challenges</h2>` + subNav(items, chalSub, 'setChalSub');
+            const vendorBlock = (usr, kind) => {
                 const nrow = findVendorRow(usr), days = workingDays(usr);
-                return `<h3 class="section-title">🔵 Challenge Google — mes gains</h3><div class="dash-sub">Du 1er au 31 octobre 2026</div>${googleBlock(nrow, days, false)}
-                    <h3 class="section-title">📡 Challenge TCS (Télécâble Sat) — mon estimation</h3><div class="dash-sub">Du 1er octobre au 30 novembre 2026</div>${tcsBlock(nrow, days, TCS_VENDOR, '(mon espace)', tcsCarryFor('vendors', usr.email))}`;
+                return kind === 'google' ? googleBlock(nrow, days, false) : tcsBlock(nrow, days, TCS_VENDOR, '(mon espace)', tcsCarryFor('vendors', usr.email));
             };
-            const storeSection = (store, title) => {
+            const storeBlock = (store, kind) => {
                 const nrow = findStoreRow(store), days = storeWorkingDays(data, store);
-                return `<h3 class="section-title">🔵 Challenge Google — ${title}</h3><div class="dash-sub">Du 1er au 31 octobre 2026</div>${googleBlock(nrow, days, true)}
-                    <h3 class="section-title">📡 Challenge TCS — ${title}</h3><div class="dash-sub">Du 1er octobre au 30 novembre 2026</div>${tcsBlock(nrow, days, TCS_RPV, '(espace SFR)', tcsCarryFor('stores', store))}`;
+                return kind === 'google' ? googleBlock(nrow, days, true) : tcsBlock(nrow, days, TCS_RPV, '(espace SFR)', tcsCarryFor('stores', store));
             };
-            if (u.isDirector) {
+            if (chalSub === 'total') {
+                h += dylanTotalBlock(data, u);
+            } else if (u.isDirector) {
+                const kind = chalSub;
+                h += chalHead(kind, kind === 'tcs' ? CHAL_TCS_DATES : CHAL_GOOGLE_DATES);
                 const stores = data.stores.map(s => s.name);
                 if (!stores.includes(chalStore)) chalStore = stores[0] || null;
-                h += `<div class="dash-sub">Vue par magasin</div>` + subNav(stores.map(s => ({ key: s, label: s })), chalStore, 'setChalStore');
+                h += subNav(stores.map(s => ({ key: s, label: s })), chalStore, 'setChalStore');
                 if (chalStore) {
-                    h += storeSection(chalStore, esc(chalStore));
+                    h += `<h3 class="section-title">${esc(chalStore)} — le magasin</h3>` + storeBlock(chalStore, kind);
                     const vs = vendorRanking(data, chalStore);
                     if (vs.length) {
                         h += `<h3 class="section-title">Détail par vendeur — ${esc(chalStore)}</h3>`;
                         vs.forEach(v => {
-                            const g = GOOGLE_LINES.reduce((a, l) => a + (chalCol(v.nrow, l.re) || 0) * l.eur, 0);
-                            const t = v.nrow ? (getRealization(v.nrow, 'TCS') || 0) : 0;
-                            h += `<details class="vendor-detail"><summary>${esc(v.user.name)} <span class="muted">— Google ${chalEur(g)} • TCS ${fmt(t)} contrat(s)</span></summary>${vendorSection(v.user)}</details>`;
+                            const sum = kind === 'google'
+                                ? chalEur((googleGain(v.nrow, false) || { gain: 0 }).gain)
+                                : fmt(v.nrow ? (getRealization(v.nrow, 'TCS') || 0) : 0) + ' contrat(s)';
+                            h += `<details class="vendor-detail"><summary>${esc(v.user.name)} <span class="muted">— ${sum}</span></summary>${vendorBlock(v.user, kind)}</details>`;
                         });
                     }
                 }
             } else {
-                if (u.isManager && isVendorProfile(u)) h += dylanTotalBlock(data, u);
-                if (u.isManager) h += storeSection(u.store, 'mon magasin ' + esc(u.store));
-                if (isVendorProfile(u)) h += vendorSection(u);
+                const kind = chalSub;
+                h += chalHead(kind, kind === 'tcs' ? CHAL_TCS_DATES : CHAL_GOOGLE_DATES);
+                if (u.isManager) h += `<h3 class="section-title">Mon magasin ${esc(u.store)}</h3>` + storeBlock(u.store, kind);
+                if (isVendorProfile(u)) h += `<h3 class="section-title">${u.isManager ? 'Mes résultats de vendeur' : 'Mes gains'}</h3>` + vendorBlock(u, kind);
             }
             document.getElementById('challenges-tab').innerHTML = h + '</div>';
         }
+        function setChalSub(k) { chalSub = k; loadChallengesTab(currentUser); }
         let chalStore = null;
         function setChalStore(k) { chalStore = k; loadChallengesTab(currentUser); }
 
