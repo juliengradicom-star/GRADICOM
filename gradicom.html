@@ -4122,7 +4122,14 @@
                 const info = x.t
                     ? `R/O <strong class="${x.ratio >= 100 ? 'ok' : 'ko'}">${fmtPct(x.ratio)}</strong> • ${fmt(x.r, 'qty')} / ${fmt(x.t, 'qty')} • Projection ${fmtPts(x.ptsProj)}`
                     : 'Pas d\'objectif ce mois';
-                row && (html += row(esc(x.item.label), cls, fmtPts(x.pts), info, esc(x.note)));
+                // Déclinaison par palier (100 %, 110 %, 120 %…) : quantité à atteindre et points gagnés (sauf Gradignan : un seul palier)
+                const decl = x.t && x.item.tiers.length > 1
+                    ? '<div class="pp-decl" style="margin-top:6px;line-height:1.7">' + [...x.item.tiers].sort((a, b) => a[0] - b[0]).map(([min, v]) => {
+                        const need = Math.ceil(x.t * min / 100 - 1e-9);
+                        const ok = x.ratio >= min - 1e-9;
+                        return `<div class="${ok ? 'ok' : ''}">${ok ? '✔' : '•'} <strong>${min} %</strong> : ${fmt(need, 'qty')} = ${fmtPts(v)} <span class="${ok ? 'ok' : 'muted'}">${ok ? '— atteint' : '— encore ' + fmt(Math.max(0, need - x.r), 'qty')}</span></div>`;
+                    }).join('') + '</div>' : '';
+                row && (html += row(esc(x.item.label), cls, fmtPts(x.pts), info + decl, esc(x.note)));
             });
             const noVal = v => v === undefined || v === null || v === '';
             html += row('Note Goodays (trimestre)', pp.goodaysPts ? 'ok' : 'ko', pp.goodaysPts === null ? '—' : fmtPts(pp.goodaysPts),
