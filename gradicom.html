@@ -221,7 +221,7 @@
             background: var(--dark-gray);
             padding: 0 50px;
             display: flex;
-            gap: 40px;
+            gap: 32px;
         }
 
         .tab-btn {
@@ -759,6 +759,15 @@
         .chal-title { font-family: var(--serif); font-size: 22px; color: var(--gold-2); }
         .obj-bonus { font-size: 10.5px; font-weight: 400; letter-spacing: 0; color: var(--text-dim); margin-top: 3px; white-space: normal; }
         .obj-bonus strong { color: var(--gold-2); }
+        /* Barre d'onglets : une seule ligne, centrée quand tout tient, qui défile (glisser) sinon */
+        .tabs-container { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; }
+        .tabs-container::-webkit-scrollbar { display: none; height: 0; }
+        .tabs-container > .tab-btn { flex: 0 0 auto; }
+        .tabs-container > .tab-btn:first-child { margin-left: auto; }
+        .tabs-container > .tab-btn:last-child { margin-right: auto; }
+        .ico { display: inline-block; width: 1.08em; height: 1.08em; vertical-align: -0.16em; margin-right: .18em; }
+        .ico-ok { color: var(--ok); } .ico-ko { color: var(--ko); } .ico-warn { color: var(--warn); }
+        .ico svg { width: 100%; height: 100%; display: block; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
         .scroll-hint { display: flex; align-items: center; gap: 6px; font-size: 11.5px; letter-spacing: .3px; color: var(--gold-2); margin: 0 0 5px; transition: opacity .25s; }
         .scroll-hint::after { content: '→'; font-size: 14px; animation: hintNudge 1.4s ease-in-out infinite; }
         .scroll-hint.off { display: none; }
@@ -792,12 +801,12 @@
             }
 
             .tabs-container {
-                padding: 0 16px;
-                gap: 0 18px;
-                flex-wrap: wrap;
-                overflow-x: visible !important;
+                padding: 0 22px;
+                gap: 24px;
+                -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
+                mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
             }
-            .tab-btn { letter-spacing: 1.5px !important; padding: 12px 0 !important; }
+            .tab-btn { letter-spacing: 1.8px !important; padding: 15px 0 !important; }
 
             .tab-content {
                 padding: 30px 20px;
@@ -1858,6 +1867,104 @@
             alert('Nouvelle journée : reconnecte-toi avec ton mot de passe.');
         }
 
+
+        // ================= ICÔNES : pictogrammes fins dorés à la place des émojis décoratifs =================
+        const ICONS = {
+            store: '<path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/>',
+            user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
+            users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14c2.8 0 4.5 1.9 4.5 5"/>',
+            euro: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5a4.5 4.5 0 1 0 0 7"/><path d="M7.5 11h6M7.5 13.5h6"/>',
+            coins: '<circle cx="12" cy="12" r="9"/><path d="M12 7v10"/><path d="M15 9.5c-.6-1-1.7-1.5-3-1.5-1.7 0-3 .9-3 2s1.3 1.8 3 2 3 .9 3 2-1.3 2-3 2c-1.3 0-2.4-.5-3-1.5"/>',
+            trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H4v1.5A3.5 3.5 0 0 0 7.5 11M16 6h4v1.5a3.5 3.5 0 0 1-3.5 3.5"/><path d="M12 13v4M8.5 20h7M10 17h4"/>',
+            chart: '<path d="M4 20V10M10 20V4M16 20v-7M3 21h18"/>',
+            trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+            target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+            news: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/>',
+            save: '<path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3M7 21v-7h10v7"/>',
+            lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+            key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/>',
+            bell: '<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/>',
+            bellOff: '<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4M4 4l16 16"/>',
+            trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
+            history: '<path d="M4 12a8 8 0 1 0 2.5-5.8M4 4v4h4"/><path d="M12 8v4l3 2"/>',
+            mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+            download: '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
+            upload: '<path d="M12 16V5M7 9l5-5 5 5M5 20h14"/>',
+            clip: '<path d="M20 11l-8.5 8.5a5 5 0 0 1-7-7L13 4a3.3 3.3 0 0 1 4.7 4.7L9.3 17a1.7 1.7 0 0 1-2.4-2.4L14 7.5"/>',
+            compass: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+            phone: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+            refresh: '<path d="M20 11a8 8 0 0 0-14-4.5L4 9M4 4v5h5M4 13a8 8 0 0 0 14 4.5L20 15M20 20v-5h-5"/>',
+            link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+            pin: '<path d="M12 21s-6-5.6-6-10a6 6 0 0 1 12 0c0 4.4-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/>',
+            building: '<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-3h4v3"/>',
+            clipboard: '<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 11h6M9 15h6"/>',
+            briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2M3 13h18"/>',
+            calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+            dish: '<path d="M4 4a16 16 0 0 1 16 16M4 10a10 10 0 0 1 10 10M4 16a4 4 0 0 1 4 4"/><circle cx="5" cy="19" r="1"/>',
+            search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+            gift: '<rect x="3" y="8" width="18" height="4"/><rect x="5" y="12" width="14" height="9"/><path d="M12 8v13M12 8c-2-4-6-3-5 0M12 8c2-4 6-3 5 0"/>',
+            star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+            edit: '<path d="M4 20l1-4L16.5 4.5a2 2 0 0 1 3 3L8 19z"/>',
+            info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.1"/>',
+            image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M21 16l-5-5-9 9"/>',
+            file: '<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/>',
+            film: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M3 15h18M8 5v14M16 5v14"/>',
+            clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+            check: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',
+            cross: '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>',
+            warn: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.1"/>',
+            dotok: '<circle cx="12" cy="12" r="6" fill="currentColor"/>',
+            cloud: '<path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6 1.2A3.5 3.5 0 0 1 17 18z"/>'
+        };
+        const EMOJI_ICON = {
+            '🏪': 'store', '🏢': 'building', '👤': 'user', '👨': 'user', '👥': 'users', '💶': 'euro', '💰': 'coins', '🏆': 'trophy',
+            '📊': 'chart', '📈': 'trend', '🎯': 'target', '📰': 'news', '💾': 'save', '🔐': 'lock', '🔒': 'lock', '🔑': 'key',
+            '🔔': 'bell', '🔕': 'bellOff', '🗑': 'trash', '📜': 'history', '✉': 'mail', '📥': 'download', '📤': 'upload', '📎': 'clip',
+            '🧭': 'compass', '📲': 'phone', '🔄': 'refresh', '♻': 'refresh', '🔗': 'link', '📌': 'pin', '📋': 'clipboard', '💼': 'briefcase',
+            '📅': 'calendar', '📡': 'dish', '🔍': 'search', '🎁': 'gift', '⭐': 'star', '✏': 'edit', 'ℹ': 'info', '🖼': 'image',
+            '📄': 'file', '📕': 'file', '📘': 'file', '📗': 'file', '📙': 'file', '🎬': 'film', '⏳': 'clock', '☁': 'cloud', '✅': 'check', '❌': 'cross', '⚠': 'warn', '🟢': 'dotok', '🔴': 'dotok'
+        };
+        const EMOJI_RE = new RegExp('(' + Object.keys(EMOJI_ICON).join('|') + ')\\uFE0F?', 'g');
+        const EMOJI_TEST = new RegExp(EMOJI_RE.source);
+        const ICO_SKIP = 'script,style,textarea,input,select,option,noscript,.msg-prev,.msg-from,.msg-body,.msg-subj,[data-noico]';
+        function iconizeNode(root) {
+            if (!root || root.nodeType !== 1 || !root.closest || root.closest(ICO_SKIP)) return;
+            const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => (n.nodeValue && EMOJI_TEST.test(n.nodeValue) && !n.parentNode.closest(ICO_SKIP)) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT });
+            const nodes = [];
+            while (w.nextNode()) nodes.push(w.currentNode);
+            nodes.forEach(n => {
+                const parts = n.nodeValue.split(EMOJI_RE);
+                if (parts.length < 3) return;
+                const frag = document.createDocumentFragment();
+                parts.forEach((part, i) => {
+                    if (i % 2 === 0) { if (part) frag.appendChild(document.createTextNode(part)); return; }
+                    const sp = document.createElement('span');
+                    sp.className = 'ico' + ({ '✅': ' ico-ok', '🟢': ' ico-ok', '❌': ' ico-ko', '🔴': ' ico-ko', '⚠': ' ico-warn' }[part.replace(/\uFE0F/g, '')] || '');
+                    sp.setAttribute('aria-hidden', 'true');
+                    sp.innerHTML = '<svg viewBox="0 0 24 24">' + ICONS[EMOJI_ICON[part]] + '</svg>';
+                    frag.appendChild(sp);
+                });
+                n.parentNode.replaceChild(frag, n);
+            });
+        }
+        (function () {
+            let pending = new Set(), raf = 0;
+            const flush = () => { raf = 0; const list = [...pending]; pending.clear(); list.forEach(iconizeNode); };
+            const mo = new MutationObserver(muts => {
+                muts.forEach(m => m.addedNodes.forEach(n => { const el = n.nodeType === 1 ? n : n.parentElement; if (el) pending.add(el); }));
+                if (!raf && pending.size) raf = requestAnimationFrame(flush);
+            });
+            const start = () => { iconizeNode(document.body); mo.observe(document.body, { childList: true, subtree: true }); };
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+        })();
+
+        // Barre d'onglets : l'onglet actif est ramené au centre
+        function centerActiveTab() {
+            const c = document.querySelector('.tabs-container'), a = c && c.querySelector('.tab-btn.active');
+            if (!c || !a || c.scrollWidth <= c.clientWidth) return;
+            c.scrollTo({ left: a.offsetLeft - (c.clientWidth - a.offsetWidth) / 2, behavior: 'smooth' });
+        }
+
         // ================= NOUVELLE VERSION DU PORTAIL : bandeau « Recharger » =================
         // On compare le fichier en ligne à celui chargé au démarrage ; s'il a changé, on propose de recharger.
         let versionBase = null, versionCheckAt = 0, versionBannerShown = false;
@@ -2061,6 +2168,7 @@
             const [btn, tab] = map[tabName] || map.home;
             document.getElementById(btn).classList.add('active');
             document.getElementById(tab).classList.add('active');
+            centerActiveTab();
             window.scrollTo(0, 0);
             if (tabName === 'messages') { renderMessagesTab(); refreshMessages(true); }
             if (tabName === 'actus') { renderActus(); }
