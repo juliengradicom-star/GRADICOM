@@ -773,6 +773,27 @@
         .prime-gate-ico { font-size: 44px; color: var(--gold-2); }
         .prime-gate-ico .ico { width: 1.1em; height: 1.1em; margin: 0; }
         .prime-pw { width: 100%; padding: 12px 14px; margin: 14px 0 10px; background: #0f0d09; border: 1px solid var(--line, rgba(201,166,91,.3)); border-radius: 8px; color: var(--white); font-size: 15px; text-align: center; }
+        .ladder-block { border: 1px solid var(--gold); background: linear-gradient(180deg, rgba(201,166,91,.10), rgba(201,166,91,.02)); padding: 16px; }
+        .ladder-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .ladder-title { font-family: var(--serif); font-size: 21px; color: var(--gold-2); }
+        .ladder-sub { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+        .ladder-ro {white-space:nowrap; font-family: var(--serif); font-size: 34px; font-weight: 700; color: var(--white); line-height: 1; text-align: right; }
+        .ladder-ro.ok { color: var(--ok); }
+        .ladder-ro span { display: block; font-family: var(--sans); font-size: 9.5px; letter-spacing: 2px; color: var(--text-dim); margin-top: 4px; font-weight: 600; }
+        .ladder-rows { display: grid; gap: 10px; }
+        .ladder-row { background: rgba(0,0,0,.28); border: 1px solid rgba(201,166,91,.16); border-radius: 10px; padding: 12px 14px; }
+        .ladder-row.next { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(201,166,91,.35); }
+        .ladder-row.ok { border-color: rgba(90,170,120,.45); }
+        .ladder-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+        .ladder-min { font-family: var(--serif); font-size: 24px; font-weight: 700; color: var(--white); }
+        .ladder-target { font-size: 15px; color: var(--gold-2); font-weight: 600; }
+        .ladder-badge { margin-left: auto; font-size: 11px; font-weight: 700; letter-spacing: .5px; padding: 3px 9px; border-radius: 12px; background: rgba(201,166,91,.16); color: var(--gold-2); }
+        .ladder-badge.ok { background: rgba(90,170,120,.18); color: var(--ok); }
+        .ladder-need { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .ladder-need div { background: rgba(255,255,255,.04); border-radius: 8px; padding: 8px 10px; }
+        .ladder-need span { display: block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3px; }
+        .ladder-need strong { font-family: var(--serif); font-size: 22px; color: var(--white); }
+        .ladder-pts { font-size: 11.5px; margin-top: 8px; }
         .scroll-hint { display: flex; align-items: center; gap: 6px; font-size: 11.5px; letter-spacing: .3px; color: var(--gold-2); margin: 0 0 5px; transition: opacity .25s; }
         .scroll-hint::after { content: '→'; font-size: 14px; animation: hintNudge 1.4s ease-in-out infinite; }
         .scroll-hint.off { display: none; }
@@ -4275,14 +4296,37 @@
             const shown = rows.filter(r => r.min >= 100 || (r === low && showLow));
             const alert = low && last && !low.ok
                 ? `<div class="q-alert small"><div class="q-alert-icon">!</div><div><div class="q-alert-title">Objectif ramené à ${low.min} %<span>Il reste ${fmt(low.reste, '€')} de marge pour atteindre ${low.min} % de l'objectif (${fmt(low.target, '€')})</span></div></div></div>` : '';
-            const rowHtml = r => `<div class="pr-line ${r.ok ? 'on' : ''}">
-                    <div class="pr-l-main"><span>${r.ok ? '<span class="ok">✔</span>' : '<span class="ko">✘</span>'} Marge ${r.min} %</span><strong>${fmt(r.target, '€')}</strong></div>
-                    <div class="pr-l-conds"><span class="${r.ok ? 'ok' : 'ko'}">${r.ok ? 'atteint' : 'encore ' + fmt(r.reste, '€')}</span></div>
+            // Points du bloc 2 exigés en plus par chaque palier (ex. « + 22 pts magasin »), avec l'état actuel
+            let storePts = null;
+            try { storePts = payplanPoints(se.targets, se.nrow, data, store, se.days, true).total; } catch (e) {}
+            const ptsNeed = min => {
+                const line = grid.bloc1.lines.find(l => (l.conds.find(c => c.kpi === 'MARGE TOTALE' && c.min === min)));
+                const c = line && line.conds.find(c => c.storePts !== undefined);
+                return c ? c.storePts : null;
+            };
+            const remDays = ent.days && ent.days.remaining > 0 ? ent.days.remaining : 0;
+            const nextRow = shown.find(r => !r.ok);
+            const rowHtml = r => {
+                const pct = Math.min(100, mr / r.target * 100);
+                const pn = ptsNeed(r.min);
+                const ptsOk = pn === null || storePts === null || storePts >= pn - 1e-9;
+                const perDay = remDays > 0 ? Math.ceil(r.reste / remDays) : Math.ceil(r.reste);
+                return `<div class="ladder-row ${r.ok ? 'ok' : ''} ${r === nextRow ? 'next' : ''}">
+                    <div class="ladder-top"><span class="ladder-min">${r.min} %</span><span class="ladder-target">${fmt(r.target, '€')}</span>
+                        ${r.ok ? '<span class="ladder-badge ok">✅ Atteint</span>' : r === nextRow ? '<span class="ladder-badge next">Prochain palier</span>' : ''}</div>
+                    <div class="bar"><div class="bar-fill ${r.ok ? 'ok' : (r === nextRow ? 'warn' : 'ko')}" style="width:${pct}%"></div></div>
+                    ${r.ok ? '' : `<div class="ladder-need">
+                        <div><span>Reste à faire</span><strong>${fmt(r.reste, '€')}</strong></div>
+                        <div><span>${remDays > 0 ? 'Par jour • ' + remDays + ' j restant' + (remDays > 1 ? 's' : '') : 'À faire aujourd\'hui'}</span><strong>${fmt(perDay, '€')}</strong></div>
+                    </div>`}
+                    ${pn !== null ? `<div class="ladder-pts ${ptsOk ? 'ok' : 'ko'}">${ptsOk ? '✔' : '✘'} + ${pn} pts bloc 2 ${isStore || !user ? '' : 'du magasin '}(actuellement ${fmtPts(storePts || 0)})</div>` : ''}
                 </div>`;
-            return `<div class="pr-block">
-                <div class="pr-head"><span>🎯 Paliers de marge${isStore || !user ? ' du magasin' : ''}</span><strong>${fmt(mr, '€')}</strong></div>
-                <div class="pr-sub">Marge réalisée • objectif du mois (100 %) : ${fmt(mt, '€')}</div>
-                ${alert}${shown.map(rowHtml).join('')}
+            };
+            return `<div class="pr-block ladder-block">
+                <div class="ladder-head"><div><div class="ladder-title">🎯 Paliers de marge${isStore || !user ? ' du magasin' : ''}</div>
+                    <div class="ladder-sub">Marge réalisée ${fmt(mr, '€')} • objectif du mois (100 %) ${fmt(mt, '€')}</div></div>
+                    <div class="ladder-ro ${mr >= mt ? 'ok' : ''}">${fmtPct(mr / mt * 100)}<span>R/O</span></div></div>
+                ${alert}<div class="ladder-rows">${shown.map(rowHtml).join('')}</div>
             </div>`;
         }
 
