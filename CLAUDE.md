@@ -82,6 +82,8 @@
 
 - 01/10/2026 (21h) : bandeau « 🔄 Nouvelle version disponible — Recharger » (`checkNewVersion`, `showVersionBanner`) : le portail compare le fichier en ligne à celui chargé (empreinte, toutes les 2 min + au retour dans l'appli) et propose de recharger. Évite de devoir fermer / rouvrir l'appli après chaque mise à jour.
 
+- 02/10/2026 : tableaux d'objectifs (vendeur, magasin, vue dirigeant) : sous le nom de chaque objectif qui a des paliers bonus au-dessus de 100 % dans le bloc 2, petite ligne « 🎁 Bonus Payplan : 110 % = 26 (+1,25 pt) » (`bonusTiersHtml`, 5e paramètre `ctx = [user|null, store, isStore]` de `renderKpiTable`). Rien pour Gradignan (un seul palier). Voulu discret (bonus, pas l'objectif principal).
+
 ## Reprise — à faire (état au 01/10/2026 21h)
 - Nouveautés du soir (en ligne, testées avec de fausses ventes uniquement) : onglets « Challenges » (Google / TCS / Mon total pour Dylan), « Bonus reprise », onglets du haut sur plusieurs lignes sur téléphone. À VÉRIFIER avec Julien sur les vraies ventes : les noms de colonnes Google / TCS sont bien lus (noms normalisés, voir Historique), les montants sont cohérents.
 - 31/10 : rappeler à Julien d'enregistrer les contrats TCS d'octobre (Admin → Primes). 1er novembre : nouveau PDF « Bonus reprise » à intégrer (`BONUS_REPRISE`), challenge Google terminé.

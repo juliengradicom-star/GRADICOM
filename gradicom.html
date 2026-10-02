@@ -757,6 +757,8 @@
         .chal-logo { background: #fff; border-radius: 10px; padding: 6px 10px; display: inline-flex; align-items: center; }
         .chal-logo img { height: 46px; width: auto; display: block; }
         .chal-title { font-family: var(--serif); font-size: 22px; color: var(--gold-2); }
+        .obj-bonus { font-size: 10.5px; font-weight: 400; letter-spacing: 0; color: var(--text-dim); margin-top: 3px; white-space: normal; }
+        .obj-bonus strong { color: var(--gold-2); }
         .scroll-hint { display: flex; align-items: center; gap: 6px; font-size: 11.5px; letter-spacing: .3px; color: var(--gold-2); margin: 0 0 5px; transition: opacity .25s; }
         .scroll-hint::after { content: '→'; font-size: 14px; animation: hintNudge 1.4s ease-in-out infinite; }
         .scroll-hint.off { display: none; }
@@ -2150,7 +2152,25 @@
         }
 
         // Tableau d'objectifs (vendeur ou magasin)
-        function renderKpiTable(targets, nrow, objectives, days) {
+        // Paliers bonus du bloc 2 (au-dessus de 100 %) pour un objectif : petite ligne discrète sous son nom
+        function bonusTiersHtml(ctx, obj, t) {
+            if (!ctx || !t || t <= 0) return '';
+            const data = getData();
+            const grid = gridFor(data, ctx[0], ctx[1], ctx[2]);
+            const def = findDef(obj.name);
+            const item = def && grid.bloc2.items.find(it => findDef(it.obj) === def);
+            if (!item) return '';
+            const sorted = [...item.tiers].sort((a, b) => a[0] - b[0]);
+            const parts = [];
+            sorted.forEach(([min, v], i) => {
+                if (min <= 100) return;
+                const prev = i > 0 ? sorted[i - 1][1] : 0;
+                parts.push(`${min} % = <strong>${fmt(Math.ceil(t * min / 100 - 1e-9), 'qty')}</strong> (+${fmtPts(v - prev)})`);
+            });
+            return parts.length ? `<div class="obj-bonus">🎁 Bonus Payplan : ${parts.join(' · ')}</div>` : '';
+        }
+
+        function renderKpiTable(targets, nrow, objectives, days, ctx) {
             const objs = uniqueObjectives(objectives);
             const normal = objs.filter(o => o.unit !== '%');
             const pct = objs.filter(o => o.unit === '%');
@@ -2169,7 +2189,7 @@
                     const cls = t ? paceClass(k) : '';
                     const perDay = obj.unit === '€' ? fmt(k.resteParJour, '€') : (k.resteParJour ? (Math.ceil(k.resteParJour * 10) / 10).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '0');
                     html += `<tr>
-                        <td class="obj-name">${esc(obj.name)}</td>
+                        <td class="obj-name">${esc(obj.name)}${bonusTiersHtml(ctx, obj, t)}</td>
                         <td class="dim">${t ? fmt(t, obj.unit) : '—'}</td>
                         <td><strong>${fmt(k.real, obj.unit)}</strong></td>
                         <td class="${cls}"><strong>${k.ratio === null ? '—' : fmtPct(k.ratio)}</strong></td>
@@ -2554,7 +2574,7 @@
                     ${renderQualityAlerts(alertItemsFor(fresh.objectiveTargets, nrow, data.objectives))}
                     ${renderSummaryCards(fresh.objectiveTargets, nrow, data.objectives, days, rankCard + renderPayplanCard(pp))}
                     ${margeLadderHtml(data, fresh, fresh.store, false)}
-                    ${renderKpiTable(fresh.objectiveTargets, nrow, data.objectives, days)}
+                    ${renderKpiTable(fresh.objectiveTargets, nrow, data.objectives, days, [fresh, fresh.store, false])}
                 </div>`;
         }
 
@@ -2729,7 +2749,7 @@
                     <h3 class="section-title">🧭 Équipe à accompagner</h3>${helpHtml}
                     <h3 class="section-title">🏆 Classement de l'équipe</h3><div class="rank-list">${teamRows}</div>
                     <h3 class="section-title">📋 Objectifs du magasin</h3>
-                    ${renderKpiTable(targets, nrow, data.objectives, days)}`;
+                    ${renderKpiTable(targets, nrow, data.objectives, days, [null, store, true])}`;
             } else {
                 const v = team.find(x => x.user.email === mgrSub);
                 const pp = payplanPoints(v.user.objectiveTargets, v.nrow, data, v.user.store, v.days);
@@ -2744,7 +2764,7 @@
                     ${renderCoaching(v.user, v.co)}
                     ${renderSummaryCards(v.user.objectiveTargets, v.nrow, data.objectives, v.days, rankCard + renderPayplanCard(pp, true))}
                     ${margeLadderHtml(data, v.user, v.user.store, false)}
-                    ${renderKpiTable(v.user.objectiveTargets, v.nrow, data.objectives, v.days)}`;
+                    ${renderKpiTable(v.user.objectiveTargets, v.nrow, data.objectives, v.days, [v.user, v.user.store, false])}`;
             }
             document.getElementById('manager-tab').innerHTML = `<div class="dash">${errorBanner()}${nav}${body}</div>`;
         }
@@ -2822,7 +2842,7 @@
                     ${renderQualityAlerts(alertItemsFor(st.targets, st.nrow, data.objectives))}
                     ${renderSummaryCards(st.targets, st.nrow, data.objectives, st.days, '')}
                     ${margeLadderHtml(data, null, st.store.name, true)}
-                    ${renderKpiTable(st.targets, st.nrow, data.objectives, st.days)}`;
+                    ${renderKpiTable(st.targets, st.nrow, data.objectives, st.days, [null, st.store.name, true])}`;
             } else if (dirSub === 'vendeurs') {
                 if (!vendors.some(v => v.user.email === dirVendor)) dirVendor = vendors.length ? vendors[0].user.email : null;
                 const v = vendors.find(x => x.user.email === dirVendor);
@@ -2831,7 +2851,7 @@
                     ${renderQualityAlerts(alertItemsFor(v.user.objectiveTargets, v.nrow, data.objectives))}
                     ${renderSummaryCards(v.user.objectiveTargets, v.nrow, data.objectives, v.days, '')}
                     ${margeLadderHtml(data, v.user, v.user.store, false)}
-                    ${renderKpiTable(v.user.objectiveTargets, v.nrow, data.objectives, v.days)}`;
+                    ${renderKpiTable(v.user.objectiveTargets, v.nrow, data.objectives, v.days, [v.user, v.user.store, false])}`;
             } else {
                 body = `<div id="primeVolumes">${renderPrimeVolumes(data)}</div>`;
             }
