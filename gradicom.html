@@ -4292,7 +4292,9 @@
                 return { min, target, ok: mr >= target - 1e-9, reste: Math.max(0, target - mr) };
             });
             const low = rows.find(r => r.min < 100);
-            const showLow = low && (low.ok || last);
+            const hundredOk = rows.some(r => r.min >= 100 && r.ok);
+            // Palier de sauvetage : seulement en fin de mois (2 jours), tant que le 100 % n'est pas atteint
+            const showLow = low && last && !hundredOk;
             const shown = rows.filter(r => r.min >= 100 || (r === low && showLow));
             const alert = low && last && !low.ok
                 ? `<div class="q-alert small"><div class="q-alert-icon">!</div><div><div class="q-alert-title">Objectif ramené à ${low.min} %<span>Il reste ${fmt(low.reste, '€')} de marge pour atteindre ${low.min} % de l'objectif (${fmt(low.target, '€')})</span></div></div></div>` : '';
