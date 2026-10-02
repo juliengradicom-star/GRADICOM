@@ -768,6 +768,11 @@
         .ico { display: inline-block; width: 1.08em; height: 1.08em; vertical-align: -0.16em; margin-right: .18em; }
         .ico-ok { color: var(--ok); } .ico-ko { color: var(--ko); } .ico-warn { color: var(--warn); }
         .ico svg { width: 100%; height: 100%; display: block; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+        .prime-lock { display: inline-block; font-size: 12px; margin-left: 2px; opacity: .9; }
+        .prime-gate { max-width: 380px; margin: 40px auto; text-align: center; background: var(--dark-gray); border: 1px solid var(--line, rgba(201,166,91,.25)); border-radius: 14px; padding: 30px 24px; }
+        .prime-gate-ico { font-size: 44px; color: var(--gold-2); }
+        .prime-gate-ico .ico { width: 1.1em; height: 1.1em; margin: 0; }
+        .prime-pw { width: 100%; padding: 12px 14px; margin: 14px 0 10px; background: #0f0d09; border: 1px solid var(--line, rgba(201,166,91,.3)); border-radius: 8px; color: var(--white); font-size: 15px; text-align: center; }
         .scroll-hint { display: flex; align-items: center; gap: 6px; font-size: 11.5px; letter-spacing: .3px; color: var(--gold-2); margin: 0 0 5px; transition: opacity .25s; }
         .scroll-hint::after { content: '→'; font-size: 14px; animation: hintNudge 1.4s ease-in-out infinite; }
         .scroll-hint.off { display: none; }
@@ -931,7 +936,7 @@
             <button class="tab-btn" id="managerTabBtn" onclick="switchTab('manager')">Mon magasin</button>
             <button class="tab-btn" id="directorTabBtn" style="display: none;" onclick="switchTab('director')">Vue Dirigeant</button>
             <button class="tab-btn" id="payplanTabBtn" onclick="switchTab('payplan')">Points</button>
-            <button class="tab-btn" id="primeTabBtn" onclick="switchTab('prime')">Prime</button>
+            <button class="tab-btn" id="primeTabBtn" onclick="switchTab('prime')">Prime <span class="prime-lock" id="primeLockIco" style="display:none">🔒</span></button>
             <button class="tab-btn" id="challengesTabBtn" onclick="switchTab('challenges')">Challenges</button>
             <button class="tab-btn" id="bonusTabBtn" onclick="switchTab('bonus')">Bonus reprise</button>
             <button class="tab-btn" id="messagesTabBtn" onclick="switchTab('messages')">Messages <span class="msg-badge" id="msgBadge" style="display:none">0</span></button>
@@ -2074,6 +2079,7 @@
             document.getElementById('pwEye').classList.remove('on');
 
             currentUser = user;
+            primeUnlockedAt = 0;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appScreen').classList.add('active');
             animateLogo(document.getElementById('appLogo'), { step: 70, delay: 100 });
@@ -2144,6 +2150,7 @@
         function handleLogout() {
             currentUser = null;
             currentPassword = null;
+            primeUnlockedAt = 0;
             salesCreds = null; salesPrefetch = null;
             actusNewShown = []; pushSynced = false; pushMsg = ''; actusLockNote = false; actusConfirmShown = false;
             msgCache = { messages: null, contacts: null, error: null, loading: false };
@@ -2163,6 +2170,7 @@
         function switchTab(tabName) {
             if (tabName !== 'actus' && actusReadRequired()) { tabName = 'actus'; actusLockNote = true; }
             if (tabName !== 'actus') actusConfirmShown = false;
+            if (tabName !== 'prime' && primeUnlockedAt) lockPrime();
             const map = { home: ['homeTabBtn', 'home-tab'], vendeur: ['vendorTabBtn', 'vendeur-tab'], manager: ['managerTabBtn', 'manager-tab'], director: ['directorTabBtn', 'director-tab'], payplan: ['payplanTabBtn', 'payplan-tab'], prime: ['primeTabBtn', 'prime-tab'], messages: ['messagesTabBtn', 'messages-tab'], actus: ['actusTabBtn', 'actus-tab'], challenges: ['challengesTabBtn', 'challenges-tab'], bonus: ['bonusTabBtn', 'bonus-tab'] };
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -4358,6 +4366,8 @@
         function loadPrimeTab(user) {
             const data = getData();
             const fresh = data.users.find(x => x.email === user.email) || user;
+            updatePrimeLockIcon();
+            if (primeNeedsCode(fresh)) { renderPrimeLock(); return; }
             const disclaimer = `<div class="banner disclaimer">⚠️ ${PRIME_DISCLAIMER}</div>`;
             let html = `<div class="dash">${errorBanner()}`;
             if (fresh.isDirector && canSeeAllPrimes(fresh)) {
@@ -4612,6 +4622,71 @@
                 ${subNav(items, bonusBrand, 'setBonusBrand')}<div id="bonusList"></div></div>`;
             renderBonusList();
         }
+
+
+        // ================= PRIME DES RESPONSABLES : verrouillée par le mot de passe du portail =================
+        // Les responsables laissent souvent le portail ouvert sur l'ordinateur du magasin pour que les vendeurs consultent le leur :
+        // la prime du responsable est donc protégée par un cadenas (même mot de passe que pour entrer dans le portail).
+        let primeUnlockedAt = 0, primeLastAct = 0, primeFails = 0, primeBlockedUntil = 0;
+        const PRIME_IDLE_MS = 3 * 60 * 1000;
+        function primeNeedsCode(u) { return !!(u && u.isManager && !u.isDirector && !primeUnlockedAt); }
+        function updatePrimeLockIcon() {
+            const el = document.getElementById('primeLockIco');
+            if (el) el.style.display = primeNeedsCode(currentUser) ? '' : 'none';
+        }
+        function renderPrimeLock(msg) {
+            document.getElementById('prime-tab').innerHTML = `<div class="dash"><div class="prime-gate">
+                <div class="prime-gate-ico">🔐</div>
+                <h2 class="dash-title" style="text-align:center">Ma prime</h2>
+                <p class="muted" style="text-align:center">Cette partie est réservée au responsable.<br>Entre ton mot de passe du portail pour la voir.</p>
+                <form onsubmit="unlockPrime(event)" autocomplete="off">
+                    <input type="password" id="primePw" class="prime-pw" placeholder="Mot de passe du portail" autocomplete="current-password">
+                    <button type="submit" class="btn-add" id="primeUnlockBtn">Déverrouiller</button>
+                </form>
+                <div class="ko" id="primeGateMsg" style="text-align:center;min-height:20px;margin-top:8px">${msg ? esc(msg) : ''}</div>
+            </div></div>`;
+        }
+        async function unlockPrime(event) {
+            event.preventDefault();
+            const inp = document.getElementById('primePw'), btn = document.getElementById('primeUnlockBtn'), msg = document.getElementById('primeGateMsg');
+            const pw = inp ? inp.value : '';
+            if (!pw || !currentUser) return;
+            if (Date.now() < primeBlockedUntil) { msg.textContent = 'Trop d\'essais. Réessaie dans quelques secondes.'; return; }
+            if (btn) btn.disabled = true;
+            const email = String(currentUser.email).toLowerCase();
+            let ok = false, unknown = false;
+            try {
+                await callScript('login', { email, password: pw });
+                ok = true;
+            } catch (e) {
+                if (isBadPassword(e)) ok = false;
+                else {
+                    // Pas de connexion (ou ancien script) : on compare avec l'empreinte du dernier mot de passe validé sur cet appareil
+                    try { const a = JSON.parse(localStorage.getItem(AUTH_KEY)); ok = !!(a && a.email === email && a.h === await pwHash(email, pw)); } catch (x) { ok = false; }
+                    unknown = !ok;
+                }
+            }
+            if (btn) btn.disabled = false;
+            if (ok) {
+                primeFails = 0; primeUnlockedAt = primeLastAct = Date.now();
+                loadPrimeTab(currentUser);
+                return;
+            }
+            primeFails++;
+            if (primeFails >= 5) { primeBlockedUntil = Date.now() + 30000; primeFails = 0; }
+            renderPrimeLock(unknown ? 'Vérification impossible pour le moment (pas de connexion ?). Réessaie.' : 'Mot de passe incorrect.');
+            const i2 = document.getElementById('primePw'); if (i2) i2.focus();
+        }
+        function lockPrime() {
+            primeUnlockedAt = 0;
+            if (currentUser) loadPrimeTab(currentUser); // ré-affiche l'écran verrouillé (et efface la prime du contenu de la page)
+            updatePrimeLockIcon();
+        }
+        // Verrouillage automatique après 3 minutes sans toucher à l'onglet
+        ['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(ev => document.addEventListener(ev, e => {
+            if (primeUnlockedAt && e.target && e.target.closest && e.target.closest('#prime-tab')) primeLastAct = Date.now();
+        }, true));
+        setInterval(() => { if (primeUnlockedAt && Date.now() - primeLastAct > PRIME_IDLE_MS) lockPrime(); }, 15000);
 
         // ================= DIRIGEANTS : VOLUME DE PRIMES VALIDÉES (par mois, magasin, année) =================
         let volYear = null;
