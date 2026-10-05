@@ -4551,6 +4551,31 @@
                 ${build(false)}${build(true)}`;
         }
 
+
+        // Podiums des challenges (en quantité) : 3 meilleurs vendeurs + 3 meilleurs magasins. Dylan figure parmi les vendeurs seulement (le magasin est classé à part).
+        function chalPodiums(data, kind, u) {
+            if (kind === 'google' && !googleOn()) return '';
+            const unit = kind === 'google' ? 'mobile(s)' : 'contrat(s)';
+            const vendors = vendorRanking(data).map(v => {
+                let q = 0;
+                if (kind === 'google') { const g = googleGain(v.nrow, false); q = g ? g.totalQ : 0; }
+                else q = tcsNums(v.nrow, v.days, tcsCarryFor('vendors', v.user.email)).n;
+                return { name: v.user.name, store: v.user.store, email: v.user.email, q };
+            }).filter(x => x.q > 0).sort((a, b) => (b.q - a.q) || a.name.localeCompare(b.name, 'fr'));
+            const stores = data.stores.map(st => {
+                const nrow = findStoreRow(st.name);
+                let q = 0;
+                if (kind === 'google') { const g = googleGain(nrow, true); q = g ? g.totalQ : 0; }
+                else q = tcsNums(nrow, storeWorkingDays(data, st.name), tcsCarryFor('stores', st.name)).n;
+                return { name: st.name, q };
+            }).filter(x => x.q > 0).sort((a, b) => (b.q - a.q) || a.name.localeCompare(b.name, 'fr'));
+            const pod = (items, sub, me) => items.length ? renderPodium(items, 3, it => it.name, it => sub(it), me) : '<p class="muted">Podium disponible dès les premières ventes.</p>';
+            return `<h3 class="section-title">🥇 Podium vendeurs <span class="muted" style="font-size:14px">— en quantité</span></h3>`
+                + pod(vendors, it => `${it.store} • ${fmt(it.q)} ${unit}`, it => u && it.email === u.email)
+                + `<h3 class="section-title">🏬 Podium magasins <span class="muted" style="font-size:14px">— en quantité</span></h3>`
+                + pod(stores, it => `${fmt(it.q)} ${unit}`, it => u && u.store === it.name);
+        }
+
         let chalSub = null;
         function chalHead(kind, dates) {
             const title = kind === 'tcs' ? 'Challenge Télécâble Sat' : 'Challenge Google';
@@ -4582,6 +4607,7 @@
             } else if (u.isDirector) {
                 const kind = chalSub;
                 h += chalHead(kind, kind === 'tcs' ? CHAL_TCS_DATES : CHAL_GOOGLE_DATES);
+                h += chalPodiums(data, kind, u);
                 const stores = data.stores.map(s => s.name);
                 if (!stores.includes(chalStore)) chalStore = stores[0] || null;
                 h += subNav(stores.map(s => ({ key: s, label: s })), chalStore, 'setChalStore');
@@ -4601,6 +4627,7 @@
             } else {
                 const kind = chalSub;
                 h += chalHead(kind, kind === 'tcs' ? CHAL_TCS_DATES : CHAL_GOOGLE_DATES);
+                h += chalPodiums(data, kind, u);
                 if (u.isManager) h += `<h3 class="section-title">Mon magasin ${esc(u.store)}</h3>` + storeBlock(u.store, kind);
                 if (isVendorProfile(u)) h += `<h3 class="section-title">${u.isManager ? 'Mes résultats de vendeur' : 'Mes gains'}</h3>` + vendorBlock(u, kind);
             }
