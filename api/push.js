@@ -10,7 +10,12 @@ module.exports = async (req, res) => {
     if (!priv) { res.status(500).json({ ok: false, error: 'Clé d\'envoi (VAPID_PRIVATE_KEY) pas encore ajoutée dans Vercel' }); return; }
     const b = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const auth = { adminHash: b.adminHash, adminKey: b.adminKey };
-    const out = await sendToAll(auth, { title: b.title, body: b.body, url: b.url }, priv);
+    // onceKey : n'envoie qu'une fois (ex. « objectifs-2026-11 ») sauf si force = true
+    if (b.onceKey && !b.force) {
+      const c = await callScript(Object.assign({ action: 'pushClaim', ids: [String(b.onceKey)] }, auth));
+      if (!(c.fresh || []).includes(String(b.onceKey))) { res.status(200).json({ ok: true, already: true, sent: 0, failed: 0, total: 0 }); return; }
+    } else if (b.onceKey) { try { await callScript(Object.assign({ action: 'pushClaim', ids: [String(b.onceKey)] }, auth)); } catch (e) {} }
+    const out = await sendToAll(auth, { title: b.title, body: b.body, url: b.url, emails: b.emails }, priv);
     // l'actu est marquée « notifiée » : l'envoi automatique ne la renverra pas
     if (b.actuId) { try { await callScript(Object.assign({ action: 'pushClaim', ids: [String(b.actuId)] }, auth)); } catch (e) {} }
     res.status(200).json(Object.assign({ ok: true }, out));

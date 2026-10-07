@@ -1526,6 +1526,29 @@
             } catch (e) { if (st) st.textContent = '⚠️ ' + (e.message || 'Envoi impossible'); }
         }
 
+        // ----- Admin : notification « objectifs du nouveau mois » / « prime disponible » -----
+        // Renvoie le résultat de /api/push (ou { already:true } si déjà envoyée avec cette clé)
+        async function adminPush(opts) {
+            if (!adminAuth) throw new Error('Reconnecte-toi à l\'Admin pour envoyer.');
+            const r = await fetch('/api/push', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(Object.assign({ adminHash: adminAuth, adminKey: adminSecret }, opts)) });
+            const j = await r.json();
+            if (!j.ok) throw new Error(j.error || 'Erreur');
+            return j;
+        }
+        async function offerPush(question, opts, doneLabel) {
+            if (!confirm(question)) { showImportStatus('Notification non envoyée (tu peux la renvoyer en refaisant la validation).'); return; }
+            try {
+                await saveConfigOnline(); // les données doivent être en ligne AVANT l'alerte
+                let j = await adminPush(opts);
+                if (j.already) {
+                    if (!confirm('Cette notification a déjà été envoyée. La renvoyer quand même ?')) return;
+                    j = await adminPush(Object.assign({ force: true }, opts));
+                }
+                showImportStatus(`🔔 ${doneLabel} : ${j.sent} téléphone(s) prévenu(s)${j.failed ? ` (${j.failed} non joignable(s))` : ''}${j.total === 0 ? ' — personne d\'inscrit pour l\'instant.' : '.'}`);
+            } catch (e) { showImportStatus('⚠️ Notification non envoyée : ' + (e.message || 'erreur')); }
+        }
+
         // ================= MESSAGERIE =================
         let currentPassword = null;
         let msgCache = { messages: null, contacts: null, error: null, loading: false };
@@ -4907,6 +4930,9 @@
             saveData(data);
             renderPrimeHistoryAdmin();
             showImportStatus(`✅ Primes de ${monthLabel(histMonth)} validées et publiées.`);
+            const emails = Object.keys(amounts);
+            offerPush(`Prévenir les ${emails.length} personne(s) concernée(s) par une notification sur leur téléphone (« Ta prime de ${monthLabel(histMonth)} est disponible ») ?\n\nLe montant n'apparaît pas dans la notification.`,
+                { title: '💶 Ta prime de ' + monthLabel(histMonth) + ' est disponible', body: 'Ouvre le portail et va dans l\'onglet Prime pour la consulter.', url: '/', emails, onceKey: 'prime-' + histMonth }, 'Primes');
         }
 
         function deletePrimeHistory() {
@@ -5315,6 +5341,11 @@
                     document.getElementById('objectifsFile').value = '';
                     refreshLists();
                     renderAdminGlobal();
+                    const mi0 = monthInfo();
+                    const mName = MOIS_FR.find(m => norm(file.name).includes(norm(m))) || MOIS_FR[mi0.m];
+                    const mYear = mi0.y;
+                    setTimeout(() => offerPush(`Prévenir toute l'équipe par une notification sur leur téléphone (« Les objectifs de ${mName} sont disponibles ») ?`,
+                        { title: '🎯 Objectifs de ' + mName + ' disponibles', body: 'Tes nouveaux objectifs du mois sont en ligne : ouvre le portail pour les voir.', url: '/', onceKey: 'objectifs-' + mYear + '-' + mName }, 'Objectifs'), 300);
                 } catch (error) {
                     console.error('Import error:', error);
                     showImportStatus('❌ Erreur : ' + error.message);
