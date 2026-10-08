@@ -12,58 +12,58 @@
     "notifyText": "Focus sur tous les mobiles en bon plan : A37 à 1€, S26 FE, Fold8 Ultra… Prix, remises et bonus reprise !",
     "quiz": [
       {
-        "q": "Quel est le nouveau prix de la Box 5G (sans TV) ?",
+        "q": "Un client veut le Galaxy S26 FE avec un forfait SANS engagement. Quel est son prix (ODR SFR de 100 € déduite) ?",
         "options": [
-          "32,99 €/mois",
-          "34,99 €/mois",
-          "36,99 €/mois",
-          "39,99 €/mois"
+          "429 €",
+          "529 €",
+          "629 €",
+          "799 €"
         ],
         "answer": [
           1
         ],
-        "explain": "Box 5G : 34,99 €/mois (+2 €). Avec la TV : 39,99 €/mois (+3 €)."
+        "explain": "529 € (prix initial 799 € − remise 170 € − ODR 100 €). Ou 4 × 157,25 € sans frais, puis l'ODR de 100 € remboursée."
       },
       {
-        "q": "L'offre Fibre Sobriété à 27,99 €/mois : pour quels clients ? (plusieurs réponses possibles)",
+        "q": "Le client ne veut pas payer le Redmi Note 17 Pro d'un coup. Que lui proposes-tu ?",
         "options": [
-          "Conquête",
-          "VLA",
-          "Migration (client déjà SFR)",
-          "Clients en ADSL"
+          "4 × 44,75 € sans frais",
+          "4 × 87,25 € sans frais",
+          "4 × 92,25 € sans frais, puis ODR de 50 € remboursés",
+          "4 × 157,25 € sans frais"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Le Redmi Note 17 Pro est à 319 € (ODR 50 € déduite), ou 4 × 92,25 € sans frais, puis l'ODR de 50 € est remboursée. Et +50 € de bonus si le client reprend un mobile."
+      },
+      {
+        "q": "Quels mobiles donnent +100 € de bonus en cas de reprise d'un ancien mobile ? (plusieurs réponses possibles)",
+        "options": [
+          "Galaxy S26 FE",
+          "Galaxy S26+",
+          "Redmi Note 17 Pro",
+          "Galaxy A37"
         ],
         "answer": [
           0,
           1
         ],
         "multi": true,
-        "explain": "Uniquement en conquête et en VLA, et uniquement en FTTH. Engagement 12 mois, FOS 49 €, offre jusqu'au 13/10 inclus."
+        "explain": "Galaxy S26 FE et Galaxy S26+ : +100 €. Le Redmi Note 17 Pro donne +50 € et le Galaxy A37 +30 €. Le Z Fold8 Ultra monte à +150 €."
       },
       {
-        "q": "Quel mobile est à 1 € avec le forfait Illimité 5G+ (ODR SFR de 50 € déduite) ?",
+        "q": "Quel est le prix du Galaxy S26+ avec le forfait Illimité 5G+ (ODR de 100 € déduite) ?",
         "options": [
-          "Galaxy A17",
-          "Galaxy A37",
-          "Galaxy S26 FE",
-          "Honor 600 Lite"
+          "299 € + 8 €/mois",
+          "399 € + 8 €/mois",
+          "529 € + 8 €/mois",
+          "1099 € + 8 €/mois"
         ],
         "answer": [
           1
         ],
-        "explain": "Le Galaxy A37 : 1 € avec l'ODR 50 € déduite, et +30 € de bonus si le client reprend un mobile."
-      },
-      {
-        "q": "L'offre 100 % Canal+ avec le Pass Coupes d'Europe : jusqu'à quand et où est-elle disponible ?",
-        "options": [
-          "Jusqu'au 9/11, en boutique et en télévente uniquement",
-          "Jusqu'au 31/10, partout",
-          "Jusqu'au 9/11, aussi via le Service Client SFR",
-          "Jusqu'au 2/11, en boutique uniquement"
-        ],
-        "answer": [
-          0
-        ],
-        "explain": "Prolongée jusqu'au 9/11, en conquête et Mig Inter : 19,99 €/mois pendant 24 mois. Exclusivement en boutique et télévente (pas via le Service Client ni Canal+)."
+        "explain": "399 € (+ 8 €/mois pendant 24 mois), ou 4 × 172,75 € sans frais puis l'ODR de 100 € remboursée. Prix initial 861 €, remise −170 €."
       }
     ]
   },
