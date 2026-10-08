@@ -98,6 +98,8 @@
 
 - 08/10/2026 : images des actus : touche = agrandissement DANS le portail (`openActuZoom` / `closeActuZoom`) avec gros bouton « ✕ Fermer », touche sur l'image = zoom, bouton « retour » du téléphone et Échap ferment aussi (avant : image ouverte dans un nouvel onglet, impossible de revenir dans l'appli installée).
 
+- 08/10/2026 : actu Business Connect S41 complétée par 2 visuels « Focus mobiles » (`business-connect-s41-mobiles-1/2.png` : bons plans forfait sans engagement, puis Illimité 5G+, + ODR Google/Xiaomi) avec les photos de téléphones rognées telles quelles du PDF SFR. Même id d'actu : pas de nouvelle notification ni de nouvelle case « lu ».
+
 ## Reprise — à faire (état au 01/10/2026 21h)
 - Nouveautés du soir (en ligne, testées avec de fausses ventes uniquement) : onglets « Challenges » (Google / TCS / Mon total pour Dylan), « Bonus reprise », onglets du haut sur plusieurs lignes sur téléphone. À VÉRIFIER avec Julien sur les vraies ventes : les noms de colonnes Google / TCS sont bien lus (noms normalisés, voir Historique), les montants sont cohérents.
 - 31/10 : rappeler à Julien d'enregistrer les contrats TCS d'octobre (Admin → Primes). 1er novembre : nouveau PDF « Bonus reprise » à intégrer (`BONUS_REPRISE`), challenge Google terminé.
