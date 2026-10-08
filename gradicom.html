@@ -331,6 +331,13 @@
         .actu-date { font-size: 11px; letter-spacing: 1.5px; color: var(--text-dim); text-transform: uppercase; }
         .actu-new { background: var(--gold); color: #0b0a08; padding: 2px 8px; border-radius: 10px; font-weight: 800; letter-spacing: 1px; }
         .actu-title { font-family: var(--serif); color: var(--gold-2); font-size: 22px; margin: 8px 0 12px; }
+        #actuZoom { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.96); overflow: auto; -webkit-overflow-scrolling: touch; display: none; }
+        #actuZoom.open { display: block; }
+        #actuZoom img { display: block; width: 100%; max-width: none; height: auto; margin: 0; }
+        #actuZoom.big img { width: 220%; }
+        #actuZoomClose { position: fixed; top: calc(10px + env(safe-area-inset-top)); right: 12px; z-index: 10000; background: #c9a24a; color: #111; border: 0; border-radius: 999px; padding: 12px 20px; font: 700 16px Manrope, sans-serif; box-shadow: 0 2px 12px rgba(0,0,0,.6); }
+        #actuZoomHint { position: fixed; left: 0; right: 0; bottom: calc(12px + env(safe-area-inset-bottom)); text-align: center; z-index: 10000; pointer-events: none; }
+        #actuZoomHint span { background: rgba(0,0,0,.7); color: #ddd; padding: 8px 14px; border-radius: 999px; font-size: 13px; }
         .actu-img { display: block; width: 100%; height: auto; border-radius: 8px; margin: 0 0 12px; }
         .actu-text { white-space: pre-line; line-height: 1.6; margin: 0 0 12px; }
         .actu-pdf { display: inline-block; width: auto; margin: 0 8px 4px 0; text-decoration: none; }
@@ -1468,7 +1475,7 @@
             if (fresh.length) actusNewShown = fresh;
             const cards = actusList.map(a => {
                 const isNew = actusNewShown.includes(a.id);
-                const imgs = (a.images || []).map(src => `<a href="${esc(actuFile(src))}" target="_blank" rel="noopener"><img class="actu-img" loading="lazy" src="${esc(actuFile(src))}" alt="${esc(a.title)}"></a>`).join('');
+                const imgs = (a.images || []).map(src => `<a href="${esc(actuFile(src))}" onclick="openActuZoom(this.href);return false;"><img class="actu-img" loading="lazy" src="${esc(actuFile(src))}" alt="${esc(a.title)}"></a>`).join('');
                 const pdf = a.pdf ? `<a class="btn-add actu-pdf" href="${esc(actuFile(a.pdf))}" target="_blank" rel="noopener">📄 ${esc(a.pdfLabel || 'Ouvrir le PDF')}</a>` : '';
                 const link = a.link ? `<a class="btn-add actu-pdf" href="${esc(a.link)}" target="_blank" rel="noopener">🔗 ${esc(a.linkLabel || 'Voir le lien')}</a>` : '';
                 return `<article class="actu-card ${isNew ? 'new' : ''}">
@@ -1491,6 +1498,31 @@
                 ${cards || `<p class="muted">${actusError ? 'Actus indisponibles pour le moment (connexion).' : 'Aucune actu pour le moment.'}</p>`}${confirmBox}</div>`;
             if (fresh.length) markActusSeen();
         }
+
+        // Agrandissement d'une image d'actu, avec un gros bouton « Fermer » (touche l'image = zoom / dézoom)
+        function openActuZoom(src) {
+            let z = document.getElementById('actuZoom');
+            if (!z) {
+                z = document.createElement('div'); z.id = 'actuZoom'; z.setAttribute('data-noico', '');
+                z.innerHTML = '<button id="actuZoomClose" type="button">✕ Fermer</button><img alt=""><div id="actuZoomHint"><span>Touche l\'image pour zoomer / dézoomer</span></div>';
+                document.body.appendChild(z);
+                z.querySelector('#actuZoomClose').onclick = e => { e.stopPropagation(); closeActuZoom(); };
+                z.querySelector('img').onclick = () => z.classList.toggle('big');
+                document.addEventListener('keydown', e => { if (e.key === 'Escape') closeActuZoom(); });
+            }
+            z.classList.remove('big'); z.scrollTop = 0; z.scrollLeft = 0;
+            z.querySelector('img').src = src;
+            z.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            history.pushState({ actuZoom: 1 }, '');
+        }
+        function closeActuZoom(fromPop) {
+            const z = document.getElementById('actuZoom');
+            if (!z || !z.classList.contains('open')) return;
+            z.classList.remove('open'); document.body.style.overflow = '';
+            if (!fromPop && history.state && history.state.actuZoom) history.back();
+        }
+        window.addEventListener('popstate', () => closeActuZoom(true)); // le bouton « retour » du téléphone ferme aussi
 
         // ----- Admin : envoi de la notification d'une actu -----
         function sentActuKey(id) { return 'gradicom_actu_notified_' + id; }
