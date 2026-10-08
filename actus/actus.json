@@ -9,7 +9,63 @@
       "actus/business-connect-s41-mobiles-1.png",
       "actus/business-connect-s41-mobiles-2.png"
     ],
-    "notifyText": "Focus sur tous les mobiles en bon plan : A37 à 1€, S26 FE, Fold8 Ultra… Prix, remises et bonus reprise !"
+    "notifyText": "Focus sur tous les mobiles en bon plan : A37 à 1€, S26 FE, Fold8 Ultra… Prix, remises et bonus reprise !",
+    "quiz": [
+      {
+        "q": "Quel est le nouveau prix de la Box 5G (sans TV) ?",
+        "options": [
+          "32,99 €/mois",
+          "34,99 €/mois",
+          "36,99 €/mois",
+          "39,99 €/mois"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Box 5G : 34,99 €/mois (+2 €). Avec la TV : 39,99 €/mois (+3 €)."
+      },
+      {
+        "q": "L'offre Fibre Sobriété à 27,99 €/mois : pour quels clients ? (plusieurs réponses possibles)",
+        "options": [
+          "Conquête",
+          "VLA",
+          "Migration (client déjà SFR)",
+          "Clients en ADSL"
+        ],
+        "answer": [
+          0,
+          1
+        ],
+        "multi": true,
+        "explain": "Uniquement en conquête et en VLA, et uniquement en FTTH. Engagement 12 mois, FOS 49 €, offre jusqu'au 13/10 inclus."
+      },
+      {
+        "q": "Quel mobile est à 1 € avec le forfait Illimité 5G+ (ODR SFR de 50 € déduite) ?",
+        "options": [
+          "Galaxy A17",
+          "Galaxy A37",
+          "Galaxy S26 FE",
+          "Honor 600 Lite"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Le Galaxy A37 : 1 € avec l'ODR 50 € déduite, et +30 € de bonus si le client reprend un mobile."
+      },
+      {
+        "q": "L'offre 100 % Canal+ avec le Pass Coupes d'Europe : jusqu'à quand et où est-elle disponible ?",
+        "options": [
+          "Jusqu'au 9/11, en boutique et en télévente uniquement",
+          "Jusqu'au 31/10, partout",
+          "Jusqu'au 9/11, aussi via le Service Client SFR",
+          "Jusqu'au 2/11, en boutique uniquement"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Prolongée jusqu'au 9/11, en conquête et Mig Inter : 19,99 €/mois pendant 24 mois. Exclusivement en boutique et télévente (pas via le Service Client ni Canal+)."
+      }
+    ]
   },
   {
     "id": "2026-10-01-plan-merch-mobiles-octobre",

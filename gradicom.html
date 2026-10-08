@@ -331,6 +331,19 @@
         .actu-date { font-size: 11px; letter-spacing: 1.5px; color: var(--text-dim); text-transform: uppercase; }
         .actu-new { background: var(--gold); color: #0b0a08; padding: 2px 8px; border-radius: 10px; font-weight: 800; letter-spacing: 1px; }
         .actu-title { font-family: var(--serif); color: var(--gold-2); font-size: 22px; margin: 8px 0 12px; }
+        .quiz { background: linear-gradient(135deg,#221b0c,#14110a); border: 1.5px solid var(--gold); border-radius: 16px; padding: 18px 16px; margin-top: 18px; }
+        .quiz-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; color: var(--gold); letter-spacing: 1px; }
+        .quiz-dots span { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #3a321f; margin-left: 5px; }
+        .quiz-dots span.ok { background: var(--gold); } .quiz-dots span.cur { outline: 2px solid var(--gold); }
+        .quiz-q { font-family: 'Bodoni Moda', serif; font-size: 19px; line-height: 1.35; margin-bottom: 6px; }
+        .quiz-hint { font-size: 12px; color: #9d9580; margin-bottom: 10px; }
+        .quiz-opt { display: flex; gap: 10px; align-items: center; width: 100%; text-align: left; background: #1a1710; color: inherit; border: 1.5px solid #3a321f; border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; font: 600 15px Manrope, sans-serif; cursor: pointer; }
+        .quiz-opt .qb { flex: none; width: 20px; height: 20px; border: 2px solid #8b8573; border-radius: 50%; }
+        .quiz-multi .quiz-opt .qb { border-radius: 5px; }
+        .quiz-opt.sel { border-color: var(--gold); background: #2a2210; } .quiz-opt.sel .qb { background: var(--gold); border-color: var(--gold); }
+        .quiz-opt.good { border-color: #2e9e57; background: #12261a; } .quiz-opt.bad { border-color: #c0392b; background: #2a1411; }
+        .quiz-fb { margin: 10px 0; padding: 10px 12px; border-radius: 10px; font-size: 14px; line-height: 1.45; }
+        .quiz-fb.ok { background: #12261a; border: 1px solid #2e9e57; } .quiz-fb.ko { background: #2a1411; border: 1px solid #c0392b; }
         #actuZoom { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.96); overflow: auto; -webkit-overflow-scrolling: touch; display: none; }
         #actuZoom.open { display: block; }
         #actuZoom img { display: block; width: 100%; max-width: none; height: auto; margin: 0; }
@@ -1360,8 +1373,51 @@
             const done = actusRead();
             return actusList.some(a => a.lecture !== false && !done.includes(a.id)); // une actu avec "lecture": false n'impose pas la case
         }
+        // ----- Quiz de l'actu : à réussir (toutes les questions justes) avant de pouvoir cocher « J'ai lu » -----
+        let quizUi = { id: null, i: 0, sel: [], checked: false, ok: false };
+        function quizKey(id) { return 'gradicom_actus_quiz_' + (currentUser ? String(currentUser.email).toLowerCase() : '') + '_' + id; }
+        function quizPassed(a) { if (!a.quiz || !a.quiz.length) return true; try { return localStorage.getItem(quizKey(a.id)) === '1'; } catch (e) { return false; } }
+        function quizPending() { return (actusList || []).find(a => a.lecture !== false && a.quiz && a.quiz.length && !quizPassed(a)) || null; }
+        function quizHtml(a) {
+            if (quizUi.id !== a.id) quizUi = { id: a.id, i: 0, sel: [], checked: false, ok: false };
+            const n = a.quiz.length, q = a.quiz[quizUi.i];
+            const dots = a.quiz.map((_, k) => `<span class="${k < quizUi.i ? 'ok' : ''} ${k === quizUi.i ? 'cur' : ''}"></span>`).join('');
+            const ans = q.answer;
+            const opts = q.options.map((o, k) => {
+                let cls = quizUi.sel.includes(k) ? 'sel' : '';
+                if (quizUi.checked) { if (ans.includes(k)) cls = quizUi.sel.includes(k) || quizUi.ok ? 'good' : cls; else if (quizUi.sel.includes(k)) cls = 'bad'; }
+                return `<button type="button" class="quiz-opt ${cls}" onclick="quizPick(${k})" ${quizUi.ok ? 'disabled' : ''}><span class="qb"></span><span>${esc(o)}</span></button>`;
+            }).join('');
+            let fb = '', btn;
+            if (quizUi.checked && quizUi.ok) {
+                fb = `<div class="quiz-fb ok">✅ <b>Bravo !</b> ${esc(q.explain || '')}</div>`;
+                btn = quizUi.i + 1 < n ? `<button class="btn-add" onclick="quizNext()">Question suivante →</button>` : `<button class="btn-add" onclick="quizNext()">Terminer le quiz 🎉</button>`;
+            } else {
+                if (quizUi.checked) fb = `<div class="quiz-fb ko">❌ Pas tout à fait. Relis l'actu ci-dessus et réessaie.</div>`;
+                btn = `<button class="btn-add" onclick="quizCheck()" ${quizUi.sel.length ? '' : 'disabled style="opacity:.5"'}>Valider ma réponse</button>`;
+            }
+            return `<div class="quiz ${q.multi ? 'quiz-multi' : ''}"><div class="quiz-top"><span>🧠 QUIZ · QUESTION ${quizUi.i + 1} / ${n}</span><span class="quiz-dots">${dots}</span></div>
+                <div class="quiz-q">${esc(q.q)}</div><div class="quiz-hint">${q.multi ? 'Plusieurs réponses possibles' : 'Une seule bonne réponse'}</div>${opts}${fb}${btn}</div>`;
+        }
+        function quizPick(k) {
+            const a = quizPending(); if (!a || quizUi.ok) return;
+            const q = a.quiz[quizUi.i];
+            if (q.multi) { quizUi.sel = quizUi.sel.includes(k) ? quizUi.sel.filter(x => x !== k) : quizUi.sel.concat(k); } else quizUi.sel = [k];
+            quizUi.checked = false; renderActus();
+        }
+        function quizCheck() {
+            const a = quizPending(); if (!a) return;
+            const ans = a.quiz[quizUi.i].answer.slice().sort().join(), got = quizUi.sel.slice().sort().join();
+            quizUi.checked = true; quizUi.ok = (ans === got); renderActus();
+        }
+        function quizNext() {
+            const a = quizPending(); if (!a) return;
+            if (quizUi.i + 1 < a.quiz.length) { quizUi = { id: a.id, i: quizUi.i + 1, sel: [], checked: false, ok: false }; }
+            else { try { localStorage.setItem(quizKey(a.id), '1'); } catch (e) {} quizUi = { id: null, i: 0, sel: [], checked: false, ok: false }; }
+            renderActus();
+        }
         function confirmActusRead(on) {
-            if (!on) return;
+            if (!on || quizPending()) return;
             try { localStorage.setItem(actusReadKey(), JSON.stringify((actusList || []).map(a => a.id))); } catch (e) {}
             actusLockNote = false;
             updateTabLocks();
@@ -1489,7 +1545,8 @@
             const pending = actusReadRequired();
             if (pending) actusConfirmShown = true;
             const lockBanner = pending ? `<div class="actu-push" style="border-color:var(--gold)">📌 ${actusLockNote ? 'Avant d\'aller ailleurs, ' : ''}lis les actus ci-dessous puis coche la case « J'ai lu » en bas de page pour accéder au reste du portail.</div>` : '';
-            const confirmBox = actusConfirmShown ? `<div class="actu-confirm">
+            const qz = pending ? quizPending() : null;
+            const confirmBox = qz ? quizHtml(qz) : actusConfirmShown ? `<div class="actu-confirm">
                     <label><input type="checkbox" id="actuReadBox" ${pending ? '' : 'checked disabled'} onchange="confirmActusRead(this.checked)"> <span>J'ai lu toutes les actus</span></label>
                     ${pending ? '' : '<button class="btn-add" onclick="switchTab(\'home\')">Continuer vers l\'accueil →</button>'}
                 </div>` : '';
