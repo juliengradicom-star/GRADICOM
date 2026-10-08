@@ -109,6 +109,7 @@
 - 31/10 : rappeler à Julien d'enregistrer les contrats TCS d'octobre (Admin → Primes). 1er novembre : nouveau PDF « Bonus reprise » à intégrer (`BONUS_REPRISE`), challenge Google terminé.
 - Possible plus tard : fournir un vrai taux de passage en 1er prélèvement quand Julien l'aura (aujourd'hui estimation par paliers).
 - Notifications des Actus : ACTIVÉES (variables Vercel `VAPID_PRIVATE_KEY` + `GRADICOM_ADMIN_KEY` ajoutées, script Google redéployé sur `AKfycbwAm_…` avec `pushClaim`, Julien inscrit sur son téléphone). Une nouvelle actu publiée sur `main` est notifiée automatiquement au déploiement. À confirmer avec Julien : la notification du plan merch est bien arrivée sur son téléphone.
+- PLUS TARD (Julien a reporté le 08/10, « flemme » ; ne pas insister) : enregistrer en ligne les résultats du quiz d'actu (score du 1er coup, nb d'essais) pour un tableau Admin (Julien + Anthony : tous ; responsables : leur magasin). Demande une modif de `messagerie.gs` recollée par Julien (une étape à la fois). Pas de podium « 1er coup » pour l'instant (risque de réponses au hasard).
 - Prochaine actu : Julien envoie images / PDF dans la conversation, Claude crée le visuel et l'ajoute EN TÊTE de `actus/actus.json` (voir Historique).
 - Les vendeurs doivent s'inscrire une fois (onglet Actus → « Activer les notifications »), sur iPhone depuis l'icône ajoutée à l'écran d'accueil.
 - Question restée sans réponse : où Julien voit-il des décimales sur les objectifs importés (import Excel) ? Probablement des affichages calculés (prorata / cadence), à vérifier avec lui.
