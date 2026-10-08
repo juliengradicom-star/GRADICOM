@@ -64,6 +64,19 @@
           1
         ],
         "explain": "399 € (+ 8 €/mois pendant 24 mois), ou 4 × 172,75 € sans frais puis l'ODR de 100 € remboursée. Prix initial 861 €, remise −170 €."
+      },
+      {
+        "q": "Offre 100 % Canal+ avec le Pass Coupes d'Europe : quel prix pour le client, et pendant combien de temps ?",
+        "options": [
+          "19,99 €/mois pendant 24 mois",
+          "19,99 €/mois pendant 12 mois",
+          "32,99 €/mois pendant 24 mois",
+          "29,99 €/mois pendant 24 mois"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "19,99 €/mois pendant 24 mois (puis 32,99 €/mois), jusqu'au 9/11, en boutique et télévente uniquement. À privilégier cette période."
       }
     ]
   },
