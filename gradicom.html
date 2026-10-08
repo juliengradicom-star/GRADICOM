@@ -1386,7 +1386,14 @@
             if (quizIsDemoUser() && !quizSkipped) return (actusList || []).find(a => a.quiz && a.quiz.length && !quizPassed(a)) || null;
             return null;
         }
-        function quizSkip() { quizSkipped = true; quizUi = { id: null, i: 0, sel: [], checked: false, ok: false }; renderActus(); }
+        function quizSkip() { quizSkipped = true; quizUi = { id: null, i: 0, sel: [], checked: false, ok: false }; quizRefresh(); }
+        // Met à jour SEULEMENT le bloc du quiz (sans remonter en haut de la page)
+        function quizRefresh() {
+            const a = quizTarget(), box = document.getElementById('quizBox');
+            if (a && box) { box.innerHTML = quizHtml(a); return; }
+            renderActus();
+            const c = document.querySelector('.actu-confirm'); if (c) c.scrollIntoView({ block: 'center' });
+        }
         function quizHtml(a) {
             if (quizUi.id !== a.id) quizUi = { id: a.id, i: 0, sel: [], checked: false, ok: false };
             const n = a.quiz.length, q = a.quiz[quizUi.i];
@@ -1412,18 +1419,18 @@
             const a = quizTarget(); if (!a || quizUi.ok) return;
             const q = a.quiz[quizUi.i];
             if (q.multi) { quizUi.sel = quizUi.sel.includes(k) ? quizUi.sel.filter(x => x !== k) : quizUi.sel.concat(k); } else quizUi.sel = [k];
-            quizUi.checked = false; renderActus();
+            quizUi.checked = false; quizRefresh();
         }
         function quizCheck() {
             const a = quizTarget(); if (!a) return;
             const ans = a.quiz[quizUi.i].answer.slice().sort().join(), got = quizUi.sel.slice().sort().join();
-            quizUi.checked = true; quizUi.ok = (ans === got); renderActus();
+            quizUi.checked = true; quizUi.ok = (ans === got); quizRefresh();
         }
         function quizNext() {
             const a = quizTarget(); if (!a) return;
             if (quizUi.i + 1 < a.quiz.length) { quizUi = { id: a.id, i: quizUi.i + 1, sel: [], checked: false, ok: false }; }
             else { try { localStorage.setItem(quizKey(a.id), '1'); } catch (e) {} quizUi = { id: null, i: 0, sel: [], checked: false, ok: false }; }
-            renderActus();
+            quizRefresh();
         }
         function confirmActusRead(on) {
             if (!on || quizPending()) return;
@@ -1555,7 +1562,7 @@
             if (pending) actusConfirmShown = true;
             const lockBanner = pending ? `<div class="actu-push" style="border-color:var(--gold)">📌 ${actusLockNote ? 'Avant d\'aller ailleurs, ' : ''}lis les actus ci-dessous puis coche la case « J'ai lu » en bas de page pour accéder au reste du portail.</div>` : '';
             const qz = quizTarget();
-            const confirmBox = qz ? quizHtml(qz) : actusConfirmShown ? `<div class="actu-confirm">
+            const confirmBox = qz ? `<div id="quizBox">${quizHtml(qz)}</div>` : actusConfirmShown ? `<div class="actu-confirm">
                     <label><input type="checkbox" id="actuReadBox" ${pending ? '' : 'checked disabled'} onchange="confirmActusRead(this.checked)"> <span>J'ai lu toutes les actus</span></label>
                     ${pending ? '' : '<button class="btn-add" onclick="switchTab(\'home\')">Continuer vers l\'accueil →</button>'}
                 </div>` : '';
