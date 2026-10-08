@@ -1377,7 +1377,16 @@
         let quizUi = { id: null, i: 0, sel: [], checked: false, ok: false };
         function quizKey(id) { return 'gradicom_actus_quiz_' + (currentUser ? String(currentUser.email).toLowerCase() : '') + '_' + id; }
         function quizPassed(a) { if (!a.quiz || !a.quiz.length) return true; try { return localStorage.getItem(quizKey(a.id)) === '1'; } catch (e) { return false; } }
-        function quizPending() { return (actusList || []).find(a => a.lecture !== false && a.quiz && a.quiz.length && !quizPassed(a)) || null; }
+        function quizPending() { if (!currentUser || currentUser.isDirector) return null; return (actusList || []).find(a => a.lecture !== false && a.quiz && a.quiz.length && !quizPassed(a)) || null; }
+        // Julien (dirigeant) voit le quiz pour tester, mais il n'est pas obligatoire : bouton « Passer » ; Anthony n'a pas de quiz
+        let quizSkipped = false;
+        function quizIsDemoUser() { return !!currentUser && String(currentUser.email).toLowerCase() === 'julien@gradicom.fr'; }
+        function quizTarget() {
+            const p = quizPending(); if (p) return p;
+            if (quizIsDemoUser() && !quizSkipped) return (actusList || []).find(a => a.quiz && a.quiz.length && !quizPassed(a)) || null;
+            return null;
+        }
+        function quizSkip() { quizSkipped = true; quizUi = { id: null, i: 0, sel: [], checked: false, ok: false }; renderActus(); }
         function quizHtml(a) {
             if (quizUi.id !== a.id) quizUi = { id: a.id, i: 0, sel: [], checked: false, ok: false };
             const n = a.quiz.length, q = a.quiz[quizUi.i];
@@ -1397,21 +1406,21 @@
                 btn = `<button class="btn-add" onclick="quizCheck()" ${quizUi.sel.length ? '' : 'disabled style="opacity:.5"'}>Valider ma réponse</button>`;
             }
             return `<div class="quiz ${q.multi ? 'quiz-multi' : ''}"><div class="quiz-top"><span>🧠 QUIZ · QUESTION ${quizUi.i + 1} / ${n}</span><span class="quiz-dots">${dots}</span></div>
-                <div class="quiz-q">${esc(q.q)}</div><div class="quiz-hint">${q.multi ? 'Plusieurs réponses possibles' : 'Une seule bonne réponse'}</div>${opts}${fb}${btn}</div>`;
+                <div class="quiz-q">${esc(q.q)}</div><div class="quiz-hint">${q.multi ? 'Plusieurs réponses possibles' : 'Une seule bonne réponse'}</div>${opts}${fb}${btn}${quizIsDemoUser() && !quizPending() ? `<div style="margin-top:12px;text-align:center"><a href="#" onclick="quizSkip();return false;" style="color:#9d9580;font-size:13px">Passer le quiz (test, facultatif)</a></div>` : ''}</div>`;
         }
         function quizPick(k) {
-            const a = quizPending(); if (!a || quizUi.ok) return;
+            const a = quizTarget(); if (!a || quizUi.ok) return;
             const q = a.quiz[quizUi.i];
             if (q.multi) { quizUi.sel = quizUi.sel.includes(k) ? quizUi.sel.filter(x => x !== k) : quizUi.sel.concat(k); } else quizUi.sel = [k];
             quizUi.checked = false; renderActus();
         }
         function quizCheck() {
-            const a = quizPending(); if (!a) return;
+            const a = quizTarget(); if (!a) return;
             const ans = a.quiz[quizUi.i].answer.slice().sort().join(), got = quizUi.sel.slice().sort().join();
             quizUi.checked = true; quizUi.ok = (ans === got); renderActus();
         }
         function quizNext() {
-            const a = quizPending(); if (!a) return;
+            const a = quizTarget(); if (!a) return;
             if (quizUi.i + 1 < a.quiz.length) { quizUi = { id: a.id, i: quizUi.i + 1, sel: [], checked: false, ok: false }; }
             else { try { localStorage.setItem(quizKey(a.id), '1'); } catch (e) {} quizUi = { id: null, i: 0, sel: [], checked: false, ok: false }; }
             renderActus();
@@ -1545,7 +1554,7 @@
             const pending = actusReadRequired();
             if (pending) actusConfirmShown = true;
             const lockBanner = pending ? `<div class="actu-push" style="border-color:var(--gold)">📌 ${actusLockNote ? 'Avant d\'aller ailleurs, ' : ''}lis les actus ci-dessous puis coche la case « J'ai lu » en bas de page pour accéder au reste du portail.</div>` : '';
-            const qz = pending ? quizPending() : null;
+            const qz = quizTarget();
             const confirmBox = qz ? quizHtml(qz) : actusConfirmShown ? `<div class="actu-confirm">
                     <label><input type="checkbox" id="actuReadBox" ${pending ? '' : 'checked disabled'} onchange="confirmActusRead(this.checked)"> <span>J'ai lu toutes les actus</span></label>
                     ${pending ? '' : '<button class="btn-add" onclick="switchTab(\'home\')">Continuer vers l\'accueil →</button>'}
