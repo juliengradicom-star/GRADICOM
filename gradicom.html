@@ -3652,6 +3652,18 @@
             document.getElementById('passwordsList').scrollIntoView({ block: 'start' });
         }
 
+        // Génère un nouveau mot de passe pour UN compte et l'affiche (une seule fois : ensuite il n'existe plus qu'en version codée)
+        function newPasswordFor(email) {
+            const data = getData();
+            const user = data.users.find(u => u.email === email);
+            if (!user) return;
+            if (!confirm('Générer un nouveau mot de passe pour ' + user.name + ' ?\nL\'ancien ne marchera plus. Le nouveau s\'affichera dans la liste : note-le et transmets-le.')) return;
+            user.password = generatePassword();
+            delete user.passwordHash;
+            saveData(data);
+            refreshLists();
+        }
+
         function changePassword(email) {
             const newPassword = prompt('Nouveau mot de passe pour ' + email + ' :');
             if (!newPassword || newPassword.trim() === '') return;
@@ -3706,6 +3718,7 @@
                         <div style="color: var(--text-dim); font-size: 11px; margin-bottom: 3px;">Email: ${esc(u.email)}</div>
                         <div style="color: var(--gold); font-size: 12px; font-family: monospace;">Mot de passe: <strong>${u.password ? esc(u.password) + ' <span class="muted">(nouveau : à transmettre)</span>' : hasWeakPassword(u) ? '<span class="ko">⚠️ ancien mot de passe par défaut, à changer</span>' : '🔒 protégé'}</strong></div>
                     </div>
+                    <button class="btn-delete" onclick="newPasswordFor('${u.email}')" style="background: rgba(201, 166, 91, 0.3); color: var(--gold); border-color: var(--gold); width: auto; margin-left: 10px;">🎲 Nouveau</button>
                     <button class="btn-delete" onclick="changePassword('${u.email}')" style="background: rgba(201, 166, 91, 0.3); color: var(--gold); border-color: var(--gold); width: auto; margin-left: 10px;">Modifier</button>
                 </div>
             `).join('');
