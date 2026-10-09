@@ -4617,6 +4617,39 @@
         }
         const tcsGain = (n, rule, rate) => n >= rule.qualif ? n * rate : 0;
 
+
+        // ----- PDM Google (part de marché) : visible par Julien seulement -----
+        function chalIsJulien() { return !!currentUser && String(currentUser.email).toLowerCase() === 'julien@gradicom.fr'; }
+        // La colonne « PDM Google » peut arriver en fraction (0,123) ou en pourcentage (12,3) : on convertit en % si TOUTES les valeurs sont ≤ 1
+        function pdmFactor() {
+            let max = 0, n = 0, str = false;
+            const rows = RZ.stores.concat(RZ.vendors).map(x => x.nrow).concat(RZ.total ? [RZ.total] : []);
+            rows.forEach(r => { for (const k in r) if (/^PDMGOOGLE/.test(k)) { if (typeof r[k] === 'string' && r[k].indexOf('%') >= 0) str = true; const v = parseNum(r[k]); if (v !== null && !isNaN(v)) { n++; if (v > max) max = v; } } });
+            return (!str && n > 0 && max <= 1) ? 100 : 1;
+        }
+        function chalPdm(nrow) { const v = chalCol(nrow, /^PDMGOOGLE/); return v === null ? null : v * pdmFactor(); }
+        function pdmDelta(d) { return (d >= 0 ? '+' : '−') + fmtPct(Math.abs(d)).replace(' %', ' pt'); }
+        function googleNetworkBlock(data) {
+            if (!googleOn()) return '';
+            const stores = data.stores.map(st => { const nrow = findStoreRow(st.name); const g = googleGain(nrow, true); return { name: st.name, q: g ? g.totalQ : 0, g, pdm: chalPdm(nrow) }; });
+            const totalQ = stores.reduce((a, x) => a + x.q, 0);
+            const lines = GOOGLE_LINES.map(l => ({ label: l.label, q: stores.reduce((a, x) => a + ((x.g && x.g.lines.find(y => y.key === l.key) || {}).q || 0), 0) }));
+            const net = chalPdm(RZ.total);
+            const withPdm = stores.filter(x => x.pdm !== null);
+            const avg = net !== null ? net : (withPdm.length ? withPdm.reduce((a, x) => a + x.pdm, 0) / withPdm.length : null);
+            const sorted = stores.slice().sort((a, b) => ((b.pdm === null ? -1 : b.pdm) - (a.pdm === null ? -1 : a.pdm)) || (b.q - a.q));
+            const maxPdm = Math.max(1, ...withPdm.map(x => x.pdm));
+            const rows = sorted.map((x, i) => `<tr><td><strong>${i + 1}. ${esc(x.name)}</strong></td><td>${fmt(x.q)}</td>
+                <td>${x.pdm === null ? '<span class="dim">—</span>' : `<strong>${fmtPct(x.pdm)}</strong><div class="bar" style="margin-top:4px"><div class="bar-fill ${avg !== null && x.pdm >= avg ? 'ok' : 'warn'}" style="width:${(x.pdm / maxPdm * 100).toFixed(1)}%"></div></div>`}</td>
+                <td>${x.pdm !== null && avg !== null ? `<span class="${x.pdm >= avg ? 'ok' : 'ko'}">${pdmDelta(x.pdm - avg)}</span>` : '<span class="dim">—</span>'}</td></tr>`).join('');
+            return `<h3 class="section-title">📊 Vue réseau <span class="muted" style="font-size:14px">— visible par toi seul</span></h3>
+                <div class="cards">
+                    <div class="card prime-card"><div class="card-label">Mobiles Google vendus</div><div class="card-value">${fmt(totalQ)}</div><div class="card-sub">${stores.length} magasins • ${lines.map(l => esc(l.label) + ' ' + fmt(l.q)).join(' • ')}</div></div>
+                    <div class="card prime-card proj"><div class="card-label">PDM Google — réseau</div><div class="card-value">${avg === null ? '—' : fmtPct(avg)}</div><div class="card-sub">${net !== null ? 'part de marché des 4 magasins' : (avg !== null ? 'moyenne des magasins (total non fourni)' : 'colonne « PDM Google » introuvable dans le Sheets')}</div></div>
+                </div>
+                <div class="tbl-wrap"><table class="kpi"><thead><tr><th>Magasin</th><th>Vendus</th><th>PDM Google</th><th>vs réseau</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        }
+
         function googleBlock(nrow, days, isStore) {
             if (!googleOn()) return '<div class="banner">Le challenge Google était limité à la période du 1er au 31 octobre 2026.</div>';
             const g = googleGain(nrow, isStore);
@@ -4627,6 +4660,7 @@
             return `<div class="cards">
                     <div class="card prime-card"><div class="card-label">${isStore ? 'Gain du magasin' : 'Mon gain'} à date</div><div class="card-value">${chalEur(g.gain)}</div><div class="card-sub">${isStore ? 'à ' + GOOGLE_RPV_EUR + ' € par mobile Google' : 'en chèque cadeau'}</div></div>
                     <div class="card prime-card proj"><div class="card-label">Gain projeté fin de mois</div><div class="card-value">${chalEur(chalProj(g.gain, days))}</div><div class="card-sub">si le rythme actuel se maintient</div></div>
+                    ${isStore && chalIsJulien() ? (() => { const p = chalPdm(nrow); return `<div class="card"><div class="card-label">PDM Google du magasin</div><div class="card-value">${p === null ? '—' : fmtPct(p)}</div><div class="card-sub">part de marché Google</div></div>`; })() : ''}
                 </div>
                 <div class="tbl-wrap"><table class="kpi"><thead><tr><th>Gamme</th><th>Vendus</th><th>Gain unitaire</th><th>Gain</th></tr></thead><tbody>${rows}</tbody></table></div>`;
         }
@@ -4735,6 +4769,7 @@
             } else if (u.isDirector) {
                 const kind = chalSub;
                 h += chalHead(kind, kind === 'tcs' ? CHAL_TCS_DATES : CHAL_GOOGLE_DATES);
+                if (kind === 'google' && chalIsJulien()) h += googleNetworkBlock(data);
                 h += chalPodiums(data, kind, u);
                 const stores = data.stores.map(s => s.name);
                 if (!stores.includes(chalStore)) chalStore = stores[0] || null;
