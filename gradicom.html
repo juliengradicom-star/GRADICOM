@@ -2815,31 +2815,92 @@
             loadBonusTab();
             renderMessagesTab();
             updateMsgBadge();
-            try { maybeGoogleAlert(u); } catch (e) { console.error(e); }
+            try { maybeDailyAlert(u); } catch (e) { console.error(e); }
         }
 
-        // Alerte à l'ouverture pour le responsable du magasin DERNIER en PDM Google (une fois par jour et par appareil)
-        function maybeGoogleAlert(u) {
-            if (!u || u.isDirector || !u.isManager || !u.store || !googleOn() || document.getElementById('gAlertBox')) return;
-            const day = new Date().toISOString().slice(0, 10), key = 'gradicom_google_alert_' + String(u.email).toLowerCase();
+        // Objectifs en quantité jamais déclenchés (cible > 0 et réalisé = 0). Les % (Chubb, Mix 2h) sont exclus.
+        function zeroItems(targets, nrow, objectives, days) {
+            if (!nrow || !days || days.done < 2) return [];
+            const out = [];
+            uniqueObjectives(objectives).forEach(obj => {
+                if (obj.unit === '%') return;
+                const t = targetFor(targets, obj);
+                if (!t || t <= 0) return;
+                const r = getRealization(nrow, obj.name);
+                if (!r) out.push(obj.name);
+            });
+            return out;
+        }
+
+        // Fenêtre unique « Alertes du jour » à l'ouverture (une fois par jour et par appareil) :
+        // Google (magasin dernier en PDM) + items non déclenchés. Un seul bouton pour tout fermer.
+        function dailyAlertSections(u) {
+            const data = getData(), sec = [];
+            const names = a => a.map(esc).join(', ');
+            // 1) Google
+            if (googleOn()) {
+                try {
+                    const d = googlePdmData(data), ranked = d.sorted.filter(x => x.pdm !== null);
+                    if (ranked.length >= 2) {
+                        const last = ranked[ranked.length - 1];
+                        const mine = u.store && !u.isDirector && last.name === u.store;
+                        const julien = u.isDirector && chalIsJulien();
+                        if (mine || julien) {
+                            sec.push({ icon: '⚠️', title: 'Challenge Google en cours',
+                                html: `<p><strong>${esc(last.name)}</strong> est en <strong>dernière position</strong> sur la part de marché Google : <strong>${fmtPct(last.pdm)}</strong>${d.avg !== null ? ` (réseau : ${fmtPct(d.avg)})` : ''} • ${fmt(last.q)} mobile(s) Google vendu(s).</p>
+                                ${mine ? '<p class="dim">Il est encore temps de rattraper : mets les Pixel en avant et propose-les à chaque client !</p>' : ''}` });
+                        }
+                    }
+                } catch (e) { console.error(e); }
+            }
+            // 2) Items non déclenchés
+            try {
+                const obj = data.objectives;
+                const lines = [];
+                if (u.isDirector) {
+                    if (!chalIsJulien()) return sec;
+                    data.stores.forEach(st => {
+                        const z = zeroItems(storeTargetsFor(data, st.name), findStoreRow(st.name), obj, storeWorkingDays(data, st.name));
+                        const vs = vendorRanking(data, st.name).map(v => ({ n: firstNameOf(v.user.name), z: zeroItems(v.user.objectiveTargets, v.nrow, obj, v.days) })).filter(v => v.z.length);
+                        if (z.length || vs.length) lines.push(`<li><strong>${esc(st.name)}</strong>${z.length ? ' (magasin) : ' + names(z) : ''}${vs.map(v => `<br>↳ ${esc(v.n)} : ${names(v.z)}`).join('')}</li>`);
+                    });
+                } else {
+                    if (u.isManager) {
+                        const z = zeroItems(storeTargetsFor(data, u.store), findStoreRow(u.store), obj, storeWorkingDays(data, u.store));
+                        if (z.length) lines.push(`<li><strong>Magasin ${esc(u.store)}</strong> : ${names(z)}</li>`);
+                        vendorRanking(data, u.store).forEach(v => {
+                            const zz = zeroItems(v.user.objectiveTargets, v.nrow, obj, v.days);
+                            if (zz.length) lines.push(`<li><strong>${v.user.email === u.email ? 'Toi' : esc(firstNameOf(v.user.name))}</strong> : ${names(zz)}</li>`);
+                        });
+                    } else {
+                        const fresh = data.users.find(x => x.email === u.email) || u;
+                        const z = zeroItems(fresh.objectiveTargets, findVendorRow(fresh), obj, workingDays(fresh));
+                        if (z.length) lines.push(`<li>${names(z)}</li>`);
+                    }
+                }
+                if (lines.length) sec.push({ icon: '🚨', title: 'Attention : items non déclenchés',
+                    html: `<p>Ces objectifs sont <strong>toujours à zéro</strong> alors qu'on a une cible :</p><ul style="margin:6px 0 0 18px;padding:0">${lines.join('')}</ul>` });
+            } catch (e) { console.error(e); }
+            return sec;
+        }
+
+        function maybeDailyAlert(u) {
+            if (!u || document.getElementById('gAlertBox')) return;
+            const day = new Date().toISOString().slice(0, 10), key = 'gradicom_daily_alert_' + String(u.email).toLowerCase();
             try { if (localStorage.getItem(key) === day) return; } catch (e) {}
-            const d = googlePdmData(getData());
-            const ranked = d.sorted.filter(x => x.pdm !== null);
-            if (ranked.length < 2) return;
-            const last = ranked[ranked.length - 1];
-            const me = ranked.find(x => x.name === u.store);
-            if (!me || me.pdm > last.pdm || (d.avg !== null && me.pdm >= d.avg)) return;
+            const sec = dailyAlertSections(u);
+            if (!sec.length) return;
             try { localStorage.setItem(key, day); } catch (e) {}
             const box = document.createElement('div');
             box.id = 'gAlertBox';
             box.setAttribute('data-noico', '');
-            box.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:20px;';
-            box.innerHTML = `<div style="max-width:420px;width:100%;background:linear-gradient(135deg,#2a1411,#14110a);border:2px solid #c0392b;border-radius:18px;padding:24px 20px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.7)">
-                <div style="font-size:42px">⚠️</div>
-                <div style="font-family:'Bodoni Moda',serif;font-size:24px;margin:6px 0 10px;color:#e5c26a">Challenge Google en cours</div>
-                <p style="font-size:16px;line-height:1.5;margin-bottom:12px">Attention : <strong>${esc(u.store)}</strong> est en <strong>dernière position</strong> sur la part de marché Google.</p>
-                <p style="font-size:15px;line-height:1.5;color:#ddd;margin-bottom:16px">PDM Google : <strong>${fmtPct(me.pdm)}</strong>${d.avg !== null ? ` (réseau : ${fmtPct(d.avg)})` : ''} • ${fmt(me.q)} mobile(s) Google vendu(s).<br>Il est encore temps de rattraper : mets les Pixel en avant et propose-les à chaque client !</p>
-                <button class="btn-add" onclick="document.getElementById('gAlertBox').remove()">J'ai compris, je m'y mets 💪</button></div>`;
+            box.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px;';
+            box.innerHTML = `<div style="max-width:440px;width:100%;max-height:90vh;overflow-y:auto;background:linear-gradient(135deg,#2a1411,#14110a);border:2px solid #c0392b;border-radius:18px;padding:22px 18px;box-shadow:0 10px 40px rgba(0,0,0,.7)">
+                <div style="font-family:'Bodoni Moda',serif;font-size:24px;margin:0 0 12px;color:#e5c26a;text-align:center">Alertes du jour</div>
+                ${sec.map(s => `<div style="margin-bottom:14px;padding:12px;border:1px solid rgba(229,194,106,.35);border-radius:12px;background:rgba(0,0,0,.25)">
+                    <div style="font-size:17px;font-weight:700;color:#e5c26a;margin-bottom:6px">${s.icon} ${s.title}</div>
+                    <div style="font-size:15px;line-height:1.5">${s.html}</div></div>`).join('')}
+                <button class="btn-add" style="width:100%" onclick="document.getElementById('gAlertBox').remove()">J'ai compris, je m'y mets 💪</button></div>`;
             document.body.appendChild(box);
         }
 
