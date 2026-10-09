@@ -4629,25 +4629,42 @@
         }
         function chalPdm(nrow) { const v = chalCol(nrow, /^PDMGOOGLE/); return v === null ? null : v * pdmFactor(); }
         function pdmDelta(d) { return (d >= 0 ? '+' : '−') + fmtPct(Math.abs(d)).replace(' %', ' pt'); }
-        function googleNetworkBlock(data) {
-            if (!googleOn()) return '';
+        function googlePdmData(data) {
             const stores = data.stores.map(st => { const nrow = findStoreRow(st.name); const g = googleGain(nrow, true); return { name: st.name, q: g ? g.totalQ : 0, g, pdm: chalPdm(nrow) }; });
-            const totalQ = stores.reduce((a, x) => a + x.q, 0);
-            const lines = GOOGLE_LINES.map(l => ({ label: l.label, q: stores.reduce((a, x) => a + ((x.g && x.g.lines.find(y => y.key === l.key) || {}).q || 0), 0) }));
             const net = chalPdm(RZ.total);
             const withPdm = stores.filter(x => x.pdm !== null);
             const avg = net !== null ? net : (withPdm.length ? withPdm.reduce((a, x) => a + x.pdm, 0) / withPdm.length : null);
             const sorted = stores.slice().sort((a, b) => ((b.pdm === null ? -1 : b.pdm) - (a.pdm === null ? -1 : a.pdm)) || (b.q - a.q));
-            const maxPdm = Math.max(1, ...withPdm.map(x => x.pdm));
-            const rows = sorted.map((x, i) => `<tr><td><strong>${i + 1}. ${esc(x.name)}</strong></td><td>${fmt(x.q)}</td>
-                <td>${x.pdm === null ? '<span class="dim">—</span>' : `<strong>${fmtPct(x.pdm)}</strong><div class="bar" style="margin-top:4px"><div class="bar-fill ${avg !== null && x.pdm >= avg ? 'ok' : 'warn'}" style="width:${(x.pdm / maxPdm * 100).toFixed(1)}%"></div></div>`}</td>
-                <td>${x.pdm !== null && avg !== null ? `<span class="${x.pdm >= avg ? 'ok' : 'ko'}">${pdmDelta(x.pdm - avg)}</span>` : '<span class="dim">—</span>'}</td></tr>`).join('');
+            return { stores, sorted, withPdm, net, avg };
+        }
+        function googlePdmTable(d) {
+            const maxPdm = Math.max(1, ...d.withPdm.map(x => x.pdm));
+            const rows = d.sorted.map((x, i) => `<tr><td><strong>${i + 1}. ${esc(x.name)}</strong></td><td>${fmt(x.q)}</td>
+                <td>${x.pdm === null ? '<span class="dim">—</span>' : `<strong>${fmtPct(x.pdm)}</strong><div class="bar" style="margin-top:4px"><div class="bar-fill ${d.avg !== null && x.pdm >= d.avg ? 'ok' : 'warn'}" style="width:${(x.pdm / maxPdm * 100).toFixed(1)}%"></div></div>`}</td>
+                <td>${x.pdm !== null && d.avg !== null ? `<span class="${x.pdm >= d.avg ? 'ok' : 'ko'}">${pdmDelta(x.pdm - d.avg)}</span>` : '<span class="dim">—</span>'}</td></tr>`).join('');
+            return `<div class="tbl-wrap"><table class="kpi"><thead><tr><th>Magasin</th><th>Vendus</th><th>PDM Google</th><th>vs réseau</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        }
+        // Julien : volume total + PDM réseau + comparatif
+        function googleNetworkBlock(data) {
+            if (!googleOn()) return '';
+            const d = googlePdmData(data);
+            const totalQ = d.stores.reduce((a, x) => a + x.q, 0);
+            const lines = GOOGLE_LINES.map(l => ({ label: l.label, q: d.stores.reduce((a, x) => a + ((x.g && x.g.lines.find(y => y.key === l.key) || {}).q || 0), 0) }));
             return `<h3 class="section-title">📊 Vue réseau <span class="muted" style="font-size:14px">— visible par toi seul</span></h3>
                 <div class="cards">
-                    <div class="card prime-card"><div class="card-label">Mobiles Google vendus</div><div class="card-value">${fmt(totalQ)}</div><div class="card-sub">${stores.length} magasins • ${lines.map(l => esc(l.label) + ' ' + fmt(l.q)).join(' • ')}</div></div>
-                    <div class="card prime-card proj"><div class="card-label">PDM Google — réseau</div><div class="card-value">${avg === null ? '—' : fmtPct(avg)}</div><div class="card-sub">${net !== null ? 'part de marché des 4 magasins' : (avg !== null ? 'moyenne des magasins (total non fourni)' : 'colonne « PDM Google » introuvable dans le Sheets')}</div></div>
-                </div>
-                <div class="tbl-wrap"><table class="kpi"><thead><tr><th>Magasin</th><th>Vendus</th><th>PDM Google</th><th>vs réseau</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+                    <div class="card prime-card"><div class="card-label">Mobiles Google vendus</div><div class="card-value">${fmt(totalQ)}</div><div class="card-sub">${d.stores.length} magasins • ${lines.map(l => esc(l.label) + ' ' + fmt(l.q)).join(' • ')}</div></div>
+                    <div class="card prime-card proj"><div class="card-label">PDM Google — réseau</div><div class="card-value">${d.avg === null ? '—' : fmtPct(d.avg)}</div><div class="card-sub">${d.net !== null ? 'part de marché des 4 magasins' : (d.avg !== null ? 'moyenne des magasins (total non fourni)' : 'colonne « PDM Google » introuvable dans le Sheets')}</div></div>
+                </div>` + googlePdmTable(d);
+        }
+        // Responsables (RPV) : podium + comparatif des PDM de tous les magasins
+        function googlePdmManagerBlock(data, u) {
+            if (!googleOn()) return '';
+            const d = googlePdmData(data);
+            const items = d.sorted.filter(x => x.pdm !== null);
+            if (!items.length) return '';
+            return `<h3 class="section-title">📊 PDM Google <span class="muted" style="font-size:14px">— part de marché par magasin</span></h3>`
+                + renderPodium(items, 3, it => it.name, it => fmtPct(it.pdm) + ' de PDM', it => u && u.store === it.name)
+                + googlePdmTable(d);
         }
 
         function googleBlock(nrow, days, isStore) {
@@ -4790,6 +4807,7 @@
             } else {
                 const kind = chalSub;
                 h += chalHead(kind, kind === 'tcs' ? CHAL_TCS_DATES : CHAL_GOOGLE_DATES);
+                if (kind === 'google' && u.isManager) h += googlePdmManagerBlock(data, u);
                 h += chalPodiums(data, kind, u);
                 if (u.isManager) h += `<h3 class="section-title">Mon magasin ${esc(u.store)}</h3>` + storeBlock(u.store, kind);
                 if (isVendorProfile(u)) h += `<h3 class="section-title">${u.isManager ? 'Mes résultats de vendeur' : 'Mes gains'}</h3>` + vendorBlock(u, kind);
