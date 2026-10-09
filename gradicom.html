@@ -1611,6 +1611,7 @@
                 </div>`;
             }).join('');
             el.innerHTML = `<p class="muted" style="margin-bottom:14px;line-height:1.6">Les actus sont publiées par Claude (envoie-lui tes images / PDF dans la conversation). Une fois l'actu en ligne, appuie sur « Envoyer la notification » : tous les téléphones inscrits reçoivent l'alerte.</p>
+                <p style="margin-bottom:14px"><button class="btn-add" onclick="testPushJulien()">🔔 Tester une notification sur mon téléphone (moi seul)</button></p>
                 ${rows || '<p class="muted">Aucune actu publiée pour le moment.</p>'}
                 <div id="actusAdminStatus" class="muted" style="margin-top:10px"></div>`;
         }
@@ -1640,6 +1641,12 @@
             const j = await r.json();
             if (!j.ok) throw new Error(j.error || 'Erreur');
             return j;
+        }
+        async function testPushJulien() {
+            try {
+                const j = await adminPush({ title: '🚨 Alertes du jour (test)', body: 'Exemple : Taux Chubb sous les 42 %, TOTAL ABO à 0 • Google : ton magasin est dernier en PDM — ouvre le portail', url: '/', emails: ['julien@gradicom.fr'], force: true });
+                alert(j.sent ? 'Notification envoyée : regarde ton téléphone.' : 'Rien envoyé : ton téléphone n\'est pas inscrit (onglet Actus → Activer les notifications).');
+            } catch (e) { alert('Échec : ' + (e.message || 'erreur')); }
         }
         async function offerPush(question, opts, doneLabel) {
             if (!confirm(question)) { showImportStatus('Notification non envoyée (tu peux la renvoyer en refaisant la validation).'); return; }
