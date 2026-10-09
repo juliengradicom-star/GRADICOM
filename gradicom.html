@@ -2815,6 +2815,32 @@
             loadBonusTab();
             renderMessagesTab();
             updateMsgBadge();
+            try { maybeGoogleAlert(u); } catch (e) { console.error(e); }
+        }
+
+        // Alerte à l'ouverture pour le responsable du magasin DERNIER en PDM Google (une fois par jour et par appareil)
+        function maybeGoogleAlert(u) {
+            if (!u || u.isDirector || !u.isManager || !u.store || !googleOn() || document.getElementById('gAlertBox')) return;
+            const day = new Date().toISOString().slice(0, 10), key = 'gradicom_google_alert_' + String(u.email).toLowerCase();
+            try { if (localStorage.getItem(key) === day) return; } catch (e) {}
+            const d = googlePdmData(getData());
+            const ranked = d.sorted.filter(x => x.pdm !== null);
+            if (ranked.length < 2) return;
+            const last = ranked[ranked.length - 1];
+            const me = ranked.find(x => x.name === u.store);
+            if (!me || me.pdm > last.pdm || (d.avg !== null && me.pdm >= d.avg)) return;
+            try { localStorage.setItem(key, day); } catch (e) {}
+            const box = document.createElement('div');
+            box.id = 'gAlertBox';
+            box.setAttribute('data-noico', '');
+            box.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:20px;';
+            box.innerHTML = `<div style="max-width:420px;width:100%;background:linear-gradient(135deg,#2a1411,#14110a);border:2px solid #c0392b;border-radius:18px;padding:24px 20px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.7)">
+                <div style="font-size:42px">⚠️</div>
+                <div style="font-family:'Bodoni Moda',serif;font-size:24px;margin:6px 0 10px;color:#e5c26a">Challenge Google en cours</div>
+                <p style="font-size:16px;line-height:1.5;margin-bottom:12px">Attention : <strong>${esc(u.store)}</strong> est en <strong>dernière position</strong> sur la part de marché Google.</p>
+                <p style="font-size:15px;line-height:1.5;color:#ddd;margin-bottom:16px">PDM Google : <strong>${fmtPct(me.pdm)}</strong>${d.avg !== null ? ` (réseau : ${fmtPct(d.avg)})` : ''} • ${fmt(me.q)} mobile(s) Google vendu(s).<br>Il est encore temps de rattraper : mets les Pixel en avant et propose-les à chaque client !</p>
+                <button class="btn-add" onclick="document.getElementById('gAlertBox').remove()">J'ai compris, je m'y mets 💪</button></div>`;
+            document.body.appendChild(box);
         }
 
         function loadVendorDashboard(user) {
