@@ -1870,7 +1870,7 @@
                 <label class="cmp-all"><input type="checkbox" id="cmpAll"> <strong>Tout le monde</strong></label>
                 <div class="cmp-groups">${order.map(g => `<div class="cmp-group">
                     <label class="cmp-ghead"><input type="checkbox" class="cmp-gall" data-g="${esc(g)}"> ${g === 'DIRECTION' ? 'Direction' : esc(g)} <span class="muted">${g === 'DIRECTION' ? '(les dirigeants)' : '(tout le magasin)'}</span></label>
-                    ${groups[g].sort((a, b) => a.name.localeCompare(b.name)).map(c => `<label class="cmp-person" data-name="${esc(norm(c.name))}"><input type="checkbox" class="cmp-to" data-g="${esc(g)}" value="${esc(c.email)}" ${msgDraft.to.includes(c.email) ? 'checked' : ''}> ${esc(String(c.name).toUpperCase())} <span class="muted">${String(c.email).toLowerCase() === 'julien@gradicom.fr' ? 'Chef des ventes' : (c.role === 'Responsable' || c.role === 'Dirigeant' ? esc(c.role) : '')}</span></label>`).join('')}
+                    ${groups[g].sort((a, b) => a.name.localeCompare(b.name)).map(c => `<label class="cmp-person" data-name="${esc(norm(c.name))}"><input type="checkbox" class="cmp-to" data-g="${esc(g)}" value="${esc(c.email)}" ${msgDraft.to.includes(c.email) ? 'checked' : ''}> ${esc(c.role === 'Responsable' ? String(c.name).toUpperCase() : c.name)} <span class="muted">${String(c.email).toLowerCase() === 'julien@gradicom.fr' ? 'Chef des ventes' : (c.role === 'Responsable' || c.role === 'Dirigeant' ? esc(c.role) : '')}</span></label>`).join('')}
                 </div>`).join('')}</div>
                 <div class="cmp-label">Objet</div>
                 <input class="cmp-in" id="cmpSubject" value="${esc(msgDraft.subject)}" placeholder="Objet du message">
