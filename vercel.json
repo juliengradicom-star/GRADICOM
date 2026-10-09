@@ -35,5 +35,20 @@
     }
   ],
   "buildCommand": "node scripts/notify-actus.js",
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "crons": [
+    {
+      "path": "/api/morning-alert",
+      "schedule": "0 7 * * 1-6"
+    },
+    {
+      "path": "/api/morning-alert",
+      "schedule": "0 8 * * 1-6"
+    }
+  ],
+  "functions": {
+    "api/morning-alert.js": {
+      "includeFiles": "gradicom.html"
+    }
+  }
 }
