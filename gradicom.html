@@ -2820,14 +2820,17 @@
 
         // Objectifs en quantité jamais déclenchés (cible > 0 et réalisé = 0). Les % (Chubb, Mix 2h) sont exclus.
         function zeroItems(targets, nrow, objectives, days) {
-            if (!nrow || !days || days.done < 2) return [];
+            if (!nrow) return [];
             const out = [];
+            // Taux hors objectif (Chubb sous la cible, Mix 2h au-dessus)
+            alertItemsFor(targets, nrow, objectives).forEach(a => out.push(a.title + ' (' + a.sub.split(' — ')[0] + ')'));
+            if (!days || days.done < 2) return out;
             uniqueObjectives(objectives).forEach(obj => {
                 if (obj.unit === '%') return;
                 const t = targetFor(targets, obj);
                 if (!t || t <= 0) return;
                 const r = getRealization(nrow, obj.name);
-                if (!r) out.push(obj.name);
+                if (!r) out.push(obj.name + ' à 0');
             });
             return out;
         }
@@ -2878,8 +2881,8 @@
                         if (z.length) lines.push(`<li>${names(z)}</li>`);
                     }
                 }
-                if (lines.length) sec.push({ icon: '🚨', title: 'Attention : items non déclenchés',
-                    html: `<p>Ces objectifs sont <strong>toujours à zéro</strong> alors qu'on a une cible :</p><ul style="margin:6px 0 0 18px;padding:0">${lines.join('')}</ul>` });
+                if (lines.length) sec.push({ icon: '🚨', title: 'Attention : items à corriger',
+                    html: `<p>Items <strong>toujours à zéro</strong> alors qu'on a une cible, ou <strong>taux hors objectif</strong> :</p><ul style="margin:6px 0 0 18px;padding:0">${lines.join('')}</ul>` });
             } catch (e) { console.error(e); }
             return sec;
         }
