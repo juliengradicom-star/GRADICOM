@@ -709,6 +709,7 @@
         .logout-btn, .admin-back-btn { border: 1px solid var(--line); color: var(--gold-2); border-radius: 999px; letter-spacing: 1.5px; font-size: 11px; background: rgba(255,255,255,0.02); }
         .app-header { background: rgba(11,10,8,0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; }
         #userInfo { color: var(--text-dim); letter-spacing: .5px; }
+        .today-date { color: var(--gold); font-weight: 600; letter-spacing: .5px; font-size: 13px; white-space: nowrap; }
         .tabs-container { background: transparent; border-bottom: 1px solid var(--line); overflow-x: auto; }
         .tab-btn { font-family: var(--sans); font-size: 11px; letter-spacing: 2.5px; font-weight: 600; color: var(--text-dim); white-space: nowrap; }
         .tab-btn.active { color: var(--gold-2); border-bottom: 1px solid var(--gold); }
@@ -964,6 +965,7 @@
         <div class="app-header">
             <div class="app-title" id="appLogo" aria-label="GRADICOM AMR">GRADICOM AMR</div>
             <div class="header-right">
+                <div id="todayDate" class="today-date"></div>
                 <div id="userInfo"></div>
                 <button class="logout-btn" onclick="manualRefresh()">↻ Actualiser</button>
                 <button class="logout-btn" onclick="handleLogout()">Déconnexion</button>
@@ -2255,6 +2257,17 @@
             switchTab(landing);
             syncPushSilently();
         }
+
+        // Date du jour affichée en haut de toutes les pages (heure de l'appareil)
+        function updateTodayDate() {
+            const el = document.getElementById('todayDate');
+            if (!el) return;
+            const t = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            el.textContent = t.charAt(0).toUpperCase() + t.slice(1);
+        }
+        updateTodayDate();
+        setInterval(updateTodayDate, 60000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) updateTodayDate(); });
 
         function updateUserInfo() {
             const u = currentUser;
