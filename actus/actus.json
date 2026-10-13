@@ -1,5 +1,86 @@
 [
   {
+    "id": "2026-10-13-business-connect-s42",
+    "date": "2026-10-13",
+    "title": "Business Connect — semaine du 13 au 19 octobre",
+    "text": "L'essentiel de la semaine (image 1), puis un FOCUS sur tous les mobiles en bon plan : forfait sans engagement (image 2) et forfait Illimité 5G+ (image 3), avec prix, remises, ODR et bonus reprise. Touche une image pour l'agrandir.",
+    "images": [
+      "actus/business-connect-s42.png",
+      "actus/business-connect-s42-mobiles-1.png",
+      "actus/business-connect-s42-mobiles-2.png"
+    ],
+    "notifyText": "Galaxy A37 à 1€, déstockage, Canal+ Coupes d'Europe, accessoires Samsung… Toutes les infos de la semaine + un quiz !",
+    "quiz": [
+      {
+        "q": "Un client veut le Xiaomi 17T avec un forfait SANS engagement. Quel est son prix (ODR SFR de 100 € déduite) ?",
+        "options": [
+          "349 €",
+          "449 €",
+          "549 €",
+          "749 €"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "449 € (prix initial 749 € − remise 200 € − ODR 100 €). Ou 4 × 137,25 € sans frais, puis l'ODR de 100 € remboursée."
+      },
+      {
+        "q": "Un client prend le Galaxy S26 FE avec un forfait Illimité 5G+ et veut payer en 4 fois. Que lui proposes-tu ?",
+        "options": [
+          "4 × 73,25 € sans frais",
+          "4 × 157,25 € sans frais",
+          "4 × 172,75 € sans frais",
+          "4 × 347,75 € sans frais"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "En Illimité 5G+ : 4 × 73,25 € sans frais, puis ODR de 100 € remboursée. (4 × 157,25 € c'est le S26 FE sans engagement.)"
+      },
+      {
+        "q": "Quels mobiles du focus donnent 100 € de bonus pour la reprise d'un ancien mobile ? (plusieurs réponses)",
+        "options": [
+          "Galaxy S26 FE",
+          "Galaxy S26+",
+          "Galaxy A37",
+          "Galaxy Z Fold8 Ultra"
+        ],
+        "answer": [
+          0,
+          1
+        ],
+        "multi": true,
+        "explain": "100 € de bonus sur le S26 FE et le S26+. Le A37 donne 30 € et le Z Fold8 Ultra 150 €."
+      },
+      {
+        "q": "Jusqu'à combien l'ODR Google Pixel 11 rembourse-t-elle (du 1er au 31 octobre) ?",
+        "options": [
+          "70 €",
+          "100 €",
+          "200 €",
+          "300 €"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Jusqu'à 300 € remboursés pour l'achat d'un Pixel 11, 11 Pro, 11 Pro XL ou 11 Pro Fold."
+      },
+      {
+        "q": "Jusqu'à quelle date la 2e caméra Wifi Maison Sécurisée est-elle à 29 € au lieu de 39 € ?",
+        "options": [
+          "Le 19/10",
+          "Le 30/10",
+          "Le 2/11",
+          "Le 16/11"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Jusqu'au 2/11 : ODR de 10 €, preuve d'achat à envoyer par courrier sous 30 jours."
+      }
+    ]
+  },
+  {
     "id": "2026-10-08-business-connect-s41-focus-mobiles",
     "date": "2026-10-08",
     "title": "Business Connect — semaine du 6 au 12 octobre",
