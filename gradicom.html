@@ -2258,15 +2258,16 @@
             syncPushSilently();
         }
 
-        // Date du jour affichée en haut de toutes les pages (heure de l'appareil)
+        // Date et heure du jour affichées en haut de toutes les pages (heure de l'appareil)
         function updateTodayDate() {
             const el = document.getElementById('todayDate');
             if (!el) return;
             const t = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-            el.textContent = t.charAt(0).toUpperCase() + t.slice(1);
+            const h = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            el.textContent = t.charAt(0).toUpperCase() + t.slice(1) + ' • ' + h;
         }
         updateTodayDate();
-        setInterval(updateTodayDate, 60000);
+        setInterval(updateTodayDate, 15000);
         document.addEventListener('visibilitychange', () => { if (!document.hidden) updateTodayDate(); });
 
         function updateUserInfo() {
