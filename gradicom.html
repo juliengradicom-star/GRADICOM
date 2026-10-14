@@ -764,6 +764,26 @@
         ::-webkit-scrollbar { height: 10px; width: 10px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,.07); border-radius: 6px; }
         ::-webkit-scrollbar-thumb { background: rgba(201,166,91,.8); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+        .gm-card { display:flex; align-items:center; gap:14px; margin:14px 0 8px; padding:16px 18px; border:1px solid var(--gold); border-radius:12px; background:linear-gradient(120deg, rgba(201,166,91,.18), rgba(201,166,91,.04)); position:relative; overflow:hidden; }
+        .gm-card::after { content:''; position:absolute; top:0; left:-60%; width:40%; height:100%; background:linear-gradient(100deg, transparent, rgba(255,255,255,.18), transparent); animation: gmShine 3.6s ease-in-out infinite; }
+        @keyframes gmShine { 0% { left:-60%; } 60%, 100% { left:130%; } }
+        .gm-ticket { font-size:38px; animation: gmFloat 2.4s ease-in-out infinite; }
+        @keyframes gmFloat { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-5px) rotate(6deg); } }
+        .gm-title { font-family: var(--serif); font-size: 20px; color: var(--gold); }
+        .gm-sub { font-size: 13px; color: #cbbd9a; }
+        .gm-rules { margin: 6px 0 10px 18px; font-size: 13px; line-height: 1.5; }
+        .gm-cond { margin: 8px 0; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); font-size: 13px; }
+        .gm-cond.ok { border-color: #3d8f5a; } .gm-cond.warn { border-color: #b9772e; }
+        .gm-me { margin: 8px 0 12px; padding: 12px 14px; border-radius: 8px; background: rgba(255,255,255,.05); font-size: 14px; }
+        .gm-me.win { background: rgba(201,166,91,.18); border: 1px solid var(--gold); }
+        .gm-row { display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; margin-bottom:6px; }
+        .gm-row.pos { border-color: var(--gold); background: rgba(201,166,91,.12); box-shadow: 0 0 14px rgba(201,166,91,.25); }
+        .gm-row.me { outline: 1px dashed rgba(255,255,255,.35); }
+        .gm-rank { width:30px; text-align:center; font-size:18px; } .gm-name { flex:1; min-width:0; } .gm-q { text-align:right; font-size:18px; }
+        .gm-confetti { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+        .gm-confetti i { position:absolute; top:-14px; width:8px; height:14px; border-radius:2px; animation: gmFall linear forwards; }
+        @keyframes gmFall { to { top: 105%; margin-left: 40px; opacity: .85; } }
+        @media (prefers-reduced-motion: reduce) { .gm-card::after, .gm-ticket { animation: none; } }
         .chal-head { display: flex; align-items: center; gap: 14px; margin: 6px 0 4px; }
         .bonus-search { width: 100%; max-width: 420px; padding: 11px 14px; margin: 4px 0 12px; background: var(--dark-gray); border: 1px solid var(--line); border-radius: 8px; color: var(--white); font-size: 14px; }
         .bonus-brand { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
@@ -3560,6 +3580,13 @@
                     <div id="primeEstimates"><p class="muted">Chargement des ventes...</p></div>
                 </div>
 
+                <!-- JEU CONCOURS GOOGLE : MATCH FRANCE-TURQUIE -->
+                <div data-atab="prime" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
+                    <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">🎟️ Jeu concours Google — places France-Turquie</h2>
+                    <p class="muted" style="font-size:12px;margin-bottom:12px;">Le jeu compte les mobiles Google vendus À PARTIR DU 14 OCTOBRE (le tableau des ventes compte depuis le 1er). Il faut donc enregistrer le « point de départ » : le nombre de Google déjà vendus par chaque vendeur avant le jeu. Le bouton ci-dessous le relève tout seul dans les ventes ; à faire avant l'ouverture des magasins (9 h 30), sinon corrige les chiffres à la main.</p>
+                    <div id="googleMatchAdmin"></div>
+                </div>
+
                 <!-- TCS : CUMUL OCTOBRE -->
                 <div data-atab="prime" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
                     <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">📡 Challenge TCS — contrats d'octobre</h2>
@@ -3609,6 +3636,7 @@
             histMonth = null;
             renderPrimeHistoryAdmin();
             renderTcsCarryAdmin();
+            renderGoogleMatchAdmin();
             renderMessagingAdmin();
             renderActusAdmin();
             refreshLists();
@@ -4922,6 +4950,121 @@
         }
 
 
+        // ----- Jeu concours Google : 2 places pour France-Turquie (du 14 au 31 octobre 2026) -----
+        const GM = { from: '2026-10-14', minSales: 5, places: 2, pdmMin: 20 };
+        function googleMatchData(data) {
+            const cfg = data.googleMatch;
+            if (!cfg || !cfg.base) return { ready: false, rows: [] };
+            const rows = vendorRanking(data).map(v => {
+                const g = googleGain(v.nrow, false);
+                const tot = g ? g.totalQ : 0;
+                const b = parseFloat(cfg.base[v.user.email]);
+                return { name: v.user.name, store: v.user.store, email: v.user.email, q: Math.max(0, tot - (isNaN(b) ? 0 : b)) };
+            }).sort((a, b) => (b.q - a.q) || a.name.localeCompare(b.name, 'fr'));
+            const qualified = rows.filter(r => r.q >= GM.minSales);
+            const limit = qualified.length >= GM.places ? qualified[GM.places - 1].q : 0; // un ex æquo à la limite reste « à départager »
+            const inPlaces = qualified.filter(r => r.q >= limit);
+            return { ready: true, cfg, rows, qualified, inPlaces, tie: inPlaces.length > GM.places };
+        }
+        function googleMatchBlock(data, u) {
+            if (!googleOn()) return '';
+            const d = googleMatchData(data);
+            const canSeePdm = !!u && (u.isDirector || u.isManager);
+            const pdm = canSeePdm ? googlePdmData(data).avg : null;
+            const head = `<div class="gm-card"><div class="gm-ticket">🎟️</div><div>
+                <div class="gm-title">Jeu concours — 2 places pour France – Turquie</div>
+                <div class="gm-sub">Stade Matmut Atlantique, Bordeaux • novembre 2026</div></div></div>`;
+            const rules = `<ul class="gm-rules">
+                <li><strong>2 places à gagner</strong>, une place par vendeur gagnant.</li>
+                <li>Les gagnants sont les vendeurs qui ont vendu <strong>le plus de mobiles Google</strong> du <strong>14 au 31 octobre 2026</strong>, avec un <strong>minimum de ${GM.minSales} mobiles</strong> sur la période.</li>
+                <li>Condition : la <strong>part de marché Google du groupe</strong> (les 4 magasins) doit être <strong>supérieure ou égale à ${GM.pdmMin} %</strong> sur le mois d'octobre complet (1er au 31).</li>
+                <li>Places <strong>non cessibles et non revendables</strong> : réservées aux collaborateurs de l'entreprise, aucune personne extérieure ne peut y participer.</li>
+            </ul>`;
+            let cond = '';
+            if (canSeePdm) {
+                const ok = pdm !== null && pdm >= GM.pdmMin;
+                cond = `<div class="gm-cond ${pdm === null ? '' : (ok ? 'ok' : 'warn')}">PDM Google du groupe en octobre : <strong>${pdm === null ? '—' : fmtPct(pdm)}</strong> • objectif ${GM.pdmMin} % ou plus ${pdm === null ? '' : (ok ? '— pour l\'instant la condition est remplie ✔' : '— pour l\'instant la condition n\'est pas remplie')}<div class="muted" style="font-size:11px;margin-top:2px">Vérifiée sur le mois complet : résultat définitif le 31 octobre.</div></div>`;
+            }
+            if (!d.ready) return head + rules + cond + '<div class="banner">Le décompte démarre : le point de départ du jeu est en cours d\'enregistrement.</div>';
+            const me = u ? d.rows.find(r => r.email === u.email) : null;
+            let mine = '';
+            if (me) {
+                const need = Math.max(0, GM.minSales - me.q);
+                const pos = d.inPlaces.some(r => r.email === me.email);
+                mine = `<div class="gm-me ${pos ? 'win' : ''}">${pos ? '🏆 Tu es actuellement dans les ' + GM.places + ' places ! Continue, ça se joue sur la durée.' : (need > 0 ? 'Il te manque <strong>' + need + '</strong> mobile' + (need > 1 ? 's' : '') + ' Google pour être qualifié(e) (' + me.q + ' / ' + GM.minSales + ').' : 'Tu es qualifié(e) (' + me.q + ' mobiles). Plus que ' + (d.qualified.length >= GM.places ? 'dépasser ' + esc(d.qualified[GM.places - 1].name.split(' ')[0]) : 'vendre davantage') + ' pour passer devant !')}</div>`;
+                if (pos) gmConfetti(u);
+            }
+            const shown = d.rows.filter(r => r.q > 0);
+            const maxQ = Math.max(GM.minSales, ...shown.map(r => r.q));
+            const list = shown.length ? shown.map((r, i) => {
+                const qual = r.q >= GM.minSales, pos = d.inPlaces.some(x => x.email === r.email);
+                return `<div class="gm-row ${pos ? 'pos' : ''} ${u && r.email === u.email ? 'me' : ''}">
+                    <div class="gm-rank">${pos ? '🎟️' : (i + 1)}</div>
+                    <div class="gm-name">${esc(r.name)} <span class="muted">${esc(r.store || '')}</span>
+                        <div class="bar" style="margin-top:4px"><div class="bar-fill ${qual ? 'ok' : 'warn'}" style="width:${Math.min(100, r.q / maxQ * 100).toFixed(1)}%"></div></div></div>
+                    <div class="gm-q"><strong>${fmt(r.q)}</strong><div class="muted" style="font-size:11px">${qual ? (pos ? 'en place' : 'qualifié') : 'min. ' + GM.minSales}</div></div></div>`;
+            }).join('') : '<p class="muted">Le classement apparaît dès les premières ventes du jeu.</p>';
+            return head + rules + cond + mine + `<h3 class="section-title">🏁 Classement du jeu <span class="muted" style="font-size:14px">— mobiles Google vendus depuis le 14 octobre</span></h3>`
+                + `<div class="gm-list">${list}</div>`
+                + (d.tie ? '<p class="muted" style="font-size:12px">Égalité pour la dernière place : les vendeurs à égalité seront départagés par la direction.</p>' : '')
+                + `<p class="muted" style="font-size:12px">Le chèque cadeau Google continue en parallèle (gains ci-dessous).</p>`;
+        }
+        // Petit feu d'artifice (une fois par jour et par appareil) pour un vendeur dans les places
+        function gmConfetti(u) {
+            try {
+                const k = 'gradicom_gm_confetti_' + u.email, day = new Date().toDateString();
+                if (localStorage.getItem(k) === day) return;
+                localStorage.setItem(k, day);
+            } catch (e) {}
+            if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            setTimeout(() => {
+                const box = document.createElement('div');
+                box.className = 'gm-confetti';
+                const cols = ['#c9a65b', '#f3d98b', '#ffffff', '#e0a53a', '#8bd49a'];
+                for (let i = 0; i < 46; i++) {
+                    const p = document.createElement('i');
+                    p.style.cssText = `left:${Math.random() * 100}%;background:${cols[i % cols.length]};animation-delay:${(Math.random() * 0.8).toFixed(2)}s;animation-duration:${(2.2 + Math.random() * 1.6).toFixed(2)}s;transform:rotate(${Math.floor(Math.random() * 360)}deg)`;
+                    box.appendChild(p);
+                }
+                document.body.appendChild(box);
+                setTimeout(() => box.remove(), 4500);
+            }, 300);
+        }
+        // Admin : point de départ du jeu
+        function renderGoogleMatchAdmin() {
+            const el = document.getElementById('googleMatchAdmin');
+            if (!el) return;
+            const data = getData();
+            const c = data.googleMatch || { base: {} };
+            const vend = data.users.filter(u => isVendorProfile(u)).sort((a, b) => (a.store || '').localeCompare(b.store || '') || a.name.localeCompare(b.name));
+            el.innerHTML = `<div class="tbl-wrap"><table class="kpi ratings"><thead><tr><th>Vendeur</th><th>Google déjà vendus avant le jeu</th><th>Total actuel (ventes)</th></tr></thead><tbody>` +
+                vend.map(u => { const g = googleGain(findVendorRow(u), false); return `<tr><td>${esc(u.name)} <span class="muted">${esc(u.store || '')}</span></td><td><input class="rt-input gm-in" type="number" step="1" min="0" data-email="${esc(u.email)}" value="${c.base && c.base[u.email] !== undefined ? c.base[u.email] : ''}" placeholder="—"></td><td>${g ? g.totalQ : '—'}</td></tr>`; }).join('') +
+                `</tbody></table></div>
+                <div class="pe-actions"><button class="btn-add" onclick="googleMatchStart()">🚀 Fixer le départ maintenant (depuis les ventes)</button>
+                <button class="logout-btn" onclick="googleMatchSave()">💾 Enregistrer mes corrections</button></div>
+                ${c.savedAt ? `<p class="muted" style="font-size:12px">Point de départ enregistré le ${new Date(c.savedAt).toLocaleString('fr-FR')}.</p>` : '<p class="muted" style="font-size:12px">Point de départ pas encore enregistré : le jeu n\'affiche pas de classement.</p>'}`;
+        }
+        function googleMatchStart() {
+            if (!googleOn()) { alert('Les ventes affichées ne sont pas celles d\'octobre 2026.'); return; }
+            const data = getData();
+            if (data.googleMatch && data.googleMatch.savedAt && !confirm('Un point de départ existe déjà. Le remplacer par les ventes actuelles ?')) return;
+            const base = {};
+            data.users.filter(u => isVendorProfile(u)).forEach(u => { const g = googleGain(findVendorRow(u), false); base[u.email] = g ? g.totalQ : 0; });
+            data.googleMatch = { from: GM.from, base, savedAt: Date.now() };
+            saveData(data);
+            renderGoogleMatchAdmin();
+            showImportStatus('✅ Point de départ du jeu Google enregistré et publié.');
+        }
+        function googleMatchSave() {
+            const data = getData();
+            const base = {};
+            document.querySelectorAll('.gm-in').forEach(inp => { if (String(inp.value).trim() !== '') base[inp.dataset.email] = parseFloat(inp.value) || 0; });
+            data.googleMatch = { from: GM.from, base, savedAt: Date.now() };
+            saveData(data);
+            renderGoogleMatchAdmin();
+            showImportStatus('✅ Corrections enregistrées et publiées.');
+        }
+
         // Podiums des challenges (en quantité) : 3 meilleurs vendeurs + 3 meilleurs magasins. Dylan figure parmi les vendeurs seulement (le magasin est classé à part).
         function chalPodiums(data, kind, u) {
             if (kind === 'google' && !googleOn()) return '';
@@ -4977,6 +5120,7 @@
             } else if (u.isDirector) {
                 const kind = chalSub;
                 h += chalHead(kind, kind === 'tcs' ? CHAL_TCS_DATES : CHAL_GOOGLE_DATES);
+                if (kind === 'google') h += googleMatchBlock(data, u);
                 if (kind === 'google' && chalIsJulien()) h += googleNetworkBlock(data);
                 h += chalPodiums(data, kind, u);
                 const stores = data.stores.map(s => s.name);
@@ -4998,6 +5142,7 @@
             } else {
                 const kind = chalSub;
                 h += chalHead(kind, kind === 'tcs' ? CHAL_TCS_DATES : CHAL_GOOGLE_DATES);
+                if (kind === 'google') h += googleMatchBlock(data, u);
                 if (kind === 'google' && u.isManager) h += googlePdmManagerBlock(data, u);
                 h += chalPodiums(data, kind, u);
                 if (u.isManager) h += `<h3 class="section-title">Mon magasin ${esc(u.store)}</h3>` + storeBlock(u.store, kind);
