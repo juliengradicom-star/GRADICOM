@@ -115,6 +115,9 @@
 
 - 13/10/2026 : date et heure du jour (ex. « Mardi 13 octobre 2026 • 19:33 », dorée) affichée dans l'en-tête, donc sur TOUTES les pages une fois connecté (`#todayDate`, `updateTodayDate`, heure de l'appareil, mise à jour toutes les 15 s et au retour dans l'appli).
 
+- 14/10/2026 : « 📡 Connexions » (vue dirigeant, sous-onglet visible par JULIEN SEUL, `chalIsJulien`) = dernière visite, nb de connexions et appareil de chacun. Le portail signale `pingServer('login'|'open')` (connexion, puis retour dans l'appli, au plus toutes les 10 min) → action `ping` du script Google (onglet CONNEXIONS, créé tout seul) ; lecture par l'action `connexions` réservée à `PRIMES_TOUT_VOIR`. Compatible ancien script (ping ignoré, la vue dit « pas encore à jour »). Nécessite que Julien recolle `messagerie.gs` (en même temps que `snapGet`/`snapSave` du bravo). Compte seulement depuis la mise en place.
+- 14/10/2026 : Admin → mots de passe : bouton « 🎲 Nouveau » (génère un mot de passe, impossible d'afficher les anciens : hachés) ; bouton « Envoyer une notif test » (Admin → Actus, pour Julien seul) ; messagerie : Direction = « les dirigeants », responsables en MAJUSCULES (vendeurs en minuscules), Julien = « Chef des ventes », Anthony = « Dirigeant ».
+
 ## Reprise — à faire (état au 01/10/2026 21h)
 - Nouveautés du soir (en ligne, testées avec de fausses ventes uniquement) : onglets « Challenges » (Google / TCS / Mon total pour Dylan), « Bonus reprise », onglets du haut sur plusieurs lignes sur téléphone. À VÉRIFIER avec Julien sur les vraies ventes : les noms de colonnes Google / TCS sont bien lus (noms normalisés, voir Historique), les montants sont cohérents.
 - 31/10 : rappeler à Julien d'enregistrer les contrats TCS d'octobre (Admin → Primes). 1er novembre : nouveau PDF « Bonus reprise » à intégrer (`BONUS_REPRISE`), challenge Google terminé.

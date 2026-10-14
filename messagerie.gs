@@ -364,6 +364,44 @@ function handle_(req) {
       return { ok: true };
     }
 
+    // Dernières connexions : chaque appareil signale « connexion » ou « ouverture » ; seul Julien peut les lire
+    case 'ping': {
+      const me = auth_(ss, req);
+      const lock = LockService.getScriptLock();
+      lock.waitLock(20000);
+      try {
+        const sh = sheet_(ss, 'CONNEXIONS', ['email', 'name', 'store', 'lastLogin', 'lastSeen', 'logins', 'device']);
+        const v = sh.getDataRange().getValues();
+        let row = 0;
+        for (let i = 1; i < v.length; i++) { if (String(v[i][0]).toLowerCase() === me.email) { row = i + 1; break; } }
+        const now = new Date();
+        const device = String(req.device || '').slice(0, 40);
+        const isLogin = req.kind === 'login';
+        if (row) {
+          const r = v[row - 1];
+          sh.getRange(row, 1, 1, 7).setValues([[me.email, me.name, me.store, isLogin ? now : r[3], now, (Number(r[5]) || 0) + (isLogin ? 1 : 0), device || r[6]]]);
+        } else {
+          sh.appendRow([me.email, me.name, me.store, isLogin ? now : '', now, isLogin ? 1 : 0, device]);
+        }
+        return { ok: true };
+      } finally { lock.releaseLock(); }
+    }
+
+    case 'connexions': {
+      const me = auth_(ss, req);
+      if (PRIMES_TOUT_VOIR.indexOf(me.email) < 0) throw new Error('Accès réservé');
+      const sh = ss.getSheetByName('CONNEXIONS');
+      if (!sh) return { ok: true, rows: [] };
+      const v = sh.getDataRange().getValues();
+      v.shift();
+      const rows = v.filter(function (r) { return r[0]; }).map(function (r) {
+        return { email: String(r[0]).toLowerCase(), name: String(r[1]), store: String(r[2]),
+          lastLogin: r[3] ? new Date(r[3]).toISOString() : '', lastSeen: r[4] ? new Date(r[4]).toISOString() : '',
+          logins: Number(r[5]) || 0, device: String(r[6] || '') };
+      });
+      return { ok: true, rows: rows };
+    }
+
     case 'pushPurge': {
       if (!isAdmin_(ss, req)) throw new Error('Mot de passe Admin incorrect');
       const dead = {}; (req.endpoints || []).forEach(function (e) { dead[String(e)] = true; });

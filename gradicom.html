@@ -2256,6 +2256,70 @@
             } catch (e) {}
             switchTab(landing);
             syncPushSilently();
+            pingServer('login');
+        }
+
+        // Signale discrètement la connexion / l'ouverture de l'appli (Julien seul peut les consulter)
+        let lastPingAt = 0;
+        function pingServer(kind) {
+            try {
+                if (!currentUser || !currentPassword) return;
+                if (kind !== 'login' && Date.now() - lastPingAt < 10 * 60 * 1000) return;
+                lastPingAt = Date.now();
+                const ua = navigator.userAgent || '';
+                const device = /iPhone/i.test(ua) ? 'iPhone' : /iPad/i.test(ua) ? 'iPad' : /Android/i.test(ua) ? 'Android' : /Mac/i.test(ua) ? 'Mac' : /Windows/i.test(ua) ? 'PC Windows' : 'Autre';
+                msgApi('ping', { kind, device }).catch(() => {});
+            } catch (e) {}
+        }
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) pingServer('open'); });
+
+        // Vue « Connexions » (Julien seul)
+        let connexionsState = { loading: false, rows: null, error: '' };
+        async function loadConnexions() {
+            connexionsState.loading = true; connexionsState.error = '';
+            try { connexionsState.rows = (await msgApi('connexions')).rows || []; }
+            catch (e) { connexionsState.error = String(e.message || e); }
+            connexionsState.loading = false;
+            if (dirSub === 'connexions') loadDirectorDashboard();
+        }
+        function agoLabel(iso) {
+            if (!iso) return 'jamais';
+            const d = new Date(iso), diff = Date.now() - d.getTime();
+            const min = Math.floor(diff / 60000);
+            const hm = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            if (min < 2) return 'à l\'instant';
+            if (min < 60) return 'il y a ' + min + ' min';
+            const sameDay = d.toDateString() === new Date().toDateString();
+            if (sameDay) return 'aujourd\'hui à ' + hm;
+            const y = new Date(); y.setDate(y.getDate() - 1);
+            if (d.toDateString() === y.toDateString()) return 'hier à ' + hm;
+            return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }) + ' à ' + hm;
+        }
+        function connexionsHtml(data) {
+            if (connexionsState.rows === null && !connexionsState.loading && !connexionsState.error) loadConnexions();
+            if (connexionsState.error) {
+                const old = /Action inconnue/i.test(connexionsState.error);
+                return `<p class="muted">${old ? 'Le script Google n\'est pas encore à jour pour cette fonction (mise à jour à faire une fois).' : 'Impossible de charger : ' + esc(connexionsState.error)}</p>
+                    <button class="btn" onclick="connexionsState.rows=null;connexionsState.error='';loadDirectorDashboard()">Réessayer</button>`;
+            }
+            if (connexionsState.rows === null) return '<p class="muted">Chargement…</p>';
+            const byEmail = {};
+            connexionsState.rows.forEach(r => { byEmail[r.email] = r; });
+            const list = (data.users || []).filter(u => u.email).map(u => {
+                const r = byEmail[String(u.email).toLowerCase()] || {};
+                return { name: u.name, store: u.store || '', last: r.lastSeen || r.lastLogin || '', lastLogin: r.lastLogin || '', logins: r.logins || 0, device: r.device || '' };
+            });
+            list.sort((a, b) => (b.last ? new Date(b.last).getTime() : 0) - (a.last ? new Date(a.last).getTime() : 0));
+            const today = list.filter(x => x.last && new Date(x.last).toDateString() === new Date().toDateString()).length;
+            let h = `<div class="dash-sub">${today} connecté${today > 1 ? 's' : ''} aujourd'hui sur ${list.length}</div><div class="rank-list">`;
+            list.forEach(x => {
+                const recent = x.last && (Date.now() - new Date(x.last).getTime()) < 24 * 3600 * 1000;
+                h += `<div class="rank-row"><div class="rank-name">${esc(x.name)} <span class="muted">${esc(x.store)}</span></div>
+                    <div class="rank-val ${x.last ? (recent ? 'ok' : '') : 'bad'}" style="text-align:right">${esc(agoLabel(x.last))}
+                    <div class="muted" style="font-size:11px">${x.logins ? x.logins + ' connexion' + (x.logins > 1 ? 's' : '') : ''}${x.device ? ' • ' + esc(x.device) : ''}</div></div></div>`;
+            });
+            return h + `</div><p class="muted" style="margin-top:8px;font-size:11px;">« Dernière visite » = dernière fois que la personne a ouvert l'appli. Visible par toi seul. Ne compte que depuis la mise en place.</p>
+                <button class="btn" onclick="connexionsState.rows=null;loadDirectorDashboard()">Actualiser</button>`;
         }
 
         // Date et heure du jour affichées en haut de toutes les pages (heure de l'appareil)
@@ -3194,6 +3258,7 @@
 
             // Sous-onglets : une chose à la fois
             const dItems = [{ key: 'reseau', label: '📊 Réseau' }, { key: 'magasins', label: '🏪 Magasins' }, { key: 'vendeurs', label: '👥 Vendeurs' }, { key: 'primes', label: '💶 Primes versées' }];
+            if (chalIsJulien()) dItems.push({ key: 'connexions', label: '📡 Connexions' });
             if (!dItems.some(i => i.key === dirSub)) dirSub = 'reseau';
             let body = '';
             if (dirSub === 'reseau') {
@@ -3229,6 +3294,8 @@
                     ${renderSummaryCards(v.user.objectiveTargets, v.nrow, data.objectives, v.days, '')}
                     ${margeLadderHtml(data, v.user, v.user.store, false)}
                     ${renderKpiTable(v.user.objectiveTargets, v.nrow, data.objectives, v.days, [v.user, v.user.store, false])}`;
+            } else if (dirSub === 'connexions') {
+                body = `<h2 class="dash-title">📡 Dernières connexions</h2>${connexionsHtml(data)}`;
             } else {
                 body = `<div id="primeVolumes">${renderPrimeVolumes(data)}</div>`;
             }
