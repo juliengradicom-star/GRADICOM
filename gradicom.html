@@ -3583,7 +3583,7 @@
                 <!-- JEU CONCOURS GOOGLE : MATCH FRANCE-TURQUIE -->
                 <div data-atab="prime" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
                     <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">🎟️ Jeu concours Google — places France-Turquie</h2>
-                    <p class="muted" style="font-size:12px;margin-bottom:12px;">Le jeu compte les mobiles Google vendus À PARTIR DU 14 OCTOBRE (le tableau des ventes compte depuis le 1er). Il faut donc enregistrer le « point de départ » : le nombre de Google déjà vendus par chaque vendeur avant le jeu. Le bouton ci-dessous le relève tout seul dans les ventes ; à faire avant l'ouverture des magasins (9 h 30), sinon corrige les chiffres à la main.</p>
+                    <p class="muted" style="font-size:12px;margin-bottom:12px;">Le jeu compte les mobiles Google vendus À PARTIR DU 14 OCTOBRE (le tableau des ventes compte depuis le 1er). Il faut donc enregistrer le « point de départ » : le nombre de Google déjà vendus par chaque vendeur avant le jeu. Le bouton ci-dessous le relève tout seul dans les ventes. Si des ventes ont déjà eu lieu AUJOURD'HUI, note-les dans la dernière colonne avant d'appuyer : elles seront comptées dans le jeu.</p>
                     <div id="googleMatchAdmin"></div>
                 </div>
 
@@ -5037,8 +5037,8 @@
             const data = getData();
             const c = data.googleMatch || { base: {} };
             const vend = data.users.filter(u => isVendorProfile(u)).sort((a, b) => (a.store || '').localeCompare(b.store || '') || a.name.localeCompare(b.name));
-            el.innerHTML = `<div class="tbl-wrap"><table class="kpi ratings"><thead><tr><th>Vendeur</th><th>Google déjà vendus avant le jeu</th><th>Total actuel (ventes)</th></tr></thead><tbody>` +
-                vend.map(u => { const g = googleGain(findVendorRow(u), false); return `<tr><td>${esc(u.name)} <span class="muted">${esc(u.store || '')}</span></td><td><input class="rt-input gm-in" type="number" step="1" min="0" data-email="${esc(u.email)}" value="${c.base && c.base[u.email] !== undefined ? c.base[u.email] : ''}" placeholder="—"></td><td>${g ? g.totalQ : '—'}</td></tr>`; }).join('') +
+            el.innerHTML = `<div class="tbl-wrap"><table class="kpi ratings"><thead><tr><th>Vendeur</th><th>Google déjà vendus avant le jeu</th><th>Total actuel (ventes)</th><th>Vendus AUJOURD'HUI (à compter dans le jeu)</th></tr></thead><tbody>` +
+                vend.map(u => { const g = googleGain(findVendorRow(u), false); return `<tr><td>${esc(u.name)} <span class="muted">${esc(u.store || '')}</span></td><td><input class="rt-input gm-in" type="number" step="1" min="0" data-email="${esc(u.email)}" value="${c.base && c.base[u.email] !== undefined ? c.base[u.email] : ''}" placeholder="—"></td><td>${g ? g.totalQ : '—'}</td><td><input class="rt-input gm-today" type="number" step="1" min="0" data-email="${esc(u.email)}" placeholder="0"></td></tr>`; }).join('') +
                 `</tbody></table></div>
                 <div class="pe-actions"><button class="btn-add" onclick="googleMatchStart()">🚀 Fixer le départ maintenant (depuis les ventes)</button>
                 <button class="logout-btn" onclick="googleMatchSave()">💾 Enregistrer mes corrections</button></div>
@@ -5049,7 +5049,9 @@
             const data = getData();
             if (data.googleMatch && data.googleMatch.savedAt && !confirm('Un point de départ existe déjà. Le remplacer par les ventes actuelles ?')) return;
             const base = {};
-            data.users.filter(u => isVendorProfile(u)).forEach(u => { const g = googleGain(findVendorRow(u), false); base[u.email] = g ? g.totalQ : 0; });
+            const today = {};
+            document.querySelectorAll('.gm-today').forEach(inp => { today[inp.dataset.email] = Math.max(0, parseFloat(inp.value) || 0); });
+            data.users.filter(u => isVendorProfile(u)).forEach(u => { const g = googleGain(findVendorRow(u), false); base[u.email] = Math.max(0, (g ? g.totalQ : 0) - (today[u.email] || 0)); });
             data.googleMatch = { from: GM.from, base, savedAt: Date.now() };
             saveData(data);
             renderGoogleMatchAdmin();
