@@ -780,10 +780,12 @@
         .gm-row.pos { border-color: var(--gold); background: rgba(201,166,91,.12); box-shadow: 0 0 14px rgba(201,166,91,.25); }
         .gm-row.me { outline: 1px dashed rgba(255,255,255,.35); }
         .gm-rank { width:30px; text-align:center; font-size:18px; } .gm-name { flex:1; min-width:0; } .gm-q { text-align:right; font-size:18px; }
-        .gm-confetti { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+        .gm-confetti { position: fixed; inset: 0; pointer-events: none; z-index: 10003; overflow: hidden; }
         .gm-confetti i { position:absolute; top:-14px; width:8px; height:14px; border-radius:2px; animation: gmFall linear forwards; }
         @keyframes gmFall { to { top: 105%; margin-left: 40px; opacity: .85; } }
         @media (prefers-reduced-motion: reduce) { .gm-card::after, .gm-ticket { animation: none; } }
+        .gm-pop { max-width: 400px; width: 100%; max-height: 92vh; overflow-y: auto; background: linear-gradient(160deg, #1d1608, #0e0c07); border: 2px solid var(--gold); border-radius: 18px; padding: 20px 18px; box-shadow: 0 0 40px rgba(201,166,91,.35); animation: gmPop .5s cubic-bezier(.2,1.3,.4,1); }
+        @keyframes gmPop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .chal-head { display: flex; align-items: center; gap: 14px; margin: 6px 0 4px; }
         .bonus-search { width: 100%; max-width: 420px; padding: 11px 14px; margin: 4px 0 12px; background: var(--dark-gray); border: 1px solid var(--line); border-radius: 8px; color: var(--white); font-size: 14px; }
         .bonus-brand { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
@@ -2934,6 +2936,7 @@
             renderMessagesTab();
             updateMsgBadge();
             try { maybeDailyAlert(u); } catch (e) { console.error(e); }
+            try { maybeMatchPopup(u); } catch (e) { console.error(e); }
         }
 
         // Objectifs en quantité jamais déclenchés (cible > 0 et réalisé = 0). Les % (Chubb, Mix 2h) sont exclus.
@@ -2967,9 +2970,9 @@
                         const mine = u.store && !u.isDirector && last.name === u.store;
                         const julien = u.isDirector && chalIsJulien();
                         if (mine || julien) {
-                            sec.push({ icon: '⚠️', title: 'Challenge Google en cours',
-                                html: `<p><strong>${esc(last.name)}</strong> est en <strong>dernière position</strong> sur la part de marché Google : <strong>${fmtPct(last.pdm)}</strong>${d.avg !== null ? ` (réseau : ${fmtPct(d.avg)})` : ''} • ${fmt(last.q)} mobile(s) Google vendu(s).</p>
-                                ${mine ? '<p class="dim">Il est encore temps de rattraper : mets les Pixel en avant et propose-les à chaque client !</p>' : ''}` });
+                            sec.push({ icon: '', title: 'Google : part de marché',
+                                html: `<p><strong>${esc(last.name)}</strong> est dernier en part de marché Google : <strong>${fmtPct(last.pdm)}</strong>${d.avg !== null ? ` (réseau : ${fmtPct(d.avg)})` : ''}.</p>
+                                ${mine ? '<p class="dim">À faire : proposer un Pixel à chaque client.</p>' : ''}` });
                         }
                     }
                 } catch (e) { console.error(e); }
@@ -2999,8 +3002,8 @@
                         if (z.length) lines.push(`<li>${names(z)}</li>`);
                     }
                 }
-                if (lines.length) sec.push({ icon: '🚨', title: 'Attention : items à corriger',
-                    html: `<p>Items <strong>toujours à zéro</strong> alors qu'on a une cible, ou <strong>taux hors objectif</strong> :</p><ul style="margin:6px 0 0 18px;padding:0">${lines.join('')}</ul>` });
+                if (lines.length) sec.push({ icon: '', title: 'À travailler en priorité',
+                    html: `<p class="dim" style="margin:0 0 6px">Pas encore démarrés, ou taux hors objectif :</p><ul style="margin:0 0 0 18px;padding:0">${lines.join('')}</ul>` });
             } catch (e) { console.error(e); }
             return sec;
         }
@@ -3016,12 +3019,12 @@
             box.id = 'gAlertBox';
             box.setAttribute('data-noico', '');
             box.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px;';
-            box.innerHTML = `<div style="max-width:440px;width:100%;max-height:90vh;overflow-y:auto;background:linear-gradient(135deg,#2a1411,#14110a);border:2px solid #c0392b;border-radius:18px;padding:22px 18px;box-shadow:0 10px 40px rgba(0,0,0,.7)">
-                <div style="font-family:'Bodoni Moda',serif;font-size:24px;margin:0 0 12px;color:#e5c26a;text-align:center">Alertes du jour</div>
-                ${sec.map(s => `<div style="margin-bottom:14px;padding:12px;border:1px solid rgba(229,194,106,.35);border-radius:12px;background:rgba(0,0,0,.25)">
-                    <div style="font-size:17px;font-weight:700;color:#e5c26a;margin-bottom:6px">${s.icon} ${s.title}</div>
-                    <div style="font-size:15px;line-height:1.5">${s.html}</div></div>`).join('')}
-                <button class="btn-add" style="width:100%" onclick="document.getElementById('gAlertBox').remove()">J'ai compris, je m'y mets 💪</button></div>`;
+            box.innerHTML = `<div style="max-width:420px;width:100%;max-height:90vh;overflow-y:auto;background:#14110a;border:1px solid rgba(201,166,91,.55);border-radius:14px;padding:20px 18px;box-shadow:0 10px 40px rgba(0,0,0,.7)">
+                <div style="font-family:'Bodoni Moda',serif;font-size:20px;margin:0 0 12px;color:#e5c26a;text-align:center">À faire aujourd'hui</div>
+                ${sec.map(s => `<div style="margin-bottom:12px;padding:10px 12px;border-left:2px solid #c9a65b;background:rgba(255,255,255,.04)">
+                    <div style="font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#c9a65b;margin-bottom:6px">${s.title}</div>
+                    <div style="font-size:14px;line-height:1.5">${s.html}</div></div>`).join('')}
+                <button class="btn-add" style="width:100%" onclick="document.getElementById('gAlertBox').remove()">OK</button></div>`;
             document.body.appendChild(box);
         }
 
@@ -5026,6 +5029,9 @@
                 if (localStorage.getItem(k) === day) return;
                 localStorage.setItem(k, day);
             } catch (e) {}
+            confettiBurst();
+        }
+        function confettiBurst() {
             if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             setTimeout(() => {
                 const box = document.createElement('div');
@@ -5040,6 +5046,39 @@
                 setTimeout(() => box.remove(), 4500);
             }, 300);
         }
+
+        // Fenêtre du jeu Google (à partir de 11 h, une fois par jour et par appareil, du 14 au 31 octobre)
+        function maybeMatchPopup(u) {
+            if (!u || document.getElementById('gAlertBox') || document.getElementById('gmPopup')) return;
+            const now = new Date();
+            if (!googleOn() || now.getDate() < 14 || now.getHours() < 11 || /^dim/i.test(now.toLocaleDateString('fr-FR', { weekday: 'short' }))) return;
+            const key = 'gradicom_gm_popup_' + String(u.email).toLowerCase(), day = now.toISOString().slice(0, 10);
+            try { if (localStorage.getItem(key) === day) return; localStorage.setItem(key, day); } catch (e) {}
+            const data = getData(), left = Math.max(0, 31 - now.getDate());
+            let mine = '';
+            try {
+                const d = googleMatchData(data), me = d.ready ? d.rows.find(r => r.email === u.email) : null;
+                if (me) {
+                    const need = Math.max(0, GM.minSales - me.q), pos = d.inPlaces.some(r => r.email === me.email);
+                    mine = `<div style="margin:12px 0 4px;padding:10px;border-radius:10px;background:rgba(201,166,91,.16);font-size:14px">${pos ? 'Tu es dans les 2 places en ce moment.' : (need > 0 ? 'Toi : ' + me.q + ' / ' + GM.minSales + ' mobiles Google. Encore ' + need + ' pour te qualifier.' : 'Tu es qualifié(e) avec ' + me.q + ' mobiles.')}</div>`;
+                }
+            } catch (e) {}
+            const box = document.createElement('div');
+            box.id = 'gmPopup';
+            box.setAttribute('data-noico', '');
+            box.style.cssText = 'position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:16px;';
+            box.innerHTML = `<div class="gm-pop"><div class="gm-ticket" style="font-size:54px;text-align:center">🎟️</div>
+                <div style="font-family:'Bodoni Moda',serif;font-size:26px;color:#e5c26a;text-align:center;line-height:1.15;margin:4px 0">2 places à gagner</div>
+                <div style="text-align:center;font-size:18px;font-weight:700">France – Turquie</div>
+                <div style="text-align:center;font-size:13px;color:#cbbd9a;margin-bottom:10px">Stade Matmut Atlantique, Bordeaux • novembre</div>
+                <ul class="gm-rules" style="margin-left:18px"><li>Les 2 vendeurs qui vendent le plus de <strong>mobiles Google</strong> du 14 au 31 octobre</li><li><strong>${GM.minSales} mobiles minimum</strong></li><li>Si la PDM Google du groupe est de <strong>${GM.pdmMin} % ou plus</strong> sur octobre</li></ul>
+                <div style="text-align:center;font-size:13px;color:#e5c26a">${left > 0 ? 'Plus que ' + left + ' jour' + (left > 1 ? 's' : '') + ' !' : 'Dernier jour !'}</div>${mine}
+                <button class="btn-add" style="width:100%;margin-top:12px" onclick="document.getElementById('gmPopup').remove();chalSub='google';switchTab('challenges')">Voir le classement</button>
+                <button class="logout-btn" style="width:100%;margin-top:8px" onclick="document.getElementById('gmPopup').remove()">Fermer</button></div>`;
+            document.body.appendChild(box);
+            confettiBurst();
+        }
+        setInterval(() => { try { if (currentUser && !document.hidden) maybeMatchPopup(currentUser); } catch (e) {} }, 60000);
         // Admin : point de départ du jeu
         function renderGoogleMatchAdmin() {
             const el = document.getElementById('googleMatchAdmin');

@@ -1,0 +1,11 @@
+# Rappel du jeu Google à 11 h (Paris) : le portail vérifie lui-même l'heure, la période et l'envoi unique du jour.
+name: challenge-reminder
+on:
+  schedule:
+    - cron: '0 9,10 * * 1-6'
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -sS --max-time 60 https://gradicom.vercel.app/api/challenge-reminder

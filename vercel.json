@@ -52,6 +52,9 @@
     },
     "api/live-bravo.js": {
       "includeFiles": "gradicom.html"
+    },
+    "api/challenge-reminder.js": {
+      "includeFiles": "gradicom.html"
     }
   }
 }
