@@ -1,0 +1,12 @@
+# Minuteur gratuit : appelle le portail toutes les 15 min pour les « bravo » en cours de journée.
+# (Le filtre horaire — lun→sam, 10 h → 20 h Paris — est fait par le portail lui-même.)
+name: live-bravo
+on:
+  schedule:
+    - cron: '*/15 7-18 * * 1-6'
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -sS --max-time 60 https://gradicom.vercel.app/api/live-bravo

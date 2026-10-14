@@ -49,6 +49,9 @@
   "functions": {
     "api/morning-alert.js": {
       "includeFiles": "gradicom.html"
+    },
+    "api/live-bravo.js": {
+      "includeFiles": "gradicom.html"
     }
   }
 }

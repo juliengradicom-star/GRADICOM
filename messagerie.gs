@@ -353,14 +353,15 @@ function handle_(req) {
     // Relevé des marges de la veille (pour les « bravo » du matin) : stocké dans les propriétés du script
     case 'snapGet': {
       if (!isAdmin_(ss, req)) throw new Error('Mot de passe Admin incorrect');
-      let snap = null; try { snap = JSON.parse(PropertiesService.getScriptProperties().getProperty('MARGIN_SNAP') || 'null'); } catch (e) {}
+      const pk = req.key === 'live' ? 'LIVE_SNAP' : 'MARGIN_SNAP';
+      let snap = null; try { snap = JSON.parse(PropertiesService.getScriptProperties().getProperty(pk) || 'null'); } catch (e) {}
       return { ok: true, snap: snap };
     }
 
     case 'snapSave': {
       if (!isAdmin_(ss, req)) throw new Error('Mot de passe Admin incorrect');
       if (!req.snap || typeof req.snap.m !== 'object') throw new Error('Relevé invalide');
-      PropertiesService.getScriptProperties().setProperty('MARGIN_SNAP', JSON.stringify(req.snap));
+      PropertiesService.getScriptProperties().setProperty(req.key === 'live' ? 'LIVE_SNAP' : 'MARGIN_SNAP', JSON.stringify(req.snap));
       return { ok: true };
     }
 
