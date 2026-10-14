@@ -368,7 +368,7 @@
         /* Administration en onglets : chaque bloc porte data-atab="<onglet>" et ne s'affiche que dans son onglet */
         #adminScreen [data-atab] { display: none; }
         #adminScreen[data-tab="global"] [data-atab~="global"], #adminScreen[data-tab="obj"] [data-atab~="obj"], #adminScreen[data-tab="payplan"] [data-atab~="payplan"],
-        #adminScreen[data-tab="prime"] [data-atab~="prime"], #adminScreen[data-tab="team"] [data-atab~="team"], #adminScreen[data-tab="msg"] [data-atab~="msg"], #adminScreen[data-tab="actus"] [data-atab~="actus"] { display: block; }
+        #adminScreen[data-tab="prime"] [data-atab~="prime"], #adminScreen[data-tab="team"] [data-atab~="team"], #adminScreen[data-tab="msg"] [data-atab~="msg"], #adminScreen[data-tab="actus"] [data-atab~="actus"], #adminScreen[data-tab="challenge"] [data-atab~="challenge"] { display: block; }
         #adminScreen .admin-tabs { position: sticky; top: 0; z-index: 15; max-width: 1200px; margin: 0 auto 22px; padding: 10px 16px 8px; background: rgba(11,10,8,0.96); }
         .admin-sections {
             display: grid;
@@ -935,6 +935,7 @@
             <button class="sub-btn" data-k="obj" onclick="setAdminTab('obj')">🎯 Objectifs &amp; import</button>
             <button class="sub-btn" data-k="payplan" onclick="setAdminTab('payplan')">💶 Payplan</button>
             <button class="sub-btn" data-k="prime" onclick="setAdminTab('prime')">🏆 Primes</button>
+            <button class="sub-btn" data-k="challenge" onclick="setAdminTab('challenge')">🎟️ Challenges</button>
             <button class="sub-btn" data-k="team" onclick="setAdminTab('team')">👥 Équipe &amp; accès</button>
             <button class="sub-btn" data-k="msg" onclick="setAdminTab('msg')">✉️ Messagerie</button>
             <button class="sub-btn" data-k="actus" onclick="setAdminTab('actus')">📰 Actus</button>
@@ -3581,14 +3582,14 @@
                 </div>
 
                 <!-- JEU CONCOURS GOOGLE : MATCH FRANCE-TURQUIE -->
-                <div data-atab="prime" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
+                <div data-atab="challenge" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
                     <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">🎟️ Jeu concours Google — places France-Turquie</h2>
                     <p class="muted" style="font-size:12px;margin-bottom:12px;">Le jeu compte les mobiles Google vendus À PARTIR DU 14 OCTOBRE (le tableau des ventes compte depuis le 1er). Il faut donc enregistrer le « point de départ » : le nombre de Google déjà vendus par chaque vendeur avant le jeu. Le bouton ci-dessous le relève tout seul dans les ventes. Si des ventes ont déjà eu lieu AUJOURD'HUI, note-les dans la dernière colonne avant d'appuyer : elles seront comptées dans le jeu.</p>
                     <div id="googleMatchAdmin"></div>
                 </div>
 
                 <!-- TCS : CUMUL OCTOBRE -->
-                <div data-atab="prime" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
+                <div data-atab="challenge" style="max-width: 1400px; margin: 0 auto 30px; background: var(--dark-gray); border: 1px solid rgba(201, 166, 91, 0.2); padding: 30px; border-radius: 12px;">
                     <h2 style="font-family: var(--serif); font-size: 24px; color: var(--gold); margin-bottom: 10px;">📡 Challenge TCS — contrats d'octobre</h2>
                     <p class="muted" style="font-size:12px;margin-bottom:12px;">Le tableau des ventes repart de zéro le 1er novembre, mais le challenge court jusqu'au 30 novembre. Le dernier jour d'octobre (ou le 1er novembre avant que les ventes ne soient remises à zéro), clique sur « Reprendre depuis les ventes » puis « Enregistrer » : en novembre, ces contrats seront ajoutés automatiquement à ceux de novembre pour la qualification.</p>
                     <div id="tcsCarryAdmin"></div>
