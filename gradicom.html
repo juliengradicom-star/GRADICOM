@@ -2296,6 +2296,8 @@
                 const ua = navigator.userAgent || '';
                 const device = /iPhone/i.test(ua) ? 'iPhone' : /iPad/i.test(ua) ? 'iPad' : /Android/i.test(ua) ? 'Android' : /Mac/i.test(ua) ? 'Mac' : /Windows/i.test(ua) ? 'PC Windows' : 'Autre';
                 msgApi('ping', { kind, device }).catch(() => {});
+                // Le minuteur GitHub étant irrégulier, chaque ouverture du portail relance aussi les envois du jour (bravo, rappel du jeu) : le serveur n'envoie qu'une fois
+                ['/api/live-bravo', '/api/challenge-reminder'].forEach(u => { try { fetch(u, { cache: 'no-store', keepalive: true }).catch(() => {}); } catch (e) {} });
             } catch (e) {}
         }
         document.addEventListener('visibilitychange', () => { if (!document.hidden) pingServer('open'); });

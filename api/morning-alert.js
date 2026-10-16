@@ -4,6 +4,7 @@
 // Chaque envoi : une seule fois par jour (pushClaim). Variables Vercel : VAPID_PRIVATE_KEY et GRADICOM_ADMIN_KEY (déjà en place).
 const { callScript, sendPersonal, sendToAll } = require('../lib/push.js');
 const { compute, margins, loadPortalSource, parisNow } = require('../lib/alerts.js');
+const reminder = require('../lib/reminder.js');
 
 const BRAVO_MIN = 450; // € de marge gagnés entre deux relevés (veille → aujourd'hui) pour mériter un bravo
 const cap = n => String(n || '').trim().split(/\s+/)[0].split('-').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('-');
@@ -55,16 +56,18 @@ module.exports = async (req, res) => {
     // Si CRON_SECRET existe dans Vercel, seul le planificateur Vercel peut déclencher
     const secret = process.env.CRON_SECRET;
     if (secret && req.headers.authorization !== 'Bearer ' + secret) { res.status(401).json({ ok: false }); return; }
+    const out0 = {};
     const priv = process.env.VAPID_PRIVATE_KEY, key = process.env.GRADICOM_ADMIN_KEY;
     if (!priv || !key) { res.status(200).json({ ok: false, skipped: 'variables Vercel absentes' }); return; }
     const now = parisNow();
     if (/^dim/i.test(now.wd)) { res.status(200).json({ ok: true, skipped: 'dimanche' }); return; }
     const auth = { adminKey: key };
+    try { out0.jeu = await reminder.run(auth, priv); } catch (e) { out0.jeu = { error: String((e && e.message) || e).slice(0, 160) }; }
     const cfg = (await callScript(Object.assign({ action: 'adminConfig' }, auth))).config;
     const s = await callScript(Object.assign({ action: 'sales' }, auth));
     const sales = { vendeurs: s.vendeurs, magasins: s.magasins };
     const src = await loadPortalSource();
-    const out = { ok: true };
+    const out = Object.assign({ ok: true }, out0);
     for (const [name, job] of [['alertes', alertsJob], ['bravo', bravoJob]]) {
       try { out[name] = await job(now, auth, priv, cfg, sales, src); } catch (e) { out[name] = { error: String((e && e.message) || e).slice(0, 160) }; }
     }

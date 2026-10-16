@@ -43,7 +43,7 @@
     },
     {
       "path": "/api/morning-alert",
-      "schedule": "0 8 * * 1-6"
+      "schedule": "0 9 * * 1-6"
     }
   ],
   "functions": {
