@@ -91,12 +91,19 @@ s.addText(D.roTitre, { placeholder: 'titre' });
 // ---- 3. Items non déclenchés
 s = pres.addSlide({ masterName: 'Page' });
 s.addText(D.nonDeclenches.titre + '\n' + D.nonDeclenches.date, { placeholder: 'titre' });
+const LOGOS = { 'SFR PRO': { f: 'sfrpro.png', w: 1.3, r: 0.559, plate: true }, 'CANAL+': { f: 'canal.png', w: 1.5, r: 0.1857 }, 'MAISON SECURISEE': { f: 'maison.png', w: 1.2, r: 1 } };
 D.nonDeclenches.lignes.forEach((l, i) => {
   const y = 2.6 + i * 2.7, h = 2.3;
   s.addShape(pres.shapes.RECTANGLE, { x: 0.4, y, w: 6.7, h, fill: { color: DARK }, line: { color: GOLD, width: 1.5 }, objectName: 'Cadre ' + l[0] });
   s.addShape(pres.shapes.RECTANGLE, { x: 0.4, y, w: 0.12, h, fill: { color: GOLD }, line: { color: GOLD, width: 0 }, objectName: 'Liseré ' + l[0] });
   s.addText([{ text: l[0], options: { fontSize: 22, bold: true, fontFace: 'Cambria', color: GOLD2, breakLine: true } }, { text: l[1], options: { fontSize: 20, color: WHITE } }],
-    { x: 0.8, y, w: 6.1, h, align: 'left', valign: 'middle', margin: 0, paraSpaceAfter: 8, isTextBox: true });
+    { x: 0.8, y, w: 4.5, h, align: 'left', valign: 'middle', margin: 0, paraSpaceAfter: 8, isTextBox: true });
+  const lg = LOGOS[l[0]];
+  if (lg) {
+    const lw = lg.w, lh = lg.w * lg.r, lx = 5.45 + (1.5 - lw) / 2, ly = y + (h - lh) / 2;
+    if (lg.plate) s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: lx - 0.12, y: ly - 0.12, w: lw + 0.24, h: lh + 0.24, fill: { color: 'F4EBD3' }, line: { color: GOLD, width: 1 }, rectRadius: 0.08, objectName: 'Plaque logo' });
+    s.addImage({ path: A(lg.f), x: lx, y: ly, w: lw, h: lh, objectName: 'Logo ' + l[0] });
+  }
 });
 
 // ---- 4 et 5. Suivi des indicateurs
@@ -109,6 +116,8 @@ const indic = (g, y, h) => {
     showValue: true, dataLabelColor: WHITE, dataLabelFontSize: 13, dataLabelFontBold: true, dataLabelFontFace: 'Calibri', dataLabelPosition: 'outEnd', dataLabelFormatCode: g.format,
     showLegend: false, showTitle: false, plotArea: { fill: { color: BLACK } }
   });
+  const n = g.valeurs.length, top = y + 0.45 + h * 0.04, rowH = h * 0.86 / n;
+  g.valeurs.forEach((v, i) => { if (v[1] < g.seuil) s.addImage({ path: A('warning.png'), x: 6.8, y: top + (i + 0.5) * rowH - 0.19, w: 0.45, h: 0.45, objectName: 'Alerte ' + v[0] }); });
 };
 s = pres.addSlide({ masterName: 'Page' });
 s.addText(D.indicateurs.titre, { placeholder: 'titre' });

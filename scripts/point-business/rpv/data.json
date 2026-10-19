@@ -23,7 +23,7 @@
   "titre": "SUIVI DES INDICATEURS au 17-10-2026",
   "graphiques": [
    {"titre": "TAUX FIXE DILAX >2,2%", "seuil": 2.2, "format": "0.00\"%\"", "max": 4, "valeurs": [["TDG", 2.22], ["MARMANDE", 2.02], ["COGNAC", 2.25], ["GRADIGNAN", 1.70], ["LANGON", 2.56]]},
-   {"titre": "TAUX ABO DILAX >3,8%", "seuil": 3.8, "format": "0.00\"%\"", "max": 4, "valeurs": [["TDG", 3.14], ["MARMANDE", 3.40], ["COGNAC", 3.54], ["GRADIGNAN", 3.17], ["LANGON", 2.56]]},
+   {"titre": "TAUX ABO DILAX >3,8%", "seuil": 3.8, "format": "0.00\"%\"", "max": 5, "valeurs": [["TDG", 3.14], ["MARMANDE", 3.40], ["COGNAC", 3.54], ["GRADIGNAN", 3.17], ["LANGON", 2.56]]},
    {"titre": "TAUX TERMINAUX >5,8%", "seuil": 5.8, "format": "0.00\"%\"", "max": 7, "valeurs": [["TDG", 5.35], ["MARMANDE", 5.61], ["COGNAC", 5.19], ["GRADIGNAN", 5.89], ["LANGON", 5.07]]},
    {"titre": "TAUX DE PRISE EN CHARGE >45%", "seuil": 45, "format": "0.00\"%\"", "max": 55, "valeurs": [["MARMANDE", 42.75], ["COGNAC", 43.73], ["GRADIGNAN", 47.57], ["LANGON", 39.19]]}
   ],
