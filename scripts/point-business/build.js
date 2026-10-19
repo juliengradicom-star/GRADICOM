@@ -130,7 +130,71 @@ s.addText('SUIVI DES POINTS ' + D.datePoints + '\nBLOC n°2 du Payplan', { place
 barChart(s, D.points.valeurs, { y: 2.3, h: 6.2, name: 'Points', extra: { valAxisMinVal: 0, valAxisMaxVal: 35, dataLabelFormatCode: 'General' } });
 podium(s, D.points.podium, 12.6);
 
-// ---- 6. Fin
+// ---- 6. Challenge Google (chèque cadeau)
+const CH = D.challenges;
+const goldHead = (t, o = {}) => ({ text: t, options: Object.assign({ bold: true, color: GOLD2, fill: { color: DARK }, align: 'center', valign: 'middle', fontSize: 10, border: { type: 'solid', color: '3A3426', pt: 0.5 } }, o) });
+const cell = (t, o = {}) => ({ text: String(t), options: Object.assign({ color: WHITE, fill: { color: BLACK }, align: 'center', valign: 'middle', fontSize: 11, border: { type: 'solid', color: '3A3426', pt: 0.5 } }, o) });
+const eur = v => cell(v + ' €', { bold: true, fill: { color: v > 0 ? GREEN : 'B5651D' } });
+s = pres.addSlide({ masterName: 'Page' });
+s.addText('CHALLENGE GOOGLE\ndu 1er au 31 octobre 2026', { placeholder: 'titre' });
+s.addImage({ path: A('google.png'), x: 5.4, y: 1.15, w: 1.7, h: 1.7 * 0.3135, objectName: 'Logo Google' });
+{
+  const g = CH.googleMagasins;
+  const rows = [[goldHead(''), ...g.colonnes.map(c => goldHead(c, { fontSize: 11 }))],
+    [goldHead('PDM GOOGLE', { align: 'left' }), ...g.pdm.map(v => cell(v, { fontSize: 13 }))],
+    [goldHead('TOTAL GOOGLE (× 5 €)', { align: 'left' }), ...g.total.map(v => cell(v, { bold: true, fontSize: 13 }))],
+    [goldHead('€', { align: 'left' }), ...g.euros.map(v => Object.assign(eur(v), {}))]];
+  rows[3].slice(1).forEach(c => { c.options.fontSize = 14; });
+  s.addTable(rows, { x: 0.4, y: 2.45, w: 6.7, colW: [1.9, 1.2, 1.2, 1.2, 1.2], rowH: 0.42, fontFace: 'Calibri', margin: [0, 0.05, 0, 0.05], objectName: 'Google magasins' });
+  const hd = ['', 'PDM GOOGLE', 'TOTAL GOOGLE', 'PIXEL 10A (15€)', 'PIXEL 10 (20€)', 'PIXEL SERIES 11 (20€)', '€'].map((t, i) => goldHead(t, { fontSize: 8.5, align: i ? 'center' : 'left' }));
+  const vr = CH.googleVendeurs.map(r => [cell(r[0], { bold: true, align: 'left', fontSize: 11.5, fill: { color: DARK } }), cell(r[1]), cell(r[2], { bold: true }), cell(r[3]), cell(r[4]), cell(r[5]), eur(r[6])]);
+  s.addTable([hd, ...vr], { x: 0.4, y: 4.45, w: 6.7, colW: [1.35, 0.85, 0.85, 0.9, 0.9, 1.0, 0.85], rowH: [0.6, ...vr.map(() => 0.42)], fontFace: 'Calibri', margin: [0, 0.04, 0, 0.04], objectName: 'Google vendeurs' });
+}
+
+// ---- 7. Bonus Match France - Turquie
+s = pres.addSlide({ masterName: 'Page' });
+s.addText('BONUS Match France - Turquie\ndu 16 au 31 octobre 2026', { placeholder: 'titre' });
+{ // ticket
+  const x = 0.4, y = 2.3, w = 6.7, h = 2.5, stub = 1.9;
+  s.addShape(pres.shapes.RECTANGLE, { x, y, w, h, fill: { color: DARK }, line: { color: GOLD, width: 2.5 }, objectName: 'Ticket' });
+  s.addShape(pres.shapes.RECTANGLE, { x, y, w: stub, h, fill: { color: GOLD }, line: { color: GOLD, width: 2.5 }, objectName: 'Ticket souche' });
+  s.addText([{ text: '2', options: { fontSize: 72, bold: true, fontFace: 'Cambria', color: BLACK, breakLine: true } }, { text: 'PLACES', options: { fontSize: 16, bold: true, color: BLACK, charSpacing: 4 } }], { x, y, w: stub, h, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+  for (let k = 0; k < 9; k++) s.addShape(pres.shapes.RECTANGLE, { x: x + stub - 0.015, y: y + 0.12 + k * 0.265, w: 0.03, h: 0.14, fill: { color: BLACK }, line: { color: BLACK, width: 0 } });
+  s.addShape(pres.shapes.OVAL, { x: x + stub - 0.17, y: y - 0.17, w: 0.34, h: 0.34, fill: { color: BLACK }, line: { color: GOLD, width: 2.5 } });
+  s.addShape(pres.shapes.OVAL, { x: x + stub - 0.17, y: y + h - 0.17, w: 0.34, h: 0.34, fill: { color: BLACK }, line: { color: GOLD, width: 2.5 } });
+  s.addText([{ text: 'FRANCE – TURQUIE', options: { fontSize: 24, bold: true, fontFace: 'Cambria', color: GOLD2, breakLine: true } },
+    { text: 'Stade Matmut Atlantique • Bordeaux', options: { fontSize: 12.5, bold: true, color: WHITE, breakLine: true } },
+    { text: 'Novembre 2026', options: { fontSize: 12.5, bold: true, color: WHITE, breakLine: true } },
+    { text: '1 place par vendeur • minimum 5 mobiles Google', options: { fontSize: 11, color: GREY, breakLine: true } },
+    { text: 'PDM Google du groupe ≥ 20 % sur octobre', options: { fontSize: 11, color: GREY } }],
+    { x: x + stub + 0.25, y, w: w - stub - 0.4, h, align: 'left', valign: 'middle', margin: 0, isTextBox: true });
+}
+s.addText(CH.matchPeriode, { x: 0.4, y: 5.0, w: 6.7, h: 0.4, fontFace: 'Calibri', fontSize: 13, bold: true, color: GOLD2, align: 'center', valign: 'middle', isTextBox: true });
+barChart(s, CH.matchVendeurs, { y: 5.4, h: 4.5, name: 'Quantité Google', extra: { valAxisMinVal: 0, valAxisMaxVal: 3.5, dataLabelFormatCode: '0' } });
+{
+  const m = CH.matchPdm;
+  const rows = [[goldHead(''), ...m.colonnes.map(c => goldHead(c, { fontSize: 11 }))],
+    [goldHead('PDM GOOGLE', { align: 'left', fontSize: 11 }), ...m.valeurs.map((v, i) => cell(v, { fontSize: 14, bold: true, fill: i === m.valeurs.length - 1 ? { color: 'E0955B' } : { color: BLACK }, color: i === m.valeurs.length - 1 ? BLACK : WHITE }))]];
+  s.addTable(rows, { x: 0.4, y: 10.3, w: 6.7, colW: [1.5, 1.04, 1.04, 1.04, 1.04, 1.04], rowH: 0.5, fontFace: 'Calibri', margin: [0, 0.04, 0, 0.04], objectName: 'PDM Google' });
+}
+
+// ---- 8. Challenge TCS
+s = pres.addSlide({ masterName: 'Page' });
+s.addText('CHALLENGE TCS\ndu 1er octobre au 30 novembre 2026', { placeholder: 'titre' });
+s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 5.95, y: 0.85, w: 1.15, h: 1.15, fill: { color: 'F4EBD3' }, line: { color: GOLD, width: 1.5 }, rectRadius: 0.1, objectName: 'Plaque logo' });
+s.addImage({ path: A('telecablesat.png'), x: 6.02, y: 0.92, w: 1.0, h: 1.0, sizing: { type: 'contain', w: 1.0, h: 1.0 }, objectName: 'Logo Télécâble Sat' });
+{
+  const yellowHead = (t, o = {}) => goldHead(t, Object.assign({ fill: { color: GOLD2 }, color: BLACK, fontSize: 11 }, o));
+  const mk = rowsData => rowsData.map(r => [cell(r[0], { bold: true, align: 'left', fontSize: 11.5, fill: { color: DARK } }), cell(r[1], { bold: true }), cell(r[2]), cell(r[3])]);
+  const hd = ['', 'TCS', '€ QUALITÉ >55%', '€ QUALITÉ >60%'].map((t, i) => yellowHead(t, { align: i ? 'center' : 'left' }));
+  const st = mk(CH.tcsMagasins), ve = mk(CH.tcsVendeurs);
+  s.addTable([hd, ...st], { x: 0.4, y: 2.45, w: 6.7, colW: [2.2, 1.0, 1.75, 1.75], rowH: [0.42, ...st.map(() => 0.36)], fontFace: 'Calibri', margin: [0, 0.06, 0, 0.06], objectName: 'TCS magasins' });
+  s.addText(CH.tcsMagasinsNote, { x: 0.4, y: 4.35, w: 6.7, h: 0.4, fontFace: 'Calibri', fontSize: 13, bold: true, italic: true, color: GOLD2, align: 'center', valign: 'middle', isTextBox: true });
+  s.addTable([hd, ...ve], { x: 0.4, y: 4.95, w: 6.7, colW: [2.2, 1.0, 1.75, 1.75], rowH: [0.42, ...ve.map(() => 0.3)], fontFace: 'Calibri', margin: [0, 0.06, 0, 0.06], objectName: 'TCS vendeurs' });
+  s.addText(CH.tcsVendeursNote, { x: 0.4, y: 10.3, w: 6.7, h: 0.4, fontFace: 'Calibri', fontSize: 13, bold: true, italic: true, color: GOLD2, align: 'center', valign: 'middle', isTextBox: true });
+}
+
+// ---- 9. Fin
 s = pres.addSlide({ masterName: 'Fin' });
 s.addText('MERCI !', { placeholder: 'titre' });
 
