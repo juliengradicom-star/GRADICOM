@@ -71,8 +71,8 @@ s.addNotes('Pour modifier : touche un texte et écris. Les graphiques se modifie
 // ---- 2. Actus & rappel (visuels SFR tels quels)
 s = pres.addSlide({ masterName: 'Page' });
 s.addText('ACTUS & RAPPEL', { placeholder: 'titre' });
-[['offre_fixe_pro_dark.png', 0.3, 2.45, 3.4, 2.82], ['offre_box_5g_dark.png', 3.85, 2.45, 3.35, 2.82], ['offres_mobile_pro_1_dark.png', 0.3, 5.45, 3.4, 3.0], ['offres_mobile_pro_2_dark.png', 3.85, 5.45, 3.35, 3.0], ['iphone_duo_dark.png', 0.6, 8.75, 6.3, 3.42]]
-  .forEach(([f, x, y, w, h]) => s.addImage({ path: A(f), x, y, w, h, sizing: { type: 'contain', w, h }, objectName: f }));
+[['offre_fixe_pro.png', 0.3, 2.45, 3.4, 2.82], ['offre_box_5g.png', 3.85, 2.45, 3.35, 2.82], ['offres_mobile_pro_1.png', 0.3, 5.45, 3.4, 3.0], ['offres_mobile_pro_2.png', 3.85, 5.45, 3.35, 3.0], ['iphone_duo.png', 0.6, 8.75, 6.3, 3.42]]
+  .forEach(([f, x, y, w, h]) => { s.addShape(pres.shapes.RECTANGLE, { x: x - 0.07, y: y - 0.07, w: w + 0.14, h: h + 0.14, fill: { color: GOLD }, line: { color: GOLD, width: 0 }, objectName: 'Cadre ' + f }); s.addImage({ path: A(f), x, y, w, h, sizing: { type: 'contain', w, h }, objectName: f }); });
 
 // ---- 3. R/O (2 tableaux empilés pour rester lisibles sur téléphone)
 s = pres.addSlide({ masterName: 'Page' });
@@ -80,7 +80,7 @@ s.addText('R/O ' + D.dateRO, { placeholder: 'titre' });
 function roTable(y) {
   const bd = { type: 'solid', color: '3A3426', pt: 0.5 };
   const cols = D.ro.colonnes, n = cols.length, nameW = 0.85, cw = (W - 0.2 - nameW) / n;
-  const rows = [['', ...cols].map(t => ({ text: t, options: { bold: true, color: GOLD2, fill: { color: DARK }, align: 'center', valign: 'middle', fontSize: 5.5, border: bd } }))];
+  const rows = [['', ...cols].map(t => ({ text: t, options: { bold: true, color: GOLD2, fill: { color: DARK }, align: 'center', valign: 'middle', fontSize: 11, textDirection: 'vert270', border: bd } }))];
   D.ro.lignes.forEach(l => {
     const r = [{ text: l[0], options: { bold: true, color: WHITE, fill: { color: DARK }, fontSize: 9.5, align: 'left', border: bd } }];
     for (let i = 1; i <= n; i++) {
@@ -90,16 +90,17 @@ function roTable(y) {
     }
     rows.push(r);
   });
-  s.addTable(rows, { x: 0.1, y, w: W - 0.2, colW: [nameW, ...cols.map(() => cw)], rowH: [0.55, ...D.ro.lignes.map(() => 0.5)], fontFace: 'Calibri', margin: [0, 0.01, 0, 0.01], valign: 'middle', objectName: 'Tableau R/O' });
+  s.addTable(rows, { x: 0.1, y, w: W - 0.2, colW: [nameW, ...cols.map(() => cw)], rowH: [1.3, ...D.ro.lignes.map(() => 0.5)], fontFace: 'Calibri', margin: [0, 0.01, 0, 0.01], valign: 'middle', objectName: 'Tableau R/O' });
 }
 roTable(2.4);
 
 // ---- 3b. Goodays + Notes Google
 s = pres.addSlide({ masterName: 'Page' });
 s.addText('GOODAYS\n& NOTES GOOGLE', { placeholder: 'titre' });
-label(s, 'GOODAYS', 2.3); s.addImage({ path: A('goodays.png'), x: 4.6, y: 2.37, w: 0.38, h: 0.38 });
+s.addImage({ path: A('goodays.png'), x: (W - 2.9) / 2, y: 2.3, w: 2.9, h: 2.9 * 0.1852 });
 barChart(s, D.goodays, { y: 2.85, h: 5.6, name: 'Goodays', extra: { valAxisMinVal: 4.2, valAxisMaxVal: 5.1, dataLabelFormatCode: '0.00' } });
-label(s, 'NOTES GOOGLE', 8.85); s.addImage({ path: A('google.png'), x: 4.95, y: 8.95, w: 1.08, h: 0.36 });
+s.addText('NOTES', { x: 1.7, y: 8.85, w: 1.9, h: 0.6, fontFace: 'Calibri', fontSize: 22, bold: true, color: WHITE, align: 'right', valign: 'middle', isTextBox: true });
+s.addImage({ path: A('google.png'), x: 3.8, y: 8.92, w: 1.5, h: 1.5 * 0.3135 });
 {
   const hd = ['', '', 'Note moyenne', 'Réponses'].map((t, i) => ({ text: t, options: { bold: true, color: GOLD2, fill: { color: DARK }, fontSize: 12, align: i > 1 ? 'right' : 'left' } }));
   const rows = [hd].concat(D.notesGoogle.map(r => r.map((t, i) => ({ text: t, options: { color: WHITE, fill: { color: BLACK }, fontSize: 14, bold: i > 1, align: i > 1 ? 'right' : 'left', border: [{ type: 'none' }, { type: 'none' }, { type: 'solid', color: '3A3426', pt: 0.75 }, { type: 'none' }] } }))));
