@@ -4,17 +4,17 @@ const fs = require('fs'), path = require('path');
 const D = JSON.parse(fs.readFileSync(path.join(__dirname, 'data.json'), 'utf8'));
 const OUT = process.argv[2] || 'Point_Hebdo.pptx';
 const W = 13.333, H = 7.5;
-const NAVY = '0B2545', GOLD = '0B2545', BG = 'FFFFFF', INK = '1A1A1A', MUTED = '6B7280', LINE = 'C9CCD2', WHITE = 'FFFFFF';
+const NAVY = '1C1C1E', GOLD = 'B08D3C', BG = 'FFFFFF', INK = '1A1A1A', MUTED = '6B7280', LINE = 'C9CCD2', WHITE = 'FFFFFF';
 const OKF = '1E8E4E', OKT = 'FFFFFF', KOF = 'D0112B', KOT = 'FFFFFF', TINT = 'FFF2CC';
 const pres = new pptxgen();
 pres.defineLayout({ name: 'W', width: W, height: H }); pres.layout = 'W';
 pres.theme = { headFontFace: 'Calibri', bodyFontFace: 'Calibri' };
 pres.title = 'Point hebdo GRADICOM • AMR';
 const footer = `Point hebdo du ${D.date}`;
-pres.defineSlideMaster({ title: 'Couverture', background: { color: NAVY }, objects: [] });
+pres.defineSlideMaster({ title: 'Couverture', background: { color: '111111' }, objects: [] });
 pres.defineSlideMaster({ title: 'Page', background: { color: BG }, slideNumber: { x: 12.3, y: 7.08, w: 0.6, h: 0.25, fontFace: 'Calibri', fontSize: 10, color: MUTED, align: 'right' }, objects: [
   { text: { text: 'GRADICOM  •  AMR', options: { x: 0.6, y: 0.28, w: 6, h: 0.25, fontFace: 'Calibri', fontSize: 10.5, bold: true, color: MUTED, charSpacing: 4, margin: 0 } } },
-  { rect: { x: 0.6, y: 1.25, w: 12.15, h: 0.02, fill: { color: NAVY } } },
+  { rect: { x: 0.6, y: 1.25, w: 12.15, h: 0.03, fill: { color: GOLD } } },
   { text: { text: footer, options: { x: 0.6, y: 7.08, w: 8, h: 0.25, fontFace: 'Calibri', fontSize: 10, color: MUTED, margin: 0 } } },
   { placeholder: { options: { name: 'titre', type: 'title', x: 0.6, y: 0.52, w: 11.5, h: 0.68, fontFace: 'Calibri', fontSize: 28, bold: true, color: NAVY, align: 'left', valign: 'middle', margin: 0 }, text: 'Titre' } }
 ] });
@@ -34,11 +34,11 @@ const evol = (n, txt, o = {}) => cel(txt, Object.assign({ bold: true, color: n <
 
 // ---- 1. Couverture
 let s = pres.addSlide({ masterName: 'Couverture' });
-s.addText('GRADICOM  •  AMR', { x: 0.9, y: 1.0, w: 8, h: 0.4, fontFace: 'Calibri', fontSize: 16, bold: true, color: 'A9B8D0', charSpacing: 6, margin: 0, isTextBox: true });
+s.addText('GRADICOM  •  AMR', { x: 0.9, y: 1.0, w: 8, h: 0.4, fontFace: 'Calibri', fontSize: 16, bold: true, color: 'A8A8A8', charSpacing: 6, margin: 0, isTextBox: true });
 s.addText('POINT HEBDO', { x: 0.9, y: 2.5, w: 11, h: 1.4, fontFace: 'Calibri', fontSize: 72, bold: true, color: WHITE, margin: 0, valign: 'middle', isTextBox: true });
-s.addShape(pres.shapes.RECTANGLE, { x: 0.9, y: 4.15, w: 3.2, h: 0.03, fill: { color: WHITE }, line: { color: WHITE, width: 0 }, objectName: 'Filet' });
-s.addText(D.date, { x: 0.9, y: 4.4, w: 8, h: 0.6, fontFace: 'Calibri', fontSize: 26, color: WHITE, margin: 0, isTextBox: true });
-s.addText('LANGON   •   GRADIGNAN   •   COGNAC   •   MARMANDE', { x: 0.9, y: 6.5, w: 10, h: 0.35, fontFace: 'Calibri', fontSize: 12, color: 'A9B8D0', charSpacing: 3, margin: 0, isTextBox: true });
+s.addShape(pres.shapes.RECTANGLE, { x: 0.9, y: 4.15, w: 3.2, h: 0.03, fill: { color: GOLD }, line: { color: GOLD, width: 0 }, objectName: 'Filet' });
+s.addText(D.date, { x: 0.9, y: 4.4, w: 8, h: 0.6, fontFace: 'Calibri', fontSize: 26, color: 'D4B15F', margin: 0, isTextBox: true });
+s.addText('LANGON   •   GRADIGNAN   •   COGNAC   •   MARMANDE', { x: 0.9, y: 6.5, w: 10, h: 0.35, fontFace: 'Calibri', fontSize: 12, color: 'A8A8A8', charSpacing: 3, margin: 0, isTextBox: true });
 
 // ---- 2. R/O Magasin (une ligne par item, 3 colonnes par magasin)
 s = pres.addSlide({ masterName: 'Page' });
@@ -46,8 +46,8 @@ s.addText(`R/O Magasin au ${D.dateDonnees}`, { placeholder: 'titre' });
 {
   const R = D.roMagasins;
   const rows = [[head('', { rowspan: 3 }), ...R.magasins.map(m => head(m, { colspan: 3, fontSize: 13 }))],
-    [...R.jours.map(j => head(`${j} jours travaillés`, { colspan: 3, fontSize: 10, bold: false, fill: { color: '2F5496' } }))],
-    [...R.magasins.flatMap(() => ['Obj', 'Réa', 'R/O'].map(t => head(t, { fontSize: 10.5, fill: { color: '2F5496' } })))]];
+    [...R.jours.map(j => head(`${j} jours travaillés`, { colspan: 3, fontSize: 10, bold: false, fill: { color: '3A3A3C' } }))],
+    [...R.magasins.flatMap(() => ['Obj', 'Réa', 'R/O'].map(t => head(t, { fontSize: 10.5, fill: { color: '3A3A3C' } })))]];
   R.items.forEach(r => rows.push([lab(r.item, { align: 'left', fontSize: 12 }), ...R.magasins.flatMap((m, i) => [cel(r.obj[i], { fontSize: 11.5 }), cel(r.rea[i], { fontSize: 11.5 }), ro(r.ro[i], { fontSize: 12.5 })])]));
   s.addTable(rows, { x: 0.6, y: 1.45, w: 12.15, colW: [1.95, ...R.magasins.flatMap(() => [0.9, 0.75, 0.9])], rowH: [0.4, 0.28, 0.3, ...R.items.map(() => 0.5)], fontFace: 'Calibri', margin: [0, 0.06, 0, 0.06], objectName: 'R/O magasins' });
 }
@@ -87,7 +87,7 @@ s.addText(`Evolution flux 2026 vs 2025 au ${D.dateDonnees}`, { placeholder: 'tit
   s.addTable(rows, { x: 0.6, y: 1.6, w: 6.2, colW: [1.9, 1.4, 1.4, 1.5], rowH: [0.5, ...F.map(() => 0.58)], fontFace: 'Calibri', margin: [0, 0.08, 0, 0.08], objectName: 'Flux' });
   const mag = F.filter(r => r[0] !== 'TDG');
   s.addChart(pres.charts.BAR, [{ name: 'DILAX 2025', labels: mag.map(r => r[0]), values: mag.map(r => r[1]) }, { name: 'DILAX 2026', labels: mag.map(r => r[0]), values: mag.map(r => r[2]) }], {
-    x: 7.2, y: 1.45, w: 5.6, h: 4.6, barDir: 'col', barGapWidthPct: 60, chartColors: ['A6A6A6', NAVY], showValue: true, dataLabelFontSize: 10, dataLabelColor: INK, dataLabelPosition: 'outEnd',
+    x: 7.2, y: 1.45, w: 5.6, h: 4.6, barDir: 'col', barGapWidthPct: 60, chartColors: ['BFBFBF', GOLD], showValue: true, dataLabelFontSize: 10, dataLabelColor: INK, dataLabelPosition: 'outEnd',
     catAxisLabelColor: INK, catAxisLabelFontSize: 11, valAxisHidden: true, valGridLine: { style: 'none' }, showLegend: true, legendPos: 'b', legendFontSize: 11, legendColor: INK,
     showTitle: true, title: 'Flux par magasin', titleFontSize: 13, titleColor: NAVY, titleFontFace: 'Calibri' });
 }
