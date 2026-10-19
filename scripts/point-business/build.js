@@ -20,12 +20,12 @@ pres.defineSlideMaster({ title: 'Couverture', background: { path: A('cover_A.png
   { text: { text: 'GRADICOM  •  AMR', options: { x: M, y: 1.0, w: 6.4, h: 0.5, fontFace: 'Calibri', fontSize: 18, bold: true, color: GOLD2, charSpacing: 5, margin: 0 } } },
   ph('titre', 'title', { x: M + 0.15, y: 6.0, w: 6.6, h: 1.0, fontFace: 'Cambria', fontSize: 50, bold: true, color: WHITE, align: 'left', valign: 'top', fit: 'shrink' }, 'POINT BUSINESS'),
   ph('mois', 'body', { x: M + 0.15, y: 7.05, w: 6.4, h: 0.7, fontFace: 'Calibri', fontSize: 30, bold: true, color: GOLD2, charSpacing: 6, align: 'left' }, 'OCTOBRE 2026'),
+  { text: { text: 'LANGON  •  GRADIGNAN  •  MARMANDE  •  COGNAC', options: { x: M + 0.15, y: 12.5, w: 6.7, h: 0.4, fontFace: 'Calibri', fontSize: 14, bold: true, color: BLACK, charSpacing: 2, margin: 0 } } },
   ph('date', 'body', { x: M + 0.15, y: 10.65, w: 6.4, h: 0.8, fontFace: 'Calibri', fontSize: 34, bold: true, color: BLACK, align: 'left' }, 'au 17-10-2026')
 ] });
 pres.defineSlideMaster({ title: 'Page', background: { color: BLACK }, objects: [
   { text: { text: 'GRADICOM  •  AMR', options: { x: M, y: 0.3, w: 6.7, h: 0.35, fontFace: 'Calibri', fontSize: 12, bold: true, color: GREY, charSpacing: 3, margin: 0 } } },
-  { image: { path: A('logo_sfr.png'), x: M, y: 0.95, w: 1.1, h: 1.1 } },
-  ph('titre', 'title', { x: 1.7, y: 0.85, w: 5.4, h: 1.3, fontFace: 'Cambria', fontSize: 22, bold: true, color: GOLD2, align: 'left', valign: 'middle', fit: 'shrink' }, 'Titre')
+  ph('titre', 'title', { x: M, y: 0.85, w: 6.7, h: 1.2, fontFace: 'Cambria', fontSize: 22, bold: true, color: GOLD2, align: 'left', valign: 'middle', fit: 'shrink' }, 'Titre')
 ] });
 pres.defineSlideMaster({ title: 'Page vide', background: { color: BLACK }, objects: [
   { text: { text: 'GRADICOM  •  AMR', options: { x: M, y: 0.3, w: 6.7, h: 0.35, fontFace: 'Calibri', fontSize: 12, bold: true, color: GREY, charSpacing: 3, margin: 0 } } }
@@ -71,29 +71,28 @@ s.addNotes('Pour modifier : touche un texte et écris. Les graphiques se modifie
 // ---- 2. Actus & rappel (visuels SFR tels quels)
 s = pres.addSlide({ masterName: 'Page' });
 s.addText('ACTUS & RAPPEL', { placeholder: 'titre' });
-[['offre_fixe_pro.png', 0.3, 2.45, 3.4, 2.82], ['offre_box_5g.png', 3.85, 2.45, 3.35, 2.82], ['offres_mobile_pro_1.png', 0.3, 5.45, 3.4, 3.0], ['offres_mobile_pro_2.png', 3.85, 5.45, 3.35, 3.0], ['iphone_duo.png', 0.6, 8.75, 6.3, 3.42]]
+[['offre_fixe_pro_dark.png', 0.3, 2.45, 3.4, 2.82], ['offre_box_5g_dark.png', 3.85, 2.45, 3.35, 2.82], ['offres_mobile_pro_1_dark.png', 0.3, 5.45, 3.4, 3.0], ['offres_mobile_pro_2_dark.png', 3.85, 5.45, 3.35, 3.0], ['iphone_duo_dark.png', 0.6, 8.75, 6.3, 3.42]]
   .forEach(([f, x, y, w, h]) => s.addImage({ path: A(f), x, y, w, h, sizing: { type: 'contain', w, h }, objectName: f }));
 
 // ---- 3. R/O (2 tableaux empilés pour rester lisibles sur téléphone)
 s = pres.addSlide({ masterName: 'Page' });
 s.addText('R/O ' + D.dateRO, { placeholder: 'titre' });
-function roTable(y, from, to, nameW, cw) {
+function roTable(y) {
   const bd = { type: 'solid', color: '3A3426', pt: 0.5 };
-  const cols = D.ro.colonnes.slice(from, to);
-  const rows = [['', ...cols].map(t => ({ text: t, options: { bold: true, color: GOLD2, fill: { color: DARK }, align: 'center', valign: 'middle', fontSize: 9.5, border: bd } }))];
+  const cols = D.ro.colonnes, n = cols.length, nameW = 0.9, cw = (W - 0.2 - nameW) / n;
+  const rows = [['', ...cols].map(t => ({ text: t, options: { bold: true, color: GOLD2, fill: { color: DARK }, align: 'center', valign: 'middle', fontSize: 6.5, border: bd } }))];
   D.ro.lignes.forEach(l => {
-    const r = [{ text: l[0], options: { bold: true, color: WHITE, fill: { color: DARK }, fontSize: 10, align: 'left', border: bd } }];
-    for (let i = from + 1; i <= to; i++) {
+    const r = [{ text: l[0], options: { bold: true, color: WHITE, fill: { color: DARK }, fontSize: 9.5, align: 'left', border: bd } }];
+    for (let i = 1; i <= n; i++) {
       const v = l[i];
-      if (v === null || v === undefined) r.push({ text: '#DIV/0!', options: { color: GREY, fill: { color: DARK }, fontSize: 9.5, align: 'center', border: bd } });
-      else r.push({ text: fmt(v) + '%', options: { color: WHITE, bold: true, fill: { color: v < 100 ? RED : GREEN }, fontSize: 10.5, align: 'center', border: bd } });
+      if (v === null || v === undefined) r.push({ text: '#DIV/0!', options: { color: GREY, fill: { color: DARK }, fontSize: 7, align: 'center', border: bd } });
+      else r.push({ text: fmt(v) + '%', options: { color: WHITE, bold: true, fill: { color: v < 100 ? RED : GREEN }, fontSize: 8.5, align: 'center', border: bd } });
     }
     rows.push(r);
   });
-  s.addTable(rows, { x: 0.2, y, w: nameW + cw * cols.length, colW: [nameW, ...cols.map(() => cw)], rowH: [0.5, ...D.ro.lignes.map(() => 0.27)], fontFace: 'Calibri', margin: [0, 0.03, 0, 0.03], valign: 'middle', objectName: 'Tableau R/O ' + (from + 1) });
+  s.addTable(rows, { x: 0.1, y, w: W - 0.2, colW: [nameW, ...cols.map(() => cw)], rowH: [0.55, ...D.ro.lignes.map(() => 0.5)], fontFace: 'Calibri', margin: [0, 0.01, 0, 0.01], valign: 'middle', objectName: 'Tableau R/O' });
 }
-roTable(2.4, 0, 7, 1.05, 0.9);
-roTable(6.5 + 0.1, 7, D.ro.colonnes.length, 1.05, 1.0);
+roTable(2.4);
 
 // ---- 3b. Goodays + Notes Google
 s = pres.addSlide({ masterName: 'Page' });
