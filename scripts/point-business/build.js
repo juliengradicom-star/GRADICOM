@@ -79,8 +79,8 @@ s = pres.addSlide({ masterName: 'Page' });
 s.addText('R/O ' + D.dateRO, { placeholder: 'titre' });
 function roTable(y) {
   const bd = { type: 'solid', color: '3A3426', pt: 0.5 };
-  const cols = D.ro.colonnes, n = cols.length, nameW = 0.9, cw = (W - 0.2 - nameW) / n;
-  const rows = [['', ...cols].map(t => ({ text: t, options: { bold: true, color: GOLD2, fill: { color: DARK }, align: 'center', valign: 'middle', fontSize: 6.5, border: bd } }))];
+  const cols = D.ro.colonnes, n = cols.length, nameW = 0.85, cw = (W - 0.2 - nameW) / n;
+  const rows = [['', ...cols].map(t => ({ text: t, options: { bold: true, color: GOLD2, fill: { color: DARK }, align: 'center', valign: 'middle', fontSize: 5.5, border: bd } }))];
   D.ro.lignes.forEach(l => {
     const r = [{ text: l[0], options: { bold: true, color: WHITE, fill: { color: DARK }, fontSize: 9.5, align: 'left', border: bd } }];
     for (let i = 1; i <= n; i++) {
