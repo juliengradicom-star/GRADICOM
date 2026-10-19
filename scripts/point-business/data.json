@@ -1,0 +1,36 @@
+{
+  "mois": "OCTOBRE 2026",
+  "dateCouverture": "au 17-10-2026",
+  "dateScoring": "au 17-10-2026",
+  "dateRO": "au 16-10-2026",
+  "datePoints": "au 17-10-2026",
+  "ro": {
+    "colonnes": ["MARGE","PRO","FIXE VV","FIXE VR","MS","SERVICES COMPTOIR","C+","TCS","ABOS","RM","TERMINAUX","ACCESSOIRES","OPTIONS"],
+    "lignes": [
+      ["STEPHANE",null,null,null,null,null,null,null,null,null,null,null,null],
+      ["MATTHIEU",180.91,0,188.19,181.47,0,225.83,188.19,55.56,128.31,225.83,139.49,158.00,175.40],
+      ["DYLAN",164.63,135.50,203.25,145.18,508.13,255.06,564.58,200.00,230.97,255.06,127.53,150.26,184.17],
+      ["OCEANE G",163.73,285.42,172.33,104.85,190.28,173.53,190.28,83.33,190.28,173.53,155.27,158.75,220.42],
+      ["CHRISTELLE",138.48,304.71,169.28,184.30,0,107.54,253.92,98.04,95.22,107.54,129.95,110.98,106.65],
+      ["MARIE",132.82,518.00,185.00,135.77,161.88,114.26,215.83,97.22,139.80,114.26,99.03,93.61,129.50],
+      ["NOELLA",124.70,0,131.74,131.06,0,239.12,282.29,152.78,153.98,239.12,122.88,123.17,76.74],
+      ["CAPUCINE",114.65,0,145.76,113.93,0,99.72,0,121.21,120.40,99.72,95.57,99.30,155.40],
+      ["ADAM",108.19,155.68,70.50,50.83,207.58,149.45,311.36,45.45,79.84,149.45,119.56,126.12,166.47],
+      ["AUDREY",103.61,0,66.28,114.70,468.38,224.82,351.28,128.21,90.07,224.82,112.41,143.73,208.68],
+      ["LENA-MAY",102.30,235.38,63.28,87.01,98.08,119.56,196.15,115.38,107.69,119.56,93.41,124.99,190.21],
+      ["ARNAUD",93.40,0,82.26,118.06,159.38,121.43,106.25,125.00,37.50,121.43,78.93,104.07,109.47],
+      ["MATHILDA",49.85,0,37.64,26.88,0,115.13,125.46,41.67,59.88,115.13,61.99,82.02,73.09]
+    ]
+  },
+  "goodays": [["CHRISTELLE",5],["OCEANE G",4.88],["CAPUCINE",4.83],["NOELLA",4.8],["MATTHIEU",4.77],["LANGON",4.77],["TDG",4.72],["COGNAC",4.7],["ARNAUD",4.67],["MARMANDE",4.66],["DYLAN",4.65],["MATHILDA",4.64],["GRADIGNAN",4.63],["LENA-MAY",4.62],["ADAM",4.61],["AUDREY",4.58],["MARIE",4.47]],
+  "notesGoogle": [["1","SFR Chateaubernard","5,00","29"],["","SFR Langon","5,00","18"],["","SFR Marmande","5,00","21"],["4","SFR Gradignan","4,88","33"]],
+  "scoring": {
+    "valeurs": [["OCEANE G",20],["TDG",18.89],["COGNAC",18.89],["DYLAN",18.89],["NOELLA",17.78],["MARMANDE",17.78],["MATTHIEU",17.22],["CHRISTELLE",14.44],["MARIE",13.89],["LANGON",13.33],["ADAM",12.78],["AUDREY",12.78],["GRADIGNAN",11.11],["LENA-MAY",10.56],["CAPUCINE",10],["ARNAUD",8.33],["MATHILDA",5]],
+    "methode": ["Méthode de scoring :","9 items pris en compte -> Marge, Fixe VV, Abo, Terminaux, Goodays, Canal+, Maison sécurisée, Marge accessoire, Service comptoir,","Points à partir de 90% de R/O, puis palier supplémentaire à 100%, 110%, 120%.","Pour Goodays, paliers à 4,5 ; 4,6 ; 4,7 ; 4,8Note Maximum -> 20 points"],
+    "podium": [["OCEANE","20"],["DYLAN","18,89"],["NOËLLA","17,78"]]
+  },
+  "points": {
+    "valeurs": [["DYLAN",32],["MARIE",32],["LANGON",30],["COGNAC",29],["CHRISTELLE",27.5],["LENA-MAY",27.5],["OCEANE G",27],["MARMANDE",27],["MATTHIEU",27],["GRADIGNAN",27],["ARNAUD",26.5],["CAPUCINE",25],["NOELLA",22],["ADAM",22],["AUDREY",21.5],["MATHILDA",17],["STEPHANE",0]],
+    "podium": [["MARIE & DYLAN","32 pts"],["CHRISTELLE & LENA","27,5 pts"],["OCEANE & MATTHIEU","27 pts"]]
+  }
+}
