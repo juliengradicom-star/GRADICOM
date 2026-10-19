@@ -4,37 +4,41 @@ const fs = require('fs'), path = require('path');
 const D = JSON.parse(fs.readFileSync(path.join(__dirname, 'data.json'), 'utf8'));
 const OUT = process.argv[2] || 'Point_Hebdo.pptx';
 const W = 13.333, H = 7.5;
-const NAVY = '1F3864', GOLD = '1F3864', BG = 'FFFFFF', INK = '000000', MUTED = '595959', LINE = 'A6A6A6', WHITE = 'FFFFFF';
-const OKF = '00A651', OKT = 'FFFFFF', KOF = 'E00000', KOT = 'FFFFFF', TINT = 'FFF2CC';
+const NAVY = '0B2545', GOLD = '0B2545', BG = 'FFFFFF', INK = '1A1A1A', MUTED = '6B7280', LINE = 'C9CCD2', WHITE = 'FFFFFF';
+const OKF = '1E8E4E', OKT = 'FFFFFF', KOF = 'D0112B', KOT = 'FFFFFF', TINT = 'FFF2CC';
 const pres = new pptxgen();
 pres.defineLayout({ name: 'W', width: W, height: H }); pres.layout = 'W';
 pres.theme = { headFontFace: 'Calibri', bodyFontFace: 'Calibri' };
 pres.title = 'Point hebdo GRADICOM • AMR';
-const footer = `Gradicom - Amr  |  Point hebdo du ${D.date}`;
-pres.defineSlideMaster({ title: 'Couverture', background: { color: WHITE }, objects: [] });
+const footer = `Point hebdo du ${D.date}`;
+pres.defineSlideMaster({ title: 'Couverture', background: { color: NAVY }, objects: [] });
 pres.defineSlideMaster({ title: 'Page', background: { color: BG }, slideNumber: { x: 12.3, y: 7.08, w: 0.6, h: 0.25, fontFace: 'Calibri', fontSize: 10, color: MUTED, align: 'right' }, objects: [
-  { text: { text: footer, options: { x: 0.6, y: 7.08, w: 8, h: 0.25, fontFace: 'Calibri', fontSize: 10, color: MUTED, charSpacing: 1, margin: 0 } } },
-  { placeholder: { options: { name: 'titre', type: 'title', x: 0.6, y: 0.35, w: 11.5, h: 0.7, fontFace: 'Calibri', fontSize: 28, bold: true, color: NAVY, align: 'left', valign: 'middle', margin: 0 }, text: 'Titre' } }
+  { text: { text: 'GRADICOM  •  AMR', options: { x: 0.6, y: 0.28, w: 6, h: 0.25, fontFace: 'Calibri', fontSize: 10.5, bold: true, color: MUTED, charSpacing: 4, margin: 0 } } },
+  { rect: { x: 0.6, y: 1.25, w: 12.15, h: 0.02, fill: { color: NAVY } } },
+  { text: { text: footer, options: { x: 0.6, y: 7.08, w: 8, h: 0.25, fontFace: 'Calibri', fontSize: 10, color: MUTED, margin: 0 } } },
+  { placeholder: { options: { name: 'titre', type: 'title', x: 0.6, y: 0.52, w: 11.5, h: 0.68, fontFace: 'Calibri', fontSize: 28, bold: true, color: NAVY, align: 'left', valign: 'middle', margin: 0 }, text: 'Titre' } }
 ] });
 
-const bd = { type: 'solid', color: LINE, pt: 0.75 };
+const bd = [{ type: 'solid', color: LINE, pt: 0.5 }, { type: 'none' }, { type: 'solid', color: LINE, pt: 0.5 }, { type: 'none' }];
+const bdW = { type: 'solid', color: WHITE, pt: 2 };
 const head = (t, o = {}) => ({ text: t, options: Object.assign({ bold: true, color: WHITE, fill: { color: NAVY }, align: 'center', valign: 'middle', fontSize: 12, border: bd }, o) });
-const lab = (t, o = {}) => ({ text: t, options: Object.assign({ bold: true, color: NAVY, fill: { color: 'E7E6E6' }, align: 'center', valign: 'middle', fontSize: 12, border: bd }, o) });
+const lab = (t, o = {}) => ({ text: t, options: Object.assign({ bold: true, color: NAVY, fill: { color: 'F3F4F6' }, align: 'center', valign: 'middle', fontSize: 12, border: bd }, o) });
 const cel = (t, o = {}) => ({ text: String(t), options: Object.assign({ color: INK, fill: { color: WHITE }, align: 'center', valign: 'middle', fontSize: 12, border: bd }, o) });
 const num = v => parseFloat(String(v).replace(/\s/g, '').replace(',', '.').replace('%', ''));
 const ro = (v, o = {}) => {
   const n = num(v);
   if (isNaN(n)) return cel(v, Object.assign({ color: '9CA3AF', fill: { color: 'F3F4F6' } }, o));
-  return cel(v, Object.assign({ bold: true, color: n < 100 ? KOT : OKT, fill: { color: n < 100 ? KOF : OKF } }, o));
+  return cel(v, Object.assign({ bold: true, color: n < 100 ? KOT : OKT, fill: { color: n < 100 ? KOF : OKF }, border: bdW }, o));
 };
-const evol = (n, txt, o = {}) => cel(txt, Object.assign({ bold: true, color: n < 0 ? KOT : OKT, fill: { color: n < 0 ? KOF : OKF } }, o));
+const evol = (n, txt, o = {}) => cel(txt, Object.assign({ bold: true, color: n < 0 ? KOT : OKT, fill: { color: n < 0 ? KOF : OKF }, border: bdW }, o));
 
 // ---- 1. Couverture
 let s = pres.addSlide({ masterName: 'Couverture' });
-s.addText('POINT HEBDO', { x: 0.9, y: 2.3, w: 11, h: 1.3, fontFace: 'Calibri', fontSize: 66, bold: true, color: NAVY, margin: 0, valign: 'middle', isTextBox: true });
-s.addText('Gradicom - Amr', { x: 0.9, y: 3.7, w: 11, h: 0.7, fontFace: 'Calibri', fontSize: 30, color: INK, margin: 0, isTextBox: true });
-s.addText(D.date, { x: 0.9, y: 4.5, w: 11, h: 0.6, fontFace: 'Calibri', fontSize: 24, italic: true, color: MUTED, margin: 0, isTextBox: true });
-s.addShape(pres.shapes.RECTANGLE, { x: 0, y: 6.9, w: W, h: 0.6, fill: { color: NAVY }, line: { color: NAVY, width: 0 }, objectName: 'Bandeau bas' });
+s.addText('GRADICOM  •  AMR', { x: 0.9, y: 1.0, w: 8, h: 0.4, fontFace: 'Calibri', fontSize: 16, bold: true, color: 'A9B8D0', charSpacing: 6, margin: 0, isTextBox: true });
+s.addText('POINT HEBDO', { x: 0.9, y: 2.5, w: 11, h: 1.4, fontFace: 'Calibri', fontSize: 72, bold: true, color: WHITE, margin: 0, valign: 'middle', isTextBox: true });
+s.addShape(pres.shapes.RECTANGLE, { x: 0.9, y: 4.15, w: 3.2, h: 0.03, fill: { color: WHITE }, line: { color: WHITE, width: 0 }, objectName: 'Filet' });
+s.addText(D.date, { x: 0.9, y: 4.4, w: 8, h: 0.6, fontFace: 'Calibri', fontSize: 26, color: WHITE, margin: 0, isTextBox: true });
+s.addText('LANGON   •   GRADIGNAN   •   COGNAC   •   MARMANDE', { x: 0.9, y: 6.5, w: 10, h: 0.35, fontFace: 'Calibri', fontSize: 12, color: 'A9B8D0', charSpacing: 3, margin: 0, isTextBox: true });
 
 // ---- 2. R/O Magasin (une ligne par item, 3 colonnes par magasin)
 s = pres.addSlide({ masterName: 'Page' });
@@ -45,7 +49,7 @@ s.addText(`R/O Magasin au ${D.dateDonnees}`, { placeholder: 'titre' });
     [...R.jours.map(j => head(`${j} jours travaillés`, { colspan: 3, fontSize: 10, bold: false, fill: { color: '2F5496' } }))],
     [...R.magasins.flatMap(() => ['Obj', 'Réa', 'R/O'].map(t => head(t, { fontSize: 10.5, fill: { color: '2F5496' } })))]];
   R.items.forEach(r => rows.push([lab(r.item, { align: 'left', fontSize: 12 }), ...R.magasins.flatMap((m, i) => [cel(r.obj[i], { fontSize: 11.5 }), cel(r.rea[i], { fontSize: 11.5 }), ro(r.ro[i], { fontSize: 12.5 })])]));
-  s.addTable(rows, { x: 0.6, y: 1.45, w: 12.2, colW: [1.9, ...R.magasins.flatMap(() => [0.95, 0.8, 0.95])], rowH: [0.4, 0.28, 0.3, ...R.items.map(() => 0.5)], fontFace: 'Calibri', margin: [0, 0.06, 0, 0.06], objectName: 'R/O magasins' });
+  s.addTable(rows, { x: 0.6, y: 1.45, w: 12.15, colW: [1.95, ...R.magasins.flatMap(() => [0.9, 0.75, 0.9])], rowH: [0.4, 0.28, 0.3, ...R.items.map(() => 0.5)], fontFace: 'Calibri', margin: [0, 0.06, 0, 0.06], objectName: 'R/O magasins' });
 }
 
 // ---- 3. R/O Vendeurs
@@ -55,7 +59,7 @@ s.addText(`R/O Vendeurs au ${D.dateDonnees}`, { placeholder: 'titre' });
   const V = D.roVendeurs;
   const rows = [[head('', { fontSize: 10 }), ...V.colonnes.map(c => head(c, { fontSize: 9.5 }))]];
   V.lignes.forEach(l => rows.push([lab(l[0], { align: 'left', fontSize: 11.5 }), ...l.slice(1).map(v => v === null ? ro('#DIV/0!', { fontSize: 10 }) : ro(fmtPct(v), { fontSize: 11.5 }))]));
-  s.addTable(rows, { x: 0.6, y: 1.45, w: 12.2, colW: [1.3, ...V.colonnes.map(() => (12.2 - 1.3) / V.colonnes.length)], rowH: [0.55, ...V.lignes.map(() => 0.37)], fontFace: 'Calibri', margin: [0, 0.05, 0, 0.05], objectName: 'R/O vendeurs' });
+  s.addTable(rows, { x: 0.6, y: 1.45, w: 12.15, colW: [1.3, ...V.colonnes.map(() => (12.15 - 1.3) / V.colonnes.length)], rowH: [0.55, ...V.lignes.map(() => 0.37)], fontFace: 'Calibri', margin: [0, 0.05, 0, 0.05], objectName: 'R/O vendeurs' });
 }
 function fmtPct(v) { return v.toFixed(2).replace('.', ',') + '%'; }
 
@@ -93,13 +97,13 @@ s = pres.addSlide({ masterName: 'Page' });
 s.addText(`SATISFACTION CLIENT – GOODAYS au ${D.dateDonnees}`, { placeholder: 'titre' });
 D.goodays.forEach((g, i) => {
   const x = 0.6 + (i % 2) * 6.2, y = 1.45 + Math.floor(i / 2) * 2.8, w = 6.0, h = 2.65;
-  s.addShape(pres.shapes.RECTANGLE, { x, y, w, h, fill: { color: WHITE }, line: { color: NAVY, width: 1.25 }, objectName: 'Carte ' + g.magasin });
+  s.addShape(pres.shapes.RECTANGLE, { x, y, w, h, fill: { color: WHITE }, line: { color: LINE, width: 0.75 }, objectName: 'Carte ' + g.magasin });
   s.addShape(pres.shapes.RECTANGLE, { x, y, w, h: 0.4, fill: { color: NAVY }, line: { color: NAVY, width: 0 }, objectName: 'Bandeau ' + g.magasin });
   s.addText(g.magasin, { x: x + 0.2, y, w: w - 0.4, h: 0.4, fontFace: 'Calibri', fontSize: 13, bold: true, color: WHITE, charSpacing: 3, valign: 'middle', margin: 0, isTextBox: true });
   s.addText([{ text: g.note, options: { fontSize: 40, bold: true, fontFace: 'Calibri', color: NAVY } }, { text: ' /5', options: { fontSize: 16, color: MUTED } }], { x: x + 0.2, y: y + 0.6, w: 1.9, h: 0.9, valign: 'middle', margin: 0, isTextBox: true });
   s.addText(g.participations, { x: x + 0.2, y: y + 1.5, w: 1.9, h: 0.4, fontFace: 'Calibri', fontSize: 12, color: MUTED, margin: 0, isTextBox: true });
   const th = (t, al) => ({ text: t, options: { bold: true, color: NAVY, fontSize: 10.5, align: al, valign: 'middle', border: [{ type: 'none' }, { type: 'none' }, { type: 'solid', color: GOLD, pt: 1 }, { type: 'none' }] } });
-  const td = (t, al, b) => ({ text: t, options: { color: INK, bold: !!b, fontSize: 11.5, align: al, valign: 'middle', border: [{ type: 'none' }, { type: 'none' }, { type: 'solid', color: 'E7E6E6', pt: 0.5 }, { type: 'none' }] } });
+  const td = (t, al, b) => ({ text: t, options: { color: INK, bold: !!b, fontSize: 11.5, align: al, valign: 'middle', border: [{ type: 'none' }, { type: 'none' }, { type: 'solid', color: 'F3F4F6', pt: 0.5 }, { type: 'none' }] } });
   const rows = [[th('', 'center'), th('Login vendeur', 'left'), th('Note satis.', 'center'), th('Part.', 'center')], ...g.lignes.map(l => [td(l[0], 'center'), td(l[1], 'left'), td(l[2], 'center', true), td(l[3], 'center')])];
   s.addTable(rows, { x: x + 2.2, y: y + 0.55, w: 3.6, colW: [0.4, 1.6, 0.95, 0.65], rowH: [0.32, ...g.lignes.map(() => 0.4)], fontFace: 'Calibri', fill: { color: WHITE }, margin: [0, 0.05, 0, 0.05], objectName: 'Goodays ' + g.magasin });
 });
