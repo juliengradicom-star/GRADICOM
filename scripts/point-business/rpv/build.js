@@ -16,7 +16,7 @@ const ph = (name, type, o, text) => ({ placeholder: { options: Object.assign({ n
 const fmt = (n, d = 2) => n.toFixed(d).replace('.', ',');
 
 // ---- mises en page
-pres.defineSlideMaster({ title: 'Couverture', background: { path: A('cover_A.png') }, objects: [
+pres.defineSlideMaster({ title: 'Couverture', background: { path: A('cover_RPV.png') }, objects: [
   { text: { text: 'GRADICOM  •  AMR', options: { x: M, y: 1.0, w: 6.4, h: 0.5, fontFace: 'Calibri', fontSize: 18, bold: true, color: GOLD2, charSpacing: 5, margin: 0 } } },
   ph('titre', 'title', { x: M + 0.15, y: 6.0, w: 6.6, h: 1.0, fontFace: 'Cambria', fontSize: 50, bold: true, color: WHITE, align: 'left', valign: 'top', fit: 'shrink' }, 'POINT BUSINESS'),
   ph('mois', 'body', { x: M + 0.15, y: 7.05, w: 6.4, h: 0.7, fontFace: 'Calibri', fontSize: 30, bold: true, color: GOLD2, charSpacing: 6, align: 'left' }, 'SPECIAL RPV'),
