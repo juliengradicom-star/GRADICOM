@@ -80,7 +80,7 @@ s.addText('R/O ' + D.dateRO, { placeholder: 'titre' });
 function roTable(y) {
   const bd = { type: 'solid', color: '3A3426', pt: 0.5 };
   const cols = D.ro.colonnes, n = cols.length, nameW = 0.85, cw = (W - 0.2 - nameW) / n;
-  const rows = [['', ...cols].map(t => ({ text: t, options: { bold: true, color: GOLD2, fill: { color: DARK }, align: 'center', valign: 'middle', fontSize: 11, textDirection: 'vert270', border: bd } }))];
+  const rows = [['', ...cols].map(t => ({ text: '', options: { fill: { color: DARK }, border: bd } }))];
   D.ro.lignes.forEach(l => {
     const r = [{ text: l[0], options: { bold: true, color: WHITE, fill: { color: DARK }, fontSize: 9.5, align: 'left', border: bd } }];
     for (let i = 1; i <= n; i++) {
@@ -93,6 +93,13 @@ function roTable(y) {
   s.addTable(rows, { x: 0.1, y, w: W - 0.2, colW: [nameW, ...cols.map(() => cw)], rowH: [1.3, ...D.ro.lignes.map(() => 0.5)], fontFace: 'Calibri', margin: [0, 0.01, 0, 0.01], valign: 'middle', objectName: 'Tableau R/O' });
 }
 roTable(2.4);
+{ // titres des colonnes : zones de texte tournées de 270°, centrées exactement sur chaque colonne
+  const n = D.ro.colonnes.length, nameW = 0.85, cw = (W - 0.2 - nameW) / n, hh = 1.3, cy = 2.4 + hh / 2;
+  D.ro.colonnes.forEach((t, i) => {
+    const cx = 0.1 + nameW + cw * (i + 0.5);
+    s.addText(t, { x: cx - hh / 2, y: cy - cw / 2, w: hh, h: cw, rotate: 270, fontFace: 'Calibri', fontSize: 11, bold: true, color: GOLD2, align: 'center', valign: 'middle', margin: 0, isTextBox: true, objectName: 'Titre ' + t });
+  });
+}
 
 // ---- 3b. Goodays + Notes Google
 s = pres.addSlide({ masterName: 'Page' });
@@ -105,6 +112,7 @@ s.addImage({ path: A('google.png'), x: 3.8, y: 8.92, w: 1.5, h: 1.5 * 0.3135 });
   const hd = ['', '', 'Note moyenne', 'Réponses'].map((t, i) => ({ text: t, options: { bold: true, color: GOLD2, fill: { color: DARK }, fontSize: 12, align: i > 1 ? 'right' : 'left' } }));
   const rows = [hd].concat(D.notesGoogle.map(r => r.map((t, i) => ({ text: t, options: { color: WHITE, fill: { color: BLACK }, fontSize: 14, bold: i > 1, align: i > 1 ? 'right' : 'left', border: [{ type: 'none' }, { type: 'none' }, { type: 'solid', color: '3A3426', pt: 0.75 }, { type: 'none' }] } }))));
   s.addTable(rows, { x: 0.6, y: 9.55, w: 6.3, colW: [0.5, 2.9, 1.7, 1.2], rowH: 0.45, fontFace: 'Calibri', margin: [0, 0.08, 0, 0.08], valign: 'middle', objectName: 'Notes Google' });
+  s.addImage({ path: A('warning.png'), x: 4.7, y: 11.35 + (0.45 - 0.34) / 2 + 0.0, w: 0.34, h: 0.34, objectName: 'Alerte Gradignan' });
 }
 
 // ---- 4. Scoring général
@@ -113,7 +121,7 @@ s.addText('SCORING GENERAL\n' + D.dateScoring, { placeholder: 'titre' });
 barChart(s, D.scoring.valeurs, { y: 2.3, h: 5.3, name: 'Score', extra: { valAxisMinVal: 0, valAxisMaxVal: 22, dataLabelFormatCode: '0.00' } });
 s.addShape(pres.shapes.RECTANGLE, { x: 0.4, y: 7.7, w: 6.7, h: 1.7, fill: { color: DARK }, line: { color: GOLD, width: 1.25 }, objectName: 'Méthode' });
 s.addText(D.scoring.methode.map((t, i) => ({ text: t, options: { bold: true, color: i === 0 ? GOLD2 : WHITE, underline: i === 0 ? { style: 'sng' } : undefined, breakLine: i < D.scoring.methode.length - 1 } })),
-  { x: 0.5, y: 7.75, w: 6.5, h: 1.6, fontFace: 'Calibri', fontSize: 12, valign: 'top', margin: 0, isTextBox: true });
+  { x: 0.5, y: 7.75, w: 6.5, h: 1.6, fontFace: 'Calibri', fontSize: 12, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
 podium(s, D.scoring.podium, 12.6);
 
 // ---- 5. Suivi des points
