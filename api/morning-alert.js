@@ -42,7 +42,10 @@ async function bravoJob(now, auth, priv, cfg, sales, src) {
     if (!winners.length) result = { skipped: 'aucun vendeur au-dessus de ' + BRAVO_MIN + ' €' };
     else {
       const names = winners.map(w => w.n);
-      const body = (winners.length === 1 ? 'Bravo à ' + names[0] + ' pour sa belle journée d\'hier ! 💪' : 'Bravo pour la belle journée d\'hier : ' + names.join(', ') + ' ! 💪');
+      // « hier » seulement si le relevé de référence date de la veille ; le lundi (pas de relevé le dimanche) on dit « de samedi »
+      const gap = Math.round((Date.parse(today + 'T12:00:00Z') - Date.parse(String(prev.date) + 'T12:00:00Z')) / 86400000);
+      const jour = gap <= 1 ? 'd\'hier' : 'de ' + ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'][new Date(String(prev.date) + 'T12:00:00Z').getUTCDay()];
+      const body = (winners.length === 1 ? 'Bravo à ' + names[0] + ' pour sa belle journée ' + jour + ' ! 💪' : 'Bravo pour la belle journée ' + jour + ' : ' + names.join(', ') + ' ! 💪');
       result = Object.assign({ winners: winners.length }, await sendToAll(auth, { title: '👏 Bravo !', body, url: '/' }, priv));
     }
   }
