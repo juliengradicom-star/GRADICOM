@@ -1,176 +1,258 @@
 [
-  {
-    "id": "2026-10-13-business-connect-s42",
-    "date": "2026-10-13",
-    "title": "Business Connect — semaine du 13 au 19 octobre",
-    "text": "L'essentiel de la semaine (image 1), puis un FOCUS sur tous les mobiles en bon plan : forfait sans engagement (image 2) et forfait Illimité 5G+ (image 3), avec prix, remises, ODR et bonus reprise. Touche une image pour l'agrandir.",
-    "images": [
-      "actus/business-connect-s42.png",
-      "actus/business-connect-s42-mobiles-1.png",
-      "actus/business-connect-s42-mobiles-2.png"
+ {
+  "id": "2026-10-20-business-connect-s43",
+  "date": "2026-10-20",
+  "title": "Business Connect — semaine du 20 au 26 octobre",
+  "text": "L'essentiel de la semaine (image 1), le lancement de l'iPhone Duo (image 2), puis un FOCUS sur les mobiles en bon plan : forfait sans engagement (image 3) et forfait Illimité 5G+ (image 4), avec prix, remises, ODR et bonus reprise. Touche une image pour l'agrandir.",
+  "images": [
+   "actus/business-connect-s43.png",
+   "actus/business-connect-s43-iphone-duo.png",
+   "actus/business-connect-s43-mobiles-1.png",
+   "actus/business-connect-s43-mobiles-2.png"
+  ],
+  "notifyText": "iPhone Duo en précommande, Xiaomi 17T à 1€, déstockage, Canal+… Toutes les infos de la semaine + un quiz !",
+  "quiz": [
+   {
+    "q": "Un client veut l'iPhone Duo avec un forfait Illimité 5G+. Quel est son prix (ODR SFR de 200 € déduite) ?",
+    "options": [
+     "1 349 €",
+     "1 549 €",
+     "2 139 €",
+     "2 339 €"
     ],
-    "notifyText": "Galaxy A37 à 1€, déstockage, Canal+ Coupes d'Europe, accessoires Samsung… Toutes les infos de la semaine + un quiz !",
-    "quiz": [
-      {
-        "q": "Un client veut le Xiaomi 17T avec un forfait SANS engagement. Quel est son prix (ODR SFR de 100 € déduite) ?",
-        "options": [
-          "349 €",
-          "449 €",
-          "549 €",
-          "749 €"
-        ],
-        "answer": [
-          1
-        ],
-        "explain": "449 € (prix initial 749 € − remise 200 € − ODR 100 €). Ou 4 × 137,25 € sans frais, puis l'ODR de 100 € remboursée."
-      },
-      {
-        "q": "Un client prend le Galaxy S26 FE avec un forfait Illimité 5G+ et veut payer en 4 fois. Que lui proposes-tu ?",
-        "options": [
-          "4 × 73,25 € sans frais",
-          "4 × 157,25 € sans frais",
-          "4 × 172,75 € sans frais",
-          "4 × 347,75 € sans frais"
-        ],
-        "answer": [
-          0
-        ],
-        "explain": "En Illimité 5G+ : 4 × 73,25 € sans frais, puis ODR de 100 € remboursée. (4 × 157,25 € c'est le S26 FE sans engagement.)"
-      },
-      {
-        "q": "Quels mobiles du focus donnent 100 € de bonus pour la reprise d'un ancien mobile ? (plusieurs réponses)",
-        "options": [
-          "Galaxy S26 FE",
-          "Galaxy S26+",
-          "Galaxy A37",
-          "Galaxy Z Fold8 Ultra"
-        ],
-        "answer": [
-          0,
-          1
-        ],
-        "multi": true,
-        "explain": "100 € de bonus sur le S26 FE et le S26+. Le A37 donne 30 € et le Z Fold8 Ultra 150 €."
-      },
-      {
-        "q": "Jusqu'à combien l'ODR Google Pixel 11 rembourse-t-elle (du 1er au 31 octobre) ?",
-        "options": [
-          "70 €",
-          "100 €",
-          "200 €",
-          "300 €"
-        ],
-        "answer": [
-          3
-        ],
-        "explain": "Jusqu'à 300 € remboursés pour l'achat d'un Pixel 11, 11 Pro, 11 Pro XL ou 11 Pro Fold."
-      },
-      {
-        "q": "Jusqu'à quelle date la 2e caméra Wifi Maison Sécurisée est-elle à 29 € au lieu de 39 € ?",
-        "options": [
-          "Le 19/10",
-          "Le 30/10",
-          "Le 2/11",
-          "Le 16/11"
-        ],
-        "answer": [
-          2
-        ],
-        "explain": "Jusqu'au 2/11 : ODR de 10 €, preuve d'achat à envoyer par courrier sous 30 jours."
-      }
-    ]
-  },
-  {
-    "id": "2026-10-08-business-connect-s41-focus-mobiles",
-    "date": "2026-10-08",
-    "title": "Business Connect — semaine du 6 au 12 octobre",
-    "text": "L'essentiel de la semaine (image 1), puis un FOCUS sur tous les mobiles en bon plan : forfait sans engagement (image 2) et forfait Illimité 5G+ (image 3), avec prix, remises, ODR et bonus reprise. Touche une image pour l'agrandir.",
-    "images": [
-      "actus/business-connect-s41.png",
-      "actus/business-connect-s41-mobiles-1.png",
-      "actus/business-connect-s41-mobiles-2.png"
+    "answer": [
+     1
     ],
-    "notifyText": "Focus sur tous les mobiles en bon plan : A37 à 1€, S26 FE, Fold8 Ultra… Prix, remises et bonus reprise !",
-    "quiz": [
-      {
-        "q": "Un client veut le Galaxy S26 FE avec un forfait SANS engagement. Quel est son prix (ODR SFR de 100 € déduite) ?",
-        "options": [
-          "429 €",
-          "529 €",
-          "629 €",
-          "799 €"
-        ],
-        "answer": [
-          1
-        ],
-        "explain": "529 € (prix initial 799 € − remise 170 € − ODR 100 €). Ou 4 × 157,25 € sans frais, puis l'ODR de 100 € remboursée."
-      },
-      {
-        "q": "Le client ne veut pas payer le Redmi Note 17 Pro d'un coup. Que lui proposes-tu ?",
-        "options": [
-          "4 × 44,75 € sans frais",
-          "4 × 87,25 € sans frais",
-          "4 × 92,25 € sans frais, puis ODR de 50 € remboursés",
-          "4 × 157,25 € sans frais"
-        ],
-        "answer": [
-          2
-        ],
-        "explain": "Le Redmi Note 17 Pro est à 319 € (ODR 50 € déduite), ou 4 × 92,25 € sans frais, puis l'ODR de 50 € est remboursée. Et +50 € de bonus si le client reprend un mobile."
-      },
-      {
-        "q": "Quels mobiles donnent +100 € de bonus en cas de reprise d'un ancien mobile ? (plusieurs réponses possibles)",
-        "options": [
-          "Galaxy S26 FE",
-          "Galaxy S26+",
-          "Redmi Note 17 Pro",
-          "Galaxy A37"
-        ],
-        "answer": [
-          0,
-          1
-        ],
-        "multi": true,
-        "explain": "Galaxy S26 FE et Galaxy S26+ : +100 €. Le Redmi Note 17 Pro donne +50 € et le Galaxy A37 +30 €. Le Z Fold8 Ultra monte à +150 €."
-      },
-      {
-        "q": "Quel est le prix du Galaxy S26+ avec le forfait Illimité 5G+ (ODR de 100 € déduite) ?",
-        "options": [
-          "299 € + 8 €/mois",
-          "399 € + 8 €/mois",
-          "529 € + 8 €/mois",
-          "1099 € + 8 €/mois"
-        ],
-        "answer": [
-          1
-        ],
-        "explain": "399 € (+ 8 €/mois pendant 24 mois), ou 4 × 172,75 € sans frais puis l'ODR de 100 € remboursée. Prix initial 861 €, remise −170 €."
-      },
-      {
-        "q": "Offre 100 % Canal+ avec le Pass Coupes d'Europe : quel prix pour le client, et pendant combien de temps ?",
-        "options": [
-          "19,99 €/mois pendant 24 mois",
-          "19,99 €/mois pendant 12 mois",
-          "32,99 €/mois pendant 24 mois",
-          "29,99 €/mois pendant 24 mois"
-        ],
-        "answer": [
-          0
-        ],
-        "explain": "19,99 €/mois pendant 24 mois (puis 32,99 €/mois), jusqu'au 9/11, en boutique et télévente uniquement. À privilégier cette période."
-      }
-    ]
-  },
-  {
-    "id": "2026-10-01-plan-merch-mobiles-octobre",
-    "date": "2026-10-01",
-    "title": "Plan merch mobiles — Octobre 2026",
-    "text": "Les nouvelles recommandations SFR pour l'implantation des mobiles en magasin : meuble Actu, meubles constructeurs, table d'expérience, étiquettes et signalétique. Les points à retenir sont dans les 3 visuels ci-dessous (touche une image pour l'agrandir).",
-    "images": [
-      "actus/plan-merch-octobre-2026-1.png",
-      "actus/plan-merch-octobre-2026-2.png",
-      "actus/plan-merch-octobre-2026-3.png"
+    "explain": "1 549 € + 8 €/mois pendant 24 mois. Attention : l'ODR de 200 € n'est valable que pendant la période de précommande."
+   },
+   {
+    "q": "Un client prend le Xiaomi Redmi Note 17 avec un forfait SANS engagement et veut payer en 4 fois. Que lui proposes-tu ?",
+    "options": [
+     "4 × 49,75 € sans frais",
+     "4 × 62,25 € sans frais",
+     "4 × 67,25 € sans frais",
+     "4 × 137,25 € sans frais"
     ],
-    "notifyText": "Nouvelles consignes SFR : meubles, table d'expérience, étiquettes. À lire avant d'aller plus loin !"
-  }
+    "answer": [
+     2
+    ],
+    "explain": "4 × 67,25 € sans frais, puis ODR de 50 € remboursée (219 € avec l'ODR déduite)."
+   },
+   {
+    "q": "Quels mobiles sont à 1 € avec un forfait Illimité 5G+ (ODR de 100 € déduite) ? (plusieurs réponses)",
+    "options": [
+     "Redmi Note 17 Pro Max",
+     "Xiaomi 17T",
+     "Xiaomi 17T Pro",
+     "Galaxy S26"
+    ],
+    "answer": [
+     0,
+     1
+    ],
+    "multi": true,
+    "explain": "Redmi Note 17 Pro Max et Xiaomi 17T à 1 €. Le Xiaomi 17T Pro et le Galaxy S26 sont à 99 € + 8 €/mois pendant 24 mois."
+   },
+   {
+    "q": "Quel bonus de reprise d'un ancien mobile sur le Xiaomi 17T Pro et le Galaxy S26 en Illimité 5G+ ?",
+    "options": [
+     "50 €",
+     "70 €",
+     "100 €",
+     "150 €"
+    ],
+    "answer": [
+     2
+    ],
+    "explain": "100 € de bonus sur le Xiaomi 17T Pro et le Galaxy S26 (50 € sur le Redmi Note 17 Pro Max, 70 € sur le Xiaomi 17T)."
+   },
+   {
+    "q": "Jusqu'à quelle date les Galaxy Buds4 sont-ils à 129 € ?",
+    "options": [
+     "Le 30/10",
+     "Le 2/11",
+     "Le 9/11",
+     "Le 16/11"
+    ],
+    "answer": [
+     0
+    ],
+    "explain": "Les Buds4 à 129 € (remise 30 € + ODR SFR 20 €) jusqu'au 30/10. Les Buds4 Pro à 149 € et les AirPods vont jusqu'au 16/11."
+   }
+  ]
+ },
+ {
+  "id": "2026-10-13-business-connect-s42",
+  "date": "2026-10-13",
+  "title": "Business Connect — semaine du 13 au 19 octobre",
+  "text": "L'essentiel de la semaine (image 1), puis un FOCUS sur tous les mobiles en bon plan : forfait sans engagement (image 2) et forfait Illimité 5G+ (image 3), avec prix, remises, ODR et bonus reprise. Touche une image pour l'agrandir.",
+  "images": [
+   "actus/business-connect-s42.png",
+   "actus/business-connect-s42-mobiles-1.png",
+   "actus/business-connect-s42-mobiles-2.png"
+  ],
+  "notifyText": "Galaxy A37 à 1€, déstockage, Canal+ Coupes d'Europe, accessoires Samsung… Toutes les infos de la semaine + un quiz !",
+  "quiz": [
+   {
+    "q": "Un client veut le Xiaomi 17T avec un forfait SANS engagement. Quel est son prix (ODR SFR de 100 € déduite) ?",
+    "options": [
+     "349 €",
+     "449 €",
+     "549 €",
+     "749 €"
+    ],
+    "answer": [
+     1
+    ],
+    "explain": "449 € (prix initial 749 € − remise 200 € − ODR 100 €). Ou 4 × 137,25 € sans frais, puis l'ODR de 100 € remboursée."
+   },
+   {
+    "q": "Un client prend le Galaxy S26 FE avec un forfait Illimité 5G+ et veut payer en 4 fois. Que lui proposes-tu ?",
+    "options": [
+     "4 × 73,25 € sans frais",
+     "4 × 157,25 € sans frais",
+     "4 × 172,75 € sans frais",
+     "4 × 347,75 € sans frais"
+    ],
+    "answer": [
+     0
+    ],
+    "explain": "En Illimité 5G+ : 4 × 73,25 € sans frais, puis ODR de 100 € remboursée. (4 × 157,25 € c'est le S26 FE sans engagement.)"
+   },
+   {
+    "q": "Quels mobiles du focus donnent 100 € de bonus pour la reprise d'un ancien mobile ? (plusieurs réponses)",
+    "options": [
+     "Galaxy S26 FE",
+     "Galaxy S26+",
+     "Galaxy A37",
+     "Galaxy Z Fold8 Ultra"
+    ],
+    "answer": [
+     0,
+     1
+    ],
+    "multi": true,
+    "explain": "100 € de bonus sur le S26 FE et le S26+. Le A37 donne 30 € et le Z Fold8 Ultra 150 €."
+   },
+   {
+    "q": "Jusqu'à combien l'ODR Google Pixel 11 rembourse-t-elle (du 1er au 31 octobre) ?",
+    "options": [
+     "70 €",
+     "100 €",
+     "200 €",
+     "300 €"
+    ],
+    "answer": [
+     3
+    ],
+    "explain": "Jusqu'à 300 € remboursés pour l'achat d'un Pixel 11, 11 Pro, 11 Pro XL ou 11 Pro Fold."
+   },
+   {
+    "q": "Jusqu'à quelle date la 2e caméra Wifi Maison Sécurisée est-elle à 29 € au lieu de 39 € ?",
+    "options": [
+     "Le 19/10",
+     "Le 30/10",
+     "Le 2/11",
+     "Le 16/11"
+    ],
+    "answer": [
+     2
+    ],
+    "explain": "Jusqu'au 2/11 : ODR de 10 €, preuve d'achat à envoyer par courrier sous 30 jours."
+   }
+  ]
+ },
+ {
+  "id": "2026-10-08-business-connect-s41-focus-mobiles",
+  "date": "2026-10-08",
+  "title": "Business Connect — semaine du 6 au 12 octobre",
+  "text": "L'essentiel de la semaine (image 1), puis un FOCUS sur tous les mobiles en bon plan : forfait sans engagement (image 2) et forfait Illimité 5G+ (image 3), avec prix, remises, ODR et bonus reprise. Touche une image pour l'agrandir.",
+  "images": [
+   "actus/business-connect-s41.png",
+   "actus/business-connect-s41-mobiles-1.png",
+   "actus/business-connect-s41-mobiles-2.png"
+  ],
+  "notifyText": "Focus sur tous les mobiles en bon plan : A37 à 1€, S26 FE, Fold8 Ultra… Prix, remises et bonus reprise !",
+  "quiz": [
+   {
+    "q": "Un client veut le Galaxy S26 FE avec un forfait SANS engagement. Quel est son prix (ODR SFR de 100 € déduite) ?",
+    "options": [
+     "429 €",
+     "529 €",
+     "629 €",
+     "799 €"
+    ],
+    "answer": [
+     1
+    ],
+    "explain": "529 € (prix initial 799 € − remise 170 € − ODR 100 €). Ou 4 × 157,25 € sans frais, puis l'ODR de 100 € remboursée."
+   },
+   {
+    "q": "Le client ne veut pas payer le Redmi Note 17 Pro d'un coup. Que lui proposes-tu ?",
+    "options": [
+     "4 × 44,75 € sans frais",
+     "4 × 87,25 € sans frais",
+     "4 × 92,25 € sans frais, puis ODR de 50 € remboursés",
+     "4 × 157,25 € sans frais"
+    ],
+    "answer": [
+     2
+    ],
+    "explain": "Le Redmi Note 17 Pro est à 319 € (ODR 50 € déduite), ou 4 × 92,25 € sans frais, puis l'ODR de 50 € est remboursée. Et +50 € de bonus si le client reprend un mobile."
+   },
+   {
+    "q": "Quels mobiles donnent +100 € de bonus en cas de reprise d'un ancien mobile ? (plusieurs réponses possibles)",
+    "options": [
+     "Galaxy S26 FE",
+     "Galaxy S26+",
+     "Redmi Note 17 Pro",
+     "Galaxy A37"
+    ],
+    "answer": [
+     0,
+     1
+    ],
+    "multi": true,
+    "explain": "Galaxy S26 FE et Galaxy S26+ : +100 €. Le Redmi Note 17 Pro donne +50 € et le Galaxy A37 +30 €. Le Z Fold8 Ultra monte à +150 €."
+   },
+   {
+    "q": "Quel est le prix du Galaxy S26+ avec le forfait Illimité 5G+ (ODR de 100 € déduite) ?",
+    "options": [
+     "299 € + 8 €/mois",
+     "399 € + 8 €/mois",
+     "529 € + 8 €/mois",
+     "1099 € + 8 €/mois"
+    ],
+    "answer": [
+     1
+    ],
+    "explain": "399 € (+ 8 €/mois pendant 24 mois), ou 4 × 172,75 € sans frais puis l'ODR de 100 € remboursée. Prix initial 861 €, remise −170 €."
+   },
+   {
+    "q": "Offre 100 % Canal+ avec le Pass Coupes d'Europe : quel prix pour le client, et pendant combien de temps ?",
+    "options": [
+     "19,99 €/mois pendant 24 mois",
+     "19,99 €/mois pendant 12 mois",
+     "32,99 €/mois pendant 24 mois",
+     "29,99 €/mois pendant 24 mois"
+    ],
+    "answer": [
+     0
+    ],
+    "explain": "19,99 €/mois pendant 24 mois (puis 32,99 €/mois), jusqu'au 9/11, en boutique et télévente uniquement. À privilégier cette période."
+   }
+  ]
+ },
+ {
+  "id": "2026-10-01-plan-merch-mobiles-octobre",
+  "date": "2026-10-01",
+  "title": "Plan merch mobiles — Octobre 2026",
+  "text": "Les nouvelles recommandations SFR pour l'implantation des mobiles en magasin : meuble Actu, meubles constructeurs, table d'expérience, étiquettes et signalétique. Les points à retenir sont dans les 3 visuels ci-dessous (touche une image pour l'agrandir).",
+  "images": [
+   "actus/plan-merch-octobre-2026-1.png",
+   "actus/plan-merch-octobre-2026-2.png",
+   "actus/plan-merch-octobre-2026-3.png"
+  ],
+  "notifyText": "Nouvelles consignes SFR : meubles, table d'expérience, étiquettes. À lire avant d'aller plus loin !"
+ }
 ]
