@@ -8,6 +8,7 @@ const { margins, loadPortalSource, parisNow } = require('../lib/alerts.js');
 
 const LIVE_JUMP = 300; // € de marge gagnés d'un coup entre deux passages
 const LIVE_DAY = 450;  // € de marge gagnés depuis l'ouverture
+const STORE_PCT = 1.15; // magasin : marge du jour ≥ 115 % de l'objectif de marge journalier
 const cap = n => String(n || '').trim().split(/\s+/)[0].split('-').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('-');
 const list = a => a.length <= 1 ? a.join('') : a.slice(0, -1).join(', ') + ' et ' + a[a.length - 1];
 
@@ -48,9 +49,19 @@ module.exports = async (req, res) => {
         else if (dayGain >= LIVE_DAY && !sent[e]) { day.push({ n: cap(x.name), g: dayGain }); sent[e] = true; }
       });
     }
+    // Magasins : marge gagnée depuis l'ouverture ≥ 115 % de l'objectif journalier (1 fois par magasin et par jour)
+    const sm = {}; (cur.stores || []).forEach(x => { sm[x.name] = Math.round(x.margin * 100) / 100; });
+    const sBase = sameDay && prev.sdayStart ? prev.sdayStart : (sameMonth && age <= 4 && prev.sm ? prev.sm : null);
+    const ssent = sameDay ? Object.assign({}, prev.ssent) : {};
+    const shops = [];
+    if (sBase) (cur.stores || []).forEach(x => {
+      const base = sBase[x.name]; if (base === undefined || ssent[x.name]) return;
+      const gain = x.margin - base;
+      if (x.daily > 0 && gain >= STORE_PCT * x.daily) { shops.push({ n: cap(x.name), g: gain / x.daily }); ssent[x.name] = true; }
+    });
     // On enregistre AVANT d'envoyer : en cas de double passage, personne n'est félicité deux fois
-    await callScript(Object.assign({ action: 'snapSave', key: 'live', snap: { date: today, month: cur.month, t: Date.now(), m, dayStart: dayStart || m, sent } }, auth));
-    const out = { ok: true, jump: jump.length, day: day.length, sent: [] };
+    await callScript(Object.assign({ action: 'snapSave', key: 'live', snap: { date: today, month: cur.month, t: Date.now(), m, dayStart: dayStart || m, sent, sm, sdayStart: sBase || sm, ssent } }, auth));
+    const out = { ok: true, jump: jump.length, day: day.length, shops: shops.length, sent: [] };
     if (jump.length) {
       const n = jump.sort((a, b) => b.g - a.g).map(x => x.n);
       out.sent.push(await sendToAll(auth, { title: '🔥 Belle vente !', body: 'Bravo à ' + list(n) + ' pour la vente qui fait grimper la marge ! 👏', url: '/' }, priv));
@@ -58,6 +69,10 @@ module.exports = async (req, res) => {
     if (day.length) {
       const n = day.sort((a, b) => b.g - a.g).map(x => x.n);
       out.sent.push(await sendToAll(auth, { title: '👏 Bravo !', body: 'Bravo à ' + list(n) + ' : belle journée de marge ! 💪', url: '/' }, priv));
+    }
+    if (shops.length) {
+      const n = shops.sort((a, b) => b.g - a.g).map(x => x.n);
+      out.sent.push(await sendToAll(auth, { title: '🏆 Bravo magasin !', body: n.length === 1 ? 'Bravo à l\'équipe de ' + n[0] + ' : l\'objectif de marge du jour est largement dépassé ! 💪' : 'Bravo aux équipes de ' + list(n) + ' : l\'objectif de marge du jour est largement dépassé ! 💪', url: '/' }, priv));
     }
     res.status(200).json(out);
   } catch (e) {
