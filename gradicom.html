@@ -2958,11 +2958,63 @@
             return out;
         }
 
+        // Réussites : objectifs du mois ATTEINTS (quantité ≥ cible), taux dans l'objectif (Chubb ≥ cible, Mix 2h ≤ cible), items EN AVANCE sur le rythme
+        function winsItems(targets, nrow, objectives, days) {
+            const out = { done: [], rates: [], ahead: [] };
+            if (!nrow) return out;
+            const clean = o => String(o.name).replace(/\s*\(.*\)\s*/g, ' ').trim();
+            uniqueObjectives(objectives).forEach(obj => {
+                const t = targetFor(targets, obj);
+                if (!t || t <= 0) return;
+                const r = getRealization(nrow, obj.name);
+                if (r === null || r === undefined) return;
+                if (obj.unit === '%') {
+                    if (isLowerBetter(obj) ? r <= t : r >= t) out.rates.push(clean(obj));
+                } else if (r >= t) out.done.push(clean(obj));
+                else if (days && days.done >= 2 && paceClass(computeKPIs(r, t, days)) === 'ok') out.ahead.push(clean(obj));
+            });
+            return out;
+        }
+
         // Fenêtre unique « Alertes du jour » à l'ouverture (une fois par jour et par appareil) :
         // Google (magasin dernier en PDM) + items non déclenchés. Un seul bouton pour tout fermer.
         function dailyAlertSections(u) {
             const data = getData(), sec = [];
             const names = a => a.map(esc).join(', ');
+            // 0) Réussites (en premier)
+            try {
+                const winLine = (w) => {
+                    const p = [];
+                    if (w.done.length) p.push(`<strong>Objectif du mois atteint</strong> : ${names(w.done)}`);
+                    if (w.ahead.length) p.push(`<strong>En avance sur le rythme</strong> : ${names(w.ahead)}`);
+                    if (w.rates.length) p.push(`<strong>Taux dans l'objectif</strong> : ${names(w.rates)}`);
+                    return p;
+                };
+                const lines = [];
+                if (u.isDirector) {
+                    if (chalIsJulien()) data.stores.forEach(st => {
+                        const w = winsItems(storeTargetsFor(data, st.name), findStoreRow(st.name), data.objectives, storeWorkingDays(data, st.name));
+                        const p = winLine(w);
+                        if (p.length) lines.push(`<li><strong>${esc(st.name)}</strong><br>${p.join('<br>')}</li>`);
+                    });
+                } else {
+                    if (u.isManager) {
+                        const w = winsItems(storeTargetsFor(data, u.store), findStoreRow(u.store), data.objectives, storeWorkingDays(data, u.store));
+                        const p = winLine(w);
+                        if (p.length) lines.push(`<li><strong>Magasin ${esc(u.store)}</strong><br>${p.join('<br>')}</li>`);
+                        vendorRanking(data, u.store).forEach(v => {
+                            const wv = winsItems(v.user.objectiveTargets, v.nrow, data.objectives, v.days);
+                            if (wv.done.length) lines.push(`<li><strong>${v.user.email === u.email ? 'Toi' : esc(firstNameOf(v.user.name))}</strong> : ${names(wv.done)}</li>`);
+                        });
+                    } else {
+                        const fresh = data.users.find(x => x.email === u.email) || u;
+                        const p = winLine(winsItems(fresh.objectiveTargets, findVendorRow(fresh), data.objectives, workingDays(fresh)));
+                        if (p.length) lines.push(`<li>${p.join('<br>')}</li>`);
+                    }
+                }
+                if (lines.length) sec.push({ win: true, icon: '', title: 'Tes réussites',
+                    html: `<p class="dim" style="margin:0 0 6px">Bravo, continue comme ça !</p><ul style="margin:0 0 0 18px;padding:0">${lines.join('')}</ul>` });
+            } catch (e) { console.error(e); }
             // 1) Google
             if (googleOn()) {
                 try {
@@ -3022,7 +3074,7 @@
             box.setAttribute('data-noico', '');
             box.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px;';
             box.innerHTML = `<div style="max-width:420px;width:100%;max-height:90vh;overflow-y:auto;background:#14110a;border:1px solid rgba(201,166,91,.55);border-radius:14px;padding:20px 18px;box-shadow:0 10px 40px rgba(0,0,0,.7)">
-                <div style="font-family:'Bodoni Moda',serif;font-size:20px;margin:0 0 12px;color:#e5c26a;text-align:center">À faire aujourd'hui</div>
+                <div style="font-family:'Bodoni Moda',serif;font-size:20px;margin:0 0 12px;color:#e5c26a;text-align:center">${sec.every(x => x.win) ? 'Bravo !' : sec.some(x => x.win) ? 'Bravo, et à faire aujourd\'hui' : 'À faire aujourd\'hui'}</div>
                 ${sec.map(s => `<div style="margin-bottom:12px;padding:10px 12px;border-left:2px solid #c9a65b;background:rgba(255,255,255,.04)">
                     <div style="font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#c9a65b;margin-bottom:6px">${s.title}</div>
                     <div style="font-size:14px;line-height:1.5">${s.html}</div></div>`).join('')}

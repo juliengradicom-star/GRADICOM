@@ -3,8 +3,8 @@
 //  - GROSSE VENTE : +LIVE_JUMP € (ou plus) depuis le passage d'avant → « Belle vente ! Bravo à <prénom> »
 //  - CUMUL DU JOUR : +LIVE_DAY € depuis l'ouverture (1 seule fois par vendeur et par jour) → « Bravo à <prénom> »
 // Toute l'équipe reçoit la notification, avec les prénoms seulement (jamais de montant). Lun→sam, 10 h → 20 h (Paris).
-const { callScript, sendToAll } = require('../lib/push.js');
-const { margins, loadPortalSource, parisNow } = require('../lib/alerts.js');
+const { callScript, sendToAll, sendPersonal } = require('../lib/push.js');
+const { margins, wins, loadPortalSource, parisNow } = require('../lib/alerts.js');
 
 const LIVE_JUMP = 300; // € de marge gagnés d'un coup entre deux passages
 const LIVE_DAY = 450;  // € de marge gagnés depuis l'ouverture
@@ -59,9 +59,26 @@ module.exports = async (req, res) => {
       const gain = x.margin - base;
       if (x.daily > 0 && gain >= STORE_PCT * x.daily) { shops.push({ n: cap(x.name), g: gain / x.daily }); ssent[x.name] = true; }
     });
+    // Objectifs du mois ATTEINTS (réussites) : notification PERSONNELLE à chaque nouvel objectif atteint (point de départ sans envoi)
+    let wnow = {}, wmsgs = [];
+    try {
+      const w = wins(src, cfg, { vendeurs: s.vendeurs, magasins: s.magasins });
+      if (!w.reason) {
+        const wbase = sameMonth && prev.wins ? prev.wins : null;
+        w.list.forEach(x => {
+          wnow[x.email] = x.done;
+          if (!wbase) return;
+          const fresh = x.done.filter(n => !(wbase[x.email] || []).includes(n));
+          if (!fresh.length) return;
+          const to = x.realEmail || x.email;
+          wmsgs.push({ email: to, title: '🎯 Objectif atteint !', body: (x.who === 'store' ? 'Bravo, ton magasin a atteint son objectif du mois : ' : 'Bravo, tu as atteint ton objectif du mois : ') + fresh.map(n => n.charAt(0) + n.slice(1).toLowerCase()).join(', ') + ' ! 💪', url: '/' });
+        });
+        if (!wbase) wmsgs = [];
+      } else wnow = null;
+    } catch (e) { wnow = null; wmsgs = []; }
     // On enregistre AVANT d'envoyer : en cas de double passage, personne n'est félicité deux fois
-    await callScript(Object.assign({ action: 'snapSave', key: 'live', snap: { date: today, month: cur.month, t: Date.now(), m, dayStart: dayStart || m, sent, sm, sdayStart: sBase || sm, ssent } }, auth));
-    const out = { ok: true, jump: jump.length, day: day.length, shops: shops.length, sent: [] };
+    await callScript(Object.assign({ action: 'snapSave', key: 'live', snap: { date: today, month: cur.month, t: Date.now(), m, dayStart: dayStart || m, sent, sm, sdayStart: sBase || sm, ssent, wins: wnow || (sameMonth ? prev.wins : undefined) } }, auth));
+    const out = { ok: true, jump: jump.length, day: day.length, shops: shops.length, wins: wmsgs.length, sent: [] };
     if (jump.length) {
       const n = jump.sort((a, b) => b.g - a.g).map(x => x.n);
       out.sent.push(await sendToAll(auth, { title: '🔥 Belle vente !', body: 'Bravo à ' + list(n) + ' pour la vente qui fait grimper la marge ! 👏', url: '/' }, priv));
@@ -74,6 +91,7 @@ module.exports = async (req, res) => {
       const n = shops.sort((a, b) => b.g - a.g).map(x => x.n);
       out.sent.push(await sendToAll(auth, { title: '🏆 Bravo magasin !', body: n.length === 1 ? 'Bravo à l\'équipe de ' + n[0] + ' : l\'objectif de marge du jour est largement dépassé ! 💪' : 'Bravo aux équipes de ' + list(n) + ' : l\'objectif de marge du jour est largement dépassé ! 💪', url: '/' }, priv));
     }
+    if (wmsgs.length) out.sent.push(await sendPersonal(auth, wmsgs, priv));
     res.status(200).json(out);
   } catch (e) {
     res.status(500).json({ ok: false, error: String((e && e.message) || e).slice(0, 200) });
