@@ -91,6 +91,21 @@ module.exports = async (req, res) => {
       const n = shops.sort((a, b) => b.g - a.g).map(x => x.n);
       out.sent.push(await sendToAll(auth, { title: '🏆 Bravo magasin !', body: n.length === 1 ? 'Bravo à l\'équipe de ' + n[0] + ' : l\'objectif de marge du jour est largement dépassé ! 💪' : 'Bravo aux équipes de ' + list(n) + ' : l\'objectif de marge du jour est largement dépassé ! 💪', url: '/' }, priv));
     }
+    // Mise en avant ponctuelle (demandée par Julien le 20/10/2026) : Lena-May (Gradignan), une seule fois, à toute l'équipe
+    try {
+      if (today <= '2026-10-23') {
+        const lm = (cfg.users || []).find(u => !u.isDirector && /^LENA/i.test(String(u.name || '').trim().replace(/^é/i, 'e')) && /GRADIGNAN/i.test(String(u.store || '')));
+        if (lm) {
+          const c = await callScript(Object.assign({ action: 'pushClaim', ids: ['spot-lenamay-2026-10-20'] }, auth));
+          if ((c.fresh || []).includes('spot-lenamay-2026-10-20')) {
+            const mine = wnow && wnow[String(lm.email).toLowerCase()];
+            const it = (mine || []).map(n => n.charAt(0) + n.slice(1).toLowerCase());
+            const body = it.length ? 'Bravo à Lena-May (Gradignan) : objectif du mois atteint sur ' + list(it) + ' ! Belle performance 👏' : 'Bravo à Lena-May (Gradignan) pour son excellent travail et son implication ! 👏';
+            out.sent.push(await sendToAll(auth, { title: '🌟 Coup de chapeau à Lena-May', body, url: '/' }, priv));
+          }
+        }
+      }
+    } catch (e) {}
     if (wmsgs.length) out.sent.push(await sendPersonal(auth, wmsgs, priv));
     res.status(200).json(out);
   } catch (e) {
