@@ -4,10 +4,12 @@
 //  - CUMUL DU JOUR : +LIVE_DAY € depuis l'ouverture (1 seule fois par vendeur et par jour) → « Bravo à <prénom> »
 // Toute l'équipe reçoit la notification, avec les prénoms seulement (jamais de montant). Lun→sam, 10 h → 20 h (Paris).
 const { callScript, sendToAll, sendPersonal } = require('../lib/push.js');
-const { margins, wins, loadPortalSource, parisNow } = require('../lib/alerts.js');
+const { margins, wins, dayItems, loadPortalSource, parisNow } = require('../lib/alerts.js');
 
 const LIVE_JUMP = 300; // € de marge gagnés d'un coup entre deux passages
 const LIVE_DAY = 450;  // € de marge gagnés depuis l'ouverture
+const ITEM_PCT = 1.2;  // autres items : gagnés dans la journée ≥ 120 % de l'objectif journalier (et au moins ITEM_MIN unités)
+const ITEM_MIN = 2;
 const STORE_PCT = 1.15; // magasin : marge du jour ≥ 115 % de l'objectif de marge journalier
 const cap = n => String(n || '').trim().split(/\s+/)[0].split('-').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('-');
 const list = a => a.length <= 1 ? a.join('') : a.slice(0, -1).join(', ') + ' et ' + a[a.length - 1];
@@ -76,8 +78,33 @@ module.exports = async (req, res) => {
         if (!wbase) wmsgs = [];
       } else wnow = null;
     } catch (e) { wnow = null; wmsgs = []; }
+    // Tous les autres items (quantité) : vendeur ou magasin ≥ 120 % de l'objectif journalier sur la journée, 1 fois par personne/magasin et item et par jour
+    let inow = null, imsg = null;
+    try {
+      const di = dayItems(src, cfg, { vendeurs: s.vendeurs, magasins: s.magasins });
+      if (!di.reason) {
+        inow = {}; di.list.forEach(x => { inow[x.key] = {}; x.items.forEach(i => { inow[x.key][i.item] = Math.round(i.r * 100) / 100; }); });
+        const ibase = sameDay && prev.idayStart ? prev.idayStart : (sameMonth && age <= 4 && prev.im ? prev.im : null);
+        var isent = sameDay ? Object.assign({}, prev.isent) : {};
+        if (ibase) {
+          const hits = [];
+          di.list.forEach(x => {
+            const got = [];
+            x.items.forEach(i => {
+              const b = (ibase[x.key] || {})[i.item]; if (b === undefined) return;
+              const k = x.key + '|' + i.item; if (isent[k]) return;
+              const gain = i.r - b;
+              if (gain >= ITEM_MIN && gain >= ITEM_PCT * i.daily) { got.push(i.item.charAt(0) + i.item.slice(1).toLowerCase()); isent[k] = true; }
+            });
+            if (got.length) hits.push((x.who === 'store' ? 'magasin ' + cap(x.name) : cap(x.name)) + ' (' + got.slice(0, 3).join(', ') + (got.length > 3 ? '…' : '') + ')');
+          });
+          if (hits.length) imsg = 'Bravo ' + hits.slice(0, 4).join(', ') + (hits.length > 4 ? '…' : '') + ' : objectif du jour dépassé de plus de 20 % ! 💪';
+        }
+        var idayStart = ibase || inow;
+      }
+    } catch (e) { inow = null; imsg = null; }
     // On enregistre AVANT d'envoyer : en cas de double passage, personne n'est félicité deux fois
-    await callScript(Object.assign({ action: 'snapSave', key: 'live', snap: { date: today, month: cur.month, t: Date.now(), m, dayStart: dayStart || m, sent, sm, sdayStart: sBase || sm, ssent, wins: wnow || (sameMonth ? prev.wins : undefined) } }, auth));
+    await callScript(Object.assign({ action: 'snapSave', key: 'live', snap: { date: today, month: cur.month, t: Date.now(), m, dayStart: dayStart || m, sent, sm, sdayStart: sBase || sm, ssent, wins: wnow || (sameMonth ? prev.wins : undefined), im: inow || (sameMonth ? prev.im : undefined), idayStart: inow ? idayStart : (sameDay ? prev.idayStart : undefined), isent: inow ? isent : (sameDay ? prev.isent : undefined) } }, auth));
     const out = { ok: true, jump: jump.length, day: day.length, shops: shops.length, wins: wmsgs.length, sent: [] };
     if (jump.length) {
       const n = jump.sort((a, b) => b.g - a.g).map(x => x.n);
@@ -106,6 +133,7 @@ module.exports = async (req, res) => {
         }
       }
     } catch (e) {}
+    if (imsg) out.sent.push(await sendToAll(auth, { title: '🔥 Bravo !', body: imsg, url: '/' }, priv));
     if (wmsgs.length) out.sent.push(await sendPersonal(auth, wmsgs, priv));
     res.status(200).json(out);
   } catch (e) {
