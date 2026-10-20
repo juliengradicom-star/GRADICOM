@@ -5,6 +5,7 @@
 const { callScript, sendPersonal, sendToAll } = require('../lib/push.js');
 const { compute, margins, loadPortalSource, parisNow } = require('../lib/alerts.js');
 const reminder = require('../lib/reminder.js');
+const live = require('./live-bravo.js');
 
 const BRAVO_MIN = 450; // € de marge gagnés entre deux relevés (veille → aujourd'hui) pour mériter un bravo
 const cap = n => String(n || '').trim().split(/\s+/)[0].split('-').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('-');
@@ -71,9 +72,11 @@ module.exports = async (req, res) => {
     const sales = { vendeurs: s.vendeurs, magasins: s.magasins };
     const src = await loadPortalSource();
     const out = Object.assign({ ok: true }, out0);
-    for (const [name, job] of [['alertes', alertsJob], ['bravo', bravoJob]]) {
+    for (const [name, job] of [['alertes', alertsJob]]) {
       try { out[name] = await job(now, auth, priv, cfg, sales, src); } catch (e) { out[name] = { error: String((e && e.message) || e).slice(0, 160) }; }
     }
+    // Bravos regroupés (2 notifications par jour : dès 12 h et dès 19 h) : ce passage sert aussi de déclencheur
+    try { out.bravos = await live.run(); } catch (e) { out.bravos = { error: String((e && e.message) || e).slice(0, 160) }; }
     res.status(200).json(out);
   } catch (e) {
     res.status(500).json({ ok: false, error: String((e && e.message) || e).slice(0, 200) });
