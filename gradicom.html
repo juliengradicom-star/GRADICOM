@@ -890,7 +890,9 @@
                 padding: 20px;
             }
         }
-    </style>
+            .home-n1 { display:flex; justify-content:center; margin:0 0 16px; }
+        .home-n1 img { width:100%; max-width:340px; height:auto; border-radius:12px; border:1px solid rgba(201,166,91,.45); box-shadow:0 6px 22px rgba(0,0,0,.45); }
+</style>
 </head>
 <body>
     <!-- LOGIN SCREEN -->
@@ -2879,6 +2881,11 @@
                 ${rankExplainHtml('store')}`;
         }
 
+        // Visuel SFR « N°1 en couverture 5G » (fourni par Julien, repris tel quel) en haut de l'accueil
+        function homeBannerHtml() {
+            return '<div class="home-n1"><img src="img/sfr-n1-5g.png" alt="SFR, n°1 en couverture 5G" loading="lazy"></div>';
+        }
+
         function loadHome(user) {
             const data = getData();
             const fresh = data.users.find(x => x.email === user.email) || user;
@@ -2892,7 +2899,7 @@
                     netTargets[o.name] = stores.reduce((a, s) => a + (targetFor(s.targets, o) || 0), 0);
                 });
                 // Dirigeants : pas de brief long, juste le point chaud / le point fort de chaque magasin
-                document.getElementById('home-tab').innerHTML = `<div class="dash">${errorBanner()}
+                document.getElementById('home-tab').innerHTML = `<div class="dash">${errorBanner()}${homeBannerHtml()}
                     <div class="welcome"><div class="welcome-hi">${greeting()} ${esc(firstNameOf(fresh.name))}</div>
                     <div class="welcome-head">Le point magasin par magasin.</div></div>
                     <div class="flash-grid">${stores.map(st => renderStoreFlash(data, st)).join('')}</div>
@@ -2915,7 +2922,7 @@
                 brief = buildBrief(fresh.objectiveTargets, findVendorRow(fresh), data.objectives, workingDays(fresh), 'vendor');
                 body = vendorPodiumSection(data, fresh.email);
             }
-            document.getElementById('home-tab').innerHTML = `<div class="dash">${errorBanner()}${renderWelcome(fresh, brief)}${body}</div>`;
+            document.getElementById('home-tab').innerHTML = `<div class="dash">${errorBanner()}${homeBannerHtml()}${renderWelcome(fresh, brief)}${body}</div>`;
         }
 
         function renderAll() {
