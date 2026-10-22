@@ -2550,7 +2550,11 @@
             const item = def && grid.bloc2.items.find(it => findDef(it.obj) === def);
             if (!item) return '';
             const sorted = [...item.tiers].sort((a, b) => a[0] - b[0]);
-            if (!t) return obj.unit === 'qty' ? `<div class="obj-bonus">🎯 Paliers bloc 2 : 1 vente = tous les paliers (${fmtPts(Math.max(...item.tiers.map(x => x[1])))})</div>` : '';
+            if (!t) {
+                if (obj.unit !== 'qty') return '';
+                const up = sorted.filter(([min]) => min > 100).map(([min, v], i) => `${min} % = <strong>1</strong> (+${fmtPts(v - (sorted.filter(x => x[0] <= 100).pop() || [0, 0])[1])})`);
+                return up.length ? `<div class="obj-bonus">🎯 Paliers bloc 2 : ${up.join(' · ')}</div>` : '';
+            }
             const parts = [];
             sorted.forEach(([min, v], i) => {
                 if (min <= 100) return;
@@ -4605,10 +4609,14 @@
                     // Pas d'objectif (0) sur un objectif en quantité : la 1re vente suffit pour tous les paliers (voulu par Julien le 23/10)
                     if (obj.unit === 'qty') {
                         const condZ = !item.needMix || (mix !== null && mix < item.needMix);
-                        const got = r >= 1 && condZ;
-                        const ptsZ = got ? tierPoints(item.tiers, 1e9) : 0;
+                        // 0 vente = palier 100 % acquis ; 1 vente = palier 120 % (et au-dessus)
+                        const zr = r >= 1 ? 1e9 : 100;
+                        const ptsZ = condZ ? tierPoints(item.tiers, zr) : 0;
+                        const maxMin = Math.max(...item.tiers.map(x => x[0]));
+                        const up = r < 1 && item.tiers.some(x => x[0] > 100);
+                        const nextZ = [...item.tiers].sort((a, b) => a[0] - b[0]).find(x => x[0] > 100);
                         rows.push({ item, obj, t: null, zero: true, r, ratio: null, pts: ptsZ, ptsProj: ptsZ, condOk: condZ,
-                            note: !condZ ? `Mix 2h ${mix === null ? 'non disponible' : fmtPct(mix)} : doit être < ${item.needMix} % pour gagner les points` : (r >= 1 ? 'Palier max ✅' : 'Dès la 1re vente : tous les paliers') });
+                            note: !condZ ? `Mix 2h ${mix === null ? 'non disponible' : fmtPct(mix)} : doit être < ${item.needMix} % pour gagner les points` : (up && nextZ ? `encore 1 pour ${nextZ[0]} % (+${fmtPts(nextZ[1] - ptsZ)})` : 'Palier max ✅') });
                         return;
                     }
                     rows.push({ item, obj, t: null, r, ratio: null, pts: 0, ptsProj: 0, note: 'Pas d\'objectif' }); return;
@@ -5726,9 +5734,15 @@
                 const cls = x.pts > 0 ? 'ok' : (x.ptsProj > 0 ? 'warn' : 'ko');
                 const info = x.t
                     ? `R/O <strong class="${x.ratio >= 100 ? 'ok' : 'ko'}">${fmtPct(x.ratio)}</strong> • ${fmt(x.r, 'qty')} / ${fmt(x.t, 'qty')} • Projection ${fmtPts(x.ptsProj)}`
-                    : (x.zero ? `Pas d'objectif ce mois • <strong>1 vente = tous les paliers</strong> (${fmtPts(Math.max(...x.item.tiers.map(t => t[1])))}) • Réalisé : ${fmt(x.r, 'qty')}` : 'Pas d\'objectif ce mois');
+                    : (x.zero ? `Pas d'objectif ce mois • Réalisé : ${fmt(x.r, 'qty')}` : 'Pas d\'objectif ce mois');
                 // Déclinaison par palier (100 %, 110 %, 120 %…) : quantité à atteindre et points gagnés (sauf Gradignan : un seul palier)
-                const decl = x.t && x.item.tiers.length > 1
+                const decl = x.zero && x.item.tiers.length > 1
+                    ? '<div class="pp-decl" style="margin-top:6px;line-height:1.7">' + [...x.item.tiers].sort((a, b) => a[0] - b[0]).map(([min, v]) => {
+                        const need = min <= 100 ? 0 : 1;
+                        const ok = x.r >= need;
+                        return `<div class="${ok ? 'ok' : ''}">${ok ? '✔' : '•'} <strong>${min} %</strong> : ${fmt(need, 'qty')} = ${fmtPts(v)} <span class="${ok ? 'ok' : 'muted'}">${ok ? '— atteint' : '— encore ' + fmt(Math.max(0, need - x.r), 'qty')}</span></div>`;
+                    }).join('') + '</div>'
+                    : x.t && x.item.tiers.length > 1
                     ? '<div class="pp-decl" style="margin-top:6px;line-height:1.7">' + [...x.item.tiers].sort((a, b) => a[0] - b[0]).map(([min, v]) => {
                         const need = Math.ceil(x.t * min / 100 - 1e-9);
                         const ok = x.ratio >= min - 1e-9;
