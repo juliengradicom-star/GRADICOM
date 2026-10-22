@@ -2543,13 +2543,14 @@
         // Tableau d'objectifs (vendeur ou magasin)
         // Paliers bonus du bloc 2 (au-dessus de 100 %) pour un objectif : petite ligne discrète sous son nom
         function bonusTiersHtml(ctx, obj, t) {
-            if (!ctx || !t || t <= 0) return '';
+            if (!ctx || !(t >= 0) || t === null) return '';
             const data = getData();
             const grid = gridFor(data, ctx[0], ctx[1], ctx[2]);
             const def = findDef(obj.name);
             const item = def && grid.bloc2.items.find(it => findDef(it.obj) === def);
             if (!item) return '';
             const sorted = [...item.tiers].sort((a, b) => a[0] - b[0]);
+            if (!t) return obj.unit === 'qty' ? `<div class="obj-bonus">🎯 Paliers bloc 2 : 1 vente = tous les paliers (${fmtPts(Math.max(...item.tiers.map(x => x[1])))})</div>` : '';
             const parts = [];
             sorted.forEach(([min, v], i) => {
                 if (min <= 100) return;
@@ -4600,7 +4601,18 @@
                 const obj = objFor(data, item.obj);
                 const t = targetFor(targets, obj);
                 const r = getRealization(nrow, obj.name) || 0;
-                if (!t || t <= 0) { rows.push({ item, obj, t: null, r, ratio: null, pts: 0, ptsProj: 0, note: 'Pas d\'objectif' }); return; }
+                if (!t || t <= 0) {
+                    // Pas d'objectif (0) sur un objectif en quantité : la 1re vente suffit pour tous les paliers (voulu par Julien le 23/10)
+                    if (obj.unit === 'qty') {
+                        const condZ = !item.needMix || (mix !== null && mix < item.needMix);
+                        const got = r >= 1 && condZ;
+                        const ptsZ = got ? tierPoints(item.tiers, 1e9) : 0;
+                        rows.push({ item, obj, t: null, zero: true, r, ratio: null, pts: ptsZ, ptsProj: ptsZ, condOk: condZ,
+                            note: !condZ ? `Mix 2h ${mix === null ? 'non disponible' : fmtPct(mix)} : doit être < ${item.needMix} % pour gagner les points` : (r >= 1 ? 'Palier max ✅' : 'Dès la 1re vente : tous les paliers') });
+                        return;
+                    }
+                    rows.push({ item, obj, t: null, r, ratio: null, pts: 0, ptsProj: 0, note: 'Pas d\'objectif' }); return;
+                }
                 const ratio = r / t * 100;
                 const k = computeKPIs(r, t, days);
                 const projRatio = k.projection / t * 100;
@@ -5714,7 +5726,7 @@
                 const cls = x.pts > 0 ? 'ok' : (x.ptsProj > 0 ? 'warn' : 'ko');
                 const info = x.t
                     ? `R/O <strong class="${x.ratio >= 100 ? 'ok' : 'ko'}">${fmtPct(x.ratio)}</strong> • ${fmt(x.r, 'qty')} / ${fmt(x.t, 'qty')} • Projection ${fmtPts(x.ptsProj)}`
-                    : 'Pas d\'objectif ce mois';
+                    : (x.zero ? `Pas d'objectif ce mois • <strong>1 vente = tous les paliers</strong> (${fmtPts(Math.max(...x.item.tiers.map(t => t[1])))}) • Réalisé : ${fmt(x.r, 'qty')}` : 'Pas d\'objectif ce mois');
                 // Déclinaison par palier (100 %, 110 %, 120 %…) : quantité à atteindre et points gagnés (sauf Gradignan : un seul palier)
                 const decl = x.t && x.item.tiers.length > 1
                     ? '<div class="pp-decl" style="margin-top:6px;line-height:1.7">' + [...x.item.tiers].sort((a, b) => a[0] - b[0]).map(([min, v]) => {
