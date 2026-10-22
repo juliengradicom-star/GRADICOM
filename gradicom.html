@@ -3099,7 +3099,7 @@
             const fresh = data.users.find(x => x.email === user.email) || user;
             const nrow = findVendorRow(fresh);
             const days = workingDays(fresh);
-            const pp = payplanPoints(fresh.objectiveTargets, nrow, data, fresh.store, days);
+            const pp = payplanPoints(fresh.objectiveTargets, nrow, data, fresh.store, days, false, fresh);
             const ranking = vendorRanking(data);
             const pos = ranking.findIndex(x => x.user.email === fresh.email);
             const rankCard = pos >= 0 ? `<div class="card"><div class="card-label">Mon classement</div>
@@ -3295,7 +3295,7 @@
                     ${renderKpiTable(targets, nrow, data.objectives, days, [null, store, true])}`;
             } else {
                 const v = team.find(x => x.user.email === mgrSub);
-                const pp = payplanPoints(v.user.objectiveTargets, v.nrow, data, v.user.store, v.days);
+                const pp = payplanPoints(v.user.objectiveTargets, v.nrow, data, v.user.store, v.days, false, v.user);
                 const pos = vendorRanking(data).findIndex(x => x.user.email === v.user.email);
                 const rankCard = `<div class="card"><div class="card-label">Classement réseau</div>
                     <div class="card-value">${rankLabel(pos)}<span class="card-unit"> / ${vendorRanking(data).length}</span></div>
@@ -3510,7 +3510,7 @@
 
             let head = '<tr><th>Magasin / vendeur</th><th>Rang</th>' + objs.map(o => `<th>${esc(o.name)}</th>`).join('') + '<th>Pts bloc 2</th><th>Prime à date*</th><th>Prime projetée*</th></tr>';
             const primeCell = (u, store) => { if (!u) return '<td class="dim">—</td><td class="dim">—</td>'; const pr = computePrime(data, u, store, false); return `<td><strong>${fmtEur(pr.now.total)}</strong></td><td class="dim">${fmtEur(pr.proj.total)}</td>`; };
-            const ppCell = (targets, nrow, store, days, isStore, user) => { const pp = payplanPoints(targets, nrow, data, store, days, isStore); return `<td class="${pp.total > 0 ? 'ok' : 'dim'}" title="Projection : ${fmtPts(pp.totalProj)}"><strong>${(Math.round(pp.total * 100) / 100).toLocaleString('fr-FR')}</strong></td>`; };
+            const ppCell = (targets, nrow, store, days, isStore, user) => { const pp = payplanPoints(targets, nrow, data, store, days, isStore, user); return `<td class="${pp.total > 0 ? 'ok' : 'dim'}" title="Projection : ${fmtPts(pp.totalProj)}"><strong>${(Math.round(pp.total * 100) / 100).toLocaleString('fr-FR')}</strong></td>`; };
             let body = '';
             stores.forEach((s, si) => {
                 body += `<tr class="row-store"><td>🏪 ${esc(s.store.name)}</td><td>${rankLabel(si)}</td>` +
@@ -4551,7 +4551,25 @@
         }
         function gridFor(data, user, store, isStore) {
             const pp = getPayplan(data);
-            return pp.grids[gridKeyFor(user, store, isStore)] || DEFAULT_PAYPLAN.grids[gridKeyFor(user, store, isStore)];
+            const g = pp.grids[gridKeyFor(user, store, isStore)] || DEFAULT_PAYPLAN.grids[gridKeyFor(user, store, isStore)];
+            return gridException(g, user, pp);
+        }
+        // Exception individuelle (voulue par Julien le 23/10/2026) : BRUNO (Langon), OCTOBRE 2026 seulement — arrivé en cours de mois,
+        // il n'a pas le temps de faire de ventes raccordées (VR) : bloc 1 = Fixe conquête VV + TCS (sans VR) et bloc 2 « Fixe VV » à la place de « Fixe VR ».
+        function gridException(g, user, pp) {
+            if (!g || !user || firstNameKey(user.name) !== 'BRUNO' || user.isManager || user.isDirector) return g;
+            if (!/octobre\s*2026/i.test(String((pp && pp.month) || ''))) return g;
+            const c = JSON.parse(JSON.stringify(g));
+            (c.bloc1 && c.bloc1.lines || []).forEach(l => {
+                if ((l.conds || []).some(x => x.kpi === 'VR FIXE CONQUETE')) {
+                    l.conds = l.conds.filter(x => x.kpi !== 'VR FIXE CONQUETE');
+                    l.label = String(l.label).replace(/\s*\+\s*R\/O Fixe conquête VR/i, '').replace(/R\/O Fixe conquête VR/i, 'R/O Fixe conquête VV');
+                }
+            });
+            (c.bloc2 && c.bloc2.items || []).forEach(it => {
+                if (it.obj === 'VR FIXE CONQUETE') { it.obj = 'CONQUETE FIXE VV'; it.label = 'Fixe VV'; }
+            });
+            return c;
         }
 
         function tierValue(tiers, x) {
@@ -5668,7 +5686,7 @@
             let html = `<div class="dash">${errorBanner()}<h2 class="dash-title">🎯 Volume de points — Bloc 2 Payplan</h2>`;
             const vendorBlock = (u, title) => {
                 const nrow = findVendorRow(u), days = workingDays(u);
-                const pp = payplanPoints(u.objectiveTargets, nrow, data, u.store, days);
+                const pp = payplanPoints(u.objectiveTargets, nrow, data, u.store, days, false, u);
                 return `${title ? `<h3 class="section-title">${title}</h3>` : ''}<div class="dash-sub">${periodLabel(days)}</div>
                     <div class="cards">${renderPayplanCard(pp, true)}</div>
                     ${renderPayplanTable(pp)}`;
@@ -5695,7 +5713,7 @@
                     const v = vs.find(x => x.user.email === ppDirSel);
                     if (v) html += vendorBlock(v.user, '👤 ' + esc(v.user.name) + ' <span class="muted" style="font-size:14px">' + esc(v.user.store || '') + '</span>');
                 } else {
-                    const vp = vendorRanking(data).map(v => ({ v, pts: payplanPoints(v.user.objectiveTargets, v.nrow, data, v.user.store, v.days).total })).sort((a, b) => b.pts - a.pts);
+                    const vp = vendorRanking(data).map(v => ({ v, pts: payplanPoints(v.user.objectiveTargets, v.nrow, data, v.user.store, v.days, false, v.user).total })).sort((a, b) => b.pts - a.pts);
                     html += renderRankList(vp, x => x.v.user.name + ' — ' + fmtPts(x.pts), x => x.v.user.store || '', null);
                 }
             } else {
