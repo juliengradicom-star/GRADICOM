@@ -3836,6 +3836,29 @@
         }
 
         // Génère un nouveau mot de passe pour UN compte et l'affiche (une seule fois : ensuite il n'existe plus qu'en version codée)
+        function changeUserStore(email) {
+            const data = getData();
+            const user = data.users.find(u => u.email === email);
+            if (!user) return;
+            const names = [...new Set([...Object.keys(storeManagers), ...(data.stores || []).map(s => s.name.toUpperCase())])];
+            const ans = prompt('Nouveau magasin pour ' + user.name + ' (actuellement ' + user.store + ') :\n' + names.join(' / '), user.store);
+            if (!ans) return;
+            const st = names.find(s => norm(s) === norm(ans));
+            if (!st) { alert('Magasin inconnu : ' + ans); return; }
+            if (st === user.store) return;
+            const oldDom = user.store === 'MARMANDE' ? '@amr.fr' : '@gradicom.fr';
+            const newDom = st === 'MARMANDE' ? '@amr.fr' : '@gradicom.fr';
+            if (oldDom !== newDom && user.email.endsWith(oldDom)) {
+                const ne = user.email.slice(0, -oldDom.length) + newDom;
+                if (!data.users.some(x => x.email === ne) && confirm('Son adresse de connexion passera de ' + user.email + ' à ' + ne + '. OK ?')) user.email = ne;
+            }
+            user.store = st;
+            user.storeFixed = true;
+            saveData(data);
+            refreshLists();
+            renderAdminGlobal();
+        }
+
         function newPasswordFor(email) {
             const data = getData();
             const user = data.users.find(u => u.email === email);
@@ -3876,6 +3899,7 @@
             const usersHtml = data.users.map(u => `
                 <div class="list-item">
                     <span>${u.isManager ? '👨‍💼' : '👤'} ${u.name} • ${u.email} • ${u.store}</span>
+                    ${u.isDirector ? '' : `<button class="btn-delete" onclick="changeUserStore('${u.email}')" style="background: rgba(201, 166, 91, 0.3); color: var(--gold); border-color: var(--gold); width: auto; margin-right: 8px;">Changer de magasin</button>`}
                     <button class="btn-delete" onclick="deleteUser('${u.email}')">Supprimer</button>
                 </div>
             `).join('');
@@ -5875,7 +5899,11 @@
                             continue;
                         }
                         if (!currentStore || up.includes('NOMBRE')) continue;
-                        persons.push({ name, store: currentStore, targets: targetsFromRow(row), plannedDays: typeof row[daysCol] === 'number' ? row[daysCol] : 0 });
+                        let pName = name, pStore = currentStore;
+                        const tag = name.match(/^(.*?)\s*[\(\[\-–]\s*([^\)\]]+?)\s*[\)\]]?$/);
+                        const tagStore = tag && [...knownStores].find(s => norm(s) === norm(tag[2]));
+                        if (tagStore) { pName = tag[1].trim(); pStore = tagStore; }
+                        persons.push({ name: pName, store: pStore, targets: targetsFromRow(row), plannedDays: typeof row[daysCol] === 'number' ? row[daysCol] : 0 });
                     }
                     if (!Object.keys(storeTargets).length) { showImportStatus('❌ Aucun magasin trouvé dans le fichier'); return; }
 
@@ -5916,7 +5944,7 @@
                         if (u && vendors.some(v => v.email === u.email)) u = null;
                         u = u ? Object.assign({}, u) : (created++, { email: '', password: generatePassword(), isDirector: false });
                         if (!u.email || usedEmails.has(u.email) || !/^[a-z0-9._-]+@[a-z0-9.-]+$/.test(u.email)) u.email = uniqueEmail(emailSlug(p.name), domain, usedEmails); else usedEmails.add(u.email);
-                        Object.assign(u, { name: p.name, store: p.store, isManager: false, objectiveTargets: p.targets, plannedDays: p.plannedDays });
+                        Object.assign(u, { name: p.name, store: u.storeFixed ? u.store : p.store, isManager: false, objectiveTargets: p.targets, plannedDays: p.plannedDays });
                         vendors.push(u);
                     });
 
