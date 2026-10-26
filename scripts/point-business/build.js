@@ -71,8 +71,13 @@ s.addNotes('Pour modifier : touche un texte et écris. Les graphiques se modifie
 // ---- 2. Actus & rappel (visuels SFR tels quels)
 s = pres.addSlide({ masterName: 'Page' });
 s.addText('ACTUS & RAPPEL', { placeholder: 'titre' });
-[['offre_fixe_pro.png', 0.3, 2.45, 3.4, 2.82], ['offre_box_5g.png', 3.85, 2.45, 3.35, 2.82], ['offres_mobile_pro_1.png', 0.3, 5.45, 3.4, 3.0], ['offres_mobile_pro_2.png', 3.85, 5.45, 3.35, 3.0], ['iphone_duo.png', 0.6, 8.75, 6.3, 3.42]]
-  .forEach(([f, x, y, w, h]) => { s.addShape(pres.shapes.RECTANGLE, { x: x - 0.07, y: y - 0.07, w: w + 0.14, h: h + 0.14, fill: { color: GOLD }, line: { color: GOLD, width: 0 }, objectName: 'Cadre ' + f }); s.addImage({ path: A(f), x, y, w, h, sizing: { type: 'contain', w, h }, objectName: f }); });
+const actuTitle = (t, y, h) => s.addText(t, { x: 0.4, y, w: 6.7, h, fontFace: 'Calibri', fontSize: 17, bold: true, color: WHITE, align: 'left', valign: 'middle', margin: 0, isTextBox: true });
+const actuImg = (f, y, w, h) => { const x = (W - w) / 2; s.addShape(pres.shapes.RECTANGLE, { x: x - 0.07, y: y - 0.07, w: w + 0.14, h: h + 0.14, fill: { color: GOLD }, line: { color: GOLD, width: 0 }, objectName: 'Cadre ' + f }); s.addImage({ path: A(f), x, y, w, h, objectName: f }); };
+actuTitle('NOUVEAU - MAISON SECURISEE – DES LE 03-11-2026', 2.15, 0.5);
+actuImg('actu_maison_1.png', 2.8, 6.3, 6.3 * 397 / 875);
+actuImg('actu_maison_2.png', 5.85, 6.3, 6.3 * 358 / 876);
+actuTitle('NOUVEAU -  FIN DE COMMERCIALISATION BOX + HIGH TECH – DES LE 09-11-2026', 8.55, 0.85);
+actuImg('actu_fin_box.png', 9.6, 6.3, 6.3 * 402 / 848);
 
 // ---- 3. R/O (2 tableaux empilés pour rester lisibles sur téléphone)
 s = pres.addSlide({ masterName: 'Page' });
@@ -170,7 +175,7 @@ s.addText('BONUS Match France - Turquie\ndu 16 au 31 octobre 2026', { placeholde
     { x: x + stub + 0.25, y, w: w - stub - 0.4, h, align: 'left', valign: 'middle', margin: 0, isTextBox: true });
 }
 s.addText(CH.matchPeriode, { x: 0.4, y: 5.0, w: 6.7, h: 0.4, fontFace: 'Calibri', fontSize: 13, bold: true, color: GOLD2, align: 'center', valign: 'middle', isTextBox: true });
-barChart(s, CH.matchVendeurs, { y: 5.4, h: 4.5, name: 'Quantité Google', extra: { valAxisMinVal: 0, valAxisMaxVal: 3.5, dataLabelFormatCode: '0' } });
+barChart(s, CH.matchVendeurs, { y: 5.4, h: 4.5, name: 'Quantité Google', extra: { valAxisMinVal: 0, valAxisMaxVal: Math.max(...CH.matchVendeurs.map(r => r[1])) + 1, dataLabelFormatCode: '0' } });
 {
   const m = CH.matchPdm;
   const rows = [[goldHead(''), ...m.colonnes.map(c => goldHead(c, { fontSize: 11 }))],
@@ -191,7 +196,7 @@ s.addImage({ path: A('telecablesat.png'), x: 6.02, y: 0.92, w: 1.0, h: 1.0, sizi
   s.addTable([hd, ...st], { x: 0.4, y: 2.45, w: 6.7, colW: [2.2, 1.0, 1.75, 1.75], rowH: [0.42, ...st.map(() => 0.36)], fontFace: 'Calibri', margin: [0, 0.06, 0, 0.06], objectName: 'TCS magasins' });
   s.addText(CH.tcsMagasinsNote, { x: 0.4, y: 4.35, w: 6.7, h: 0.4, fontFace: 'Calibri', fontSize: 13, bold: true, italic: true, color: GOLD2, align: 'center', valign: 'middle', isTextBox: true });
   s.addTable([hd, ...ve], { x: 0.4, y: 4.95, w: 6.7, colW: [2.2, 1.0, 1.75, 1.75], rowH: [0.42, ...ve.map(() => 0.3)], fontFace: 'Calibri', margin: [0, 0.06, 0, 0.06], objectName: 'TCS vendeurs' });
-  s.addText(CH.tcsVendeursNote, { x: 0.4, y: 10.3, w: 6.7, h: 0.4, fontFace: 'Calibri', fontSize: 13, bold: true, italic: true, color: GOLD2, align: 'center', valign: 'middle', isTextBox: true });
+  s.addText(CH.tcsVendeursNote, { x: 0.4, y: 10.75, w: 6.7, h: 0.4, fontFace: 'Calibri', fontSize: 13, bold: true, italic: true, color: GOLD2, align: 'center', valign: 'middle', isTextBox: true });
 }
 
 // ---- 9. Fin
