@@ -175,3 +175,4 @@
 
 - 26/10/2026 : POINT BUSINESS RPV au 24/10 refait (même format que le 17/10). Julien envoie un .pptx avec le tableau R/O collé en EMF (lu via soffice → PDF → pdftoppm : le texte noir sur fond noir n'est lisible qu'ainsi) et des graphiques en images (à lire visuellement, mappés par position `<a:off y>`). Données dans `scripts/point-business/rpv/data.json`. Incohérence signalée : TDG « Taux fixe Dilax » 2,18 % affiché en vert dans le fichier de Julien alors que le seuil est 2,2 % (le portail colore par seuil : rouge).
 - 26/10/2026 : heure d'hiver : crons Vercel `morning-alert` passés à `0 8` (alertes 9 h) et `0 18` (bilan bravos 19 h), lun→sam. À repasser à `0 7` / `0 17` fin mars 2027.
+- 26/10/2026 : R/O vendeurs du Point business 24/10 remplacés par un nouveau tableau fourni par Julien (image) : surtout BRUNO (104,33 % marge…) ; ordre = celui de l'image.
