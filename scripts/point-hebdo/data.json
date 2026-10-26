@@ -840,23 +840,9 @@
   "boostTitre": "Boost selon la PDM du PDV (RPV)",
   "boost": [
    [
-    "22 % de PDM",
-    "2 €"
-   ],
-   [
-    "25 % de PDM",
-    "4 €"
-   ],
-   [
     "28 % de PDM",
-    "5 €"
+    "4 €"
    ]
-  ],
-  "validerTitre": "Pour valider le challenge (à la fin de la période, sous 60 jours)",
-  "valider": [
-   "Bilan définitif par magasin avec la PDM, dans le fichier envoyé par Xiaomi",
-   "Détail des mobiles vendus avec les IMEI associés, dans ce même fichier",
-   "Les chèques cadeaux délivrés doivent être soumis à une déclaration auprès de l'Urssaf"
   ]
  }
 }

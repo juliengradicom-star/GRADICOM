@@ -125,12 +125,9 @@ s.addText('ACTU', { placeholder: 'titre' });
     s.addShape(pres.shapes.RECTANGLE, { x: x + 0.6, y: y + 1.5, w: cw - 1.2, h: 0.02, fill: { color: GOLD }, line: { color: GOLD, width: 0 }, objectName: 'Filet ' + c[0] });
     s.addText(c[3].map((t, k) => ({ text: t, options: { breakLine: k < c[3].length - 1 } })), { x: x + 0.1, y: y + 1.6, w: cw - 0.2, h: 0.9, fontFace: 'Calibri', fontSize: 11.5, color: INK, align: 'center', valign: 'top', margin: 0, isTextBox: true });
   });
-  s.addShape(pres.shapes.RECTANGLE, { x: 0.6, y: 5.1, w: 5.6, h: 1.75, fill: { color: 'F3F4F6' }, line: { color: LINE, width: 0.75 }, objectName: 'Cadre boost' });
-  s.addText(X.boostTitre, { x: 0.8, y: 5.18, w: 5.2, h: 0.4, fontFace: 'Calibri', fontSize: 15, bold: true, color: NAVY, margin: 0, isTextBox: true });
-  s.addText(X.boost.map((b, k) => ({ text: b[0] + ' : ' + b[1], options: { breakLine: k < X.boost.length - 1 } })), { x: 0.8, y: 5.62, w: 5.2, h: 1.1, fontFace: 'Calibri', fontSize: 15, color: INK, margin: 0, valign: 'top', paraSpaceAfter: 4, isTextBox: true });
-  s.addShape(pres.shapes.RECTANGLE, { x: 6.45, y: 5.1, w: 6.3, h: 1.75, fill: { color: WHITE }, line: { color: LINE, width: 0.75 }, objectName: 'Cadre validation' });
-  s.addText(X.validerTitre, { x: 6.6, y: 5.18, w: 6.0, h: 0.4, fontFace: 'Calibri', fontSize: 13, bold: true, color: NAVY, margin: 0, isTextBox: true });
-  s.addText(X.valider.map((t, k) => ({ text: t, options: { bullet: true, breakLine: k < X.valider.length - 1 } })), { x: 6.6, y: 5.6, w: 6.05, h: 1.2, fontFace: 'Calibri', fontSize: 11.5, color: INK, margin: 0, valign: 'top', paraSpaceAfter: 3, isTextBox: true });
+  s.addShape(pres.shapes.RECTANGLE, { x: 0.6, y: 5.1, w: 12.15, h: 1.5, fill: { color: 'F3F4F6' }, line: { color: LINE, width: 0.75 }, objectName: 'Cadre boost' });
+  s.addText(X.boostTitre, { x: 0.85, y: 5.25, w: 11.65, h: 0.4, fontFace: 'Calibri', fontSize: 16, bold: true, color: NAVY, margin: 0, isTextBox: true });
+  s.addText(X.boost.map((b, k) => ({ text: b[0] + ' : ' + b[1], options: { breakLine: k < X.boost.length - 1 } })), { x: 0.85, y: 5.8, w: 11.65, h: 0.6, fontFace: 'Calibri', fontSize: 22, bold: true, color: GOLD, margin: 0, valign: 'middle', isTextBox: true });
 }
 
 // ---- 7. Actu : challenge de fin d'année (devis détaillé)
