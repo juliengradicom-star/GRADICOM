@@ -108,23 +108,25 @@ D.goodays.forEach((g, i) => {
   s.addTable(rows, { x: x + 2.2, y: y + 0.55, w: 3.6, colW: [0.4, 1.6, 0.95, 0.65], rowH: [0.3, ...g.lignes.map(() => Math.min(0.4, 2.0 / (g.lignes.length + 1)))], fontFace: 'Calibri', fill: { color: WHITE }, margin: [0, 0.05, 0, 0.05], objectName: 'Goodays ' + g.magasin });
 });
 
-// ---- 7. Actu : séjour récompense
+// ---- 7. Actu : challenge de fin d'année (devis détaillé)
 s = pres.addSlide({ masterName: 'Page' });
 s.addText('ACTU', { placeholder: 'titre' });
 {
-  const A = D.actu;
-  s.addText(A.titre, { x: 0.6, y: 1.4, w: 12.15, h: 0.45, fontFace: 'Calibri', fontSize: 20, bold: true, color: NAVY, margin: 0, isTextBox: true });
-  s.addText(A.hotel, { x: 0.6, y: 1.85, w: 12.15, h: 0.35, fontFace: 'Calibri', fontSize: 14, color: MUTED, margin: 0, isTextBox: true });
-  s.addImage({ path: path.join(__dirname, 'assets', 'djerba_piscine.png'), x: 0.6, y: 2.35, w: 5.95, h: 2.85, sizing: { type: 'cover', w: 5.95, h: 2.85 }, altText: "La piscine et l'hôtel le soir", objectName: 'Photo piscine' });
-  s.addImage({ path: path.join(__dirname, 'assets', 'djerba_plage.png'), x: 6.8, y: 2.35, w: 5.95, h: 2.85, sizing: { type: 'cover', w: 5.95, h: 2.85 }, altText: 'La plage de sable fin', objectName: 'Photo plage' });
-  const tw = 2.9, gap = 0.183;
-  A.tuiles.forEach((t, i) => {
-    const x = 0.6 + i * (tw + gap), y = 5.45;
-    s.addShape(pres.shapes.RECTANGLE, { x, y, w: tw, h: 1.35, fill: { color: 'F3F4F6' }, line: { color: LINE, width: 0.75 }, objectName: 'Tuile ' + (i + 1) });
-    s.addShape(pres.shapes.RECTANGLE, { x, y, w: tw, h: 0.04, fill: { color: GOLD }, line: { color: GOLD, width: 0 }, objectName: 'Filet tuile ' + (i + 1) });
-    s.addText([{ text: t[0], options: { fontSize: 22, bold: true, color: NAVY, breakLine: true } }, { text: t[1], options: { fontSize: 12, color: MUTED } }],
-      { x: x + 0.15, y: y + 0.1, w: tw - 0.3, h: 1.2, fontFace: 'Calibri', valign: 'middle', margin: 0, isTextBox: true });
-  });
+  const A = D.actu, IM = f => path.join(__dirname, 'assets', f);
+  s.addText(A.sousTitre, { x: 0.6, y: 1.38, w: 12.15, h: 0.4, fontFace: 'Calibri', fontSize: 20, bold: true, color: NAVY, margin: 0, isTextBox: true });
+  s.addImage({ path: IM('djerba_piscine.png'), x: 0.6, y: 1.9, w: 4.4, h: 2.4, sizing: { type: 'cover', w: 4.4, h: 2.4 }, altText: "La piscine et l'hôtel le soir", objectName: 'Photo piscine' });
+  s.addImage({ path: IM('djerba_plage.png'), x: 0.6, y: 4.45, w: 4.4, h: 2.4, sizing: { type: 'cover', w: 4.4, h: 2.4 }, altText: 'La plage de sable fin', objectName: 'Photo plage' });
+  const rows = A.devis.map((r, i) => { const last = i === A.devis.length - 1; return [lab(r[0], { align: 'left', fontSize: 11.5, fill: { color: last ? 'F3E9CF' : 'F3F4F6' } }), cel(r[1], { align: 'left', fontSize: last ? 13 : 11.5, bold: last, fill: { color: last ? 'F3E9CF' : WHITE } })]; });
+  s.addText(A.hotel, { x: 5.25, y: 1.9, w: 7.5, h: 0.3, fontFace: 'Calibri', fontSize: 12, italic: true, color: MUTED, margin: 0, isTextBox: true });
+  s.addTable(rows, { x: 5.25, y: 2.25, w: 7.5, colW: [1.9, 5.6], rowH: rows.map(() => 0.29), fontFace: 'Calibri', margin: [0, 0.08, 0, 0.08], objectName: 'Devis' });
+  const box = (x, titre, items, col) => {
+    s.addShape(pres.shapes.RECTANGLE, { x, y: 4.7, w: 3.65, h: 2.15, fill: { color: WHITE }, line: { color: LINE, width: 0.75 }, objectName: 'Cadre ' + titre });
+    s.addShape(pres.shapes.RECTANGLE, { x, y: 4.7, w: 3.65, h: 0.32, fill: { color: col }, line: { color: col, width: 0 }, objectName: 'Bandeau ' + titre });
+    s.addText(titre, { x: x + 0.12, y: 4.7, w: 3.4, h: 0.32, fontFace: 'Calibri', fontSize: 12, bold: true, color: WHITE, valign: 'middle', margin: 0, isTextBox: true });
+    s.addText(items.map((t, k) => ({ text: t, options: { bullet: true, breakLine: k < items.length - 1 } })), { x: x + 0.1, y: 5.05, w: 3.45, h: 1.78, fontFace: 'Calibri', fontSize: 10.5, color: INK, valign: 'top', margin: 0, paraSpaceAfter: 2, isTextBox: true });
+  };
+  box(5.25, 'Ce qui est compris', A.compris, OKF);
+  box(9.1, 'Ce qui n\'est pas compris', A.nonCompris, '6B7280');
 }
 
 pres.writeFile({ fileName: OUT }).then(() => console.log('ok', OUT));

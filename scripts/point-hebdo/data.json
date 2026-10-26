@@ -730,25 +730,57 @@
   }
  ],
  "actu": {
-  "titre": "Séjour récompense de l'équipe : Djerba, mai 2027",
+  "sousTitre": "Challenge de fin d'année : Djerba, mai 2027",
   "hotel": "Club Framissima Palm Beach Djerba (Tunisie), en bord de mer",
-  "tuiles": [
+  "devis": [
    [
-    "4 – 7 mai 2027",
-    "4 jours / 3 nuits, départ de Bordeaux"
+    "Au départ de",
+    "Bordeaux"
    ],
    [
-    "9 adultes",
-    "9 chambres individuelles"
+    "Dates",
+    "Mardi 4 mai 2027 au vendredi 7 mai 2027"
    ],
    [
-    "Tout compris",
-    "Vols + transfert + hôtel"
+    "Durée",
+    "4 jours / 3 nuits"
    ],
    [
-    "4 652,75 €",
-    "soit environ 517 € par personne, budget de 5 000 €"
+    "Séjour",
+    "Vols + transfert + hôtel + tout compris"
+   ],
+   [
+    "Bagages en soute",
+    "Option non retenue (bagage cabine)"
+   ],
+   [
+    "Hébergement",
+    "9 chambres standard à usage individuel"
+   ],
+   [
+    "Participants",
+    "9 adultes"
+   ],
+   [
+    "Montant du séjour",
+    "4 652,75 € (environ 517 € par personne, budget de 5 000 €)"
    ]
+  ],
+  "compris": [
+   "Vols aller-retour au départ de Bordeaux",
+   "Transfert aéroport / hôtel",
+   "Chambre individuelle rénovée (20 à 25 m²) : clim, Wi-Fi, terrasse ou balcon",
+   "Tout inclus : pension complète, boissons locales illimitées de 10 h à 23 h, snacks",
+   "Taxes d'aéroport et de solidarité",
+   "Plage privée, piscine, tennis, animation francophone"
+  ],
+  "nonCompris": [
+   "Frais de dossier",
+   "Taxe de séjour sur place : 12 dinars par personne et par nuit",
+   "Bagage en soute",
+   "Boissons importées, cocktails, bouteille d'eau",
+   "Excursions, spa, coffre-fort (1 € par jour)",
+   "Chambre vue mer (supplément)"
   ]
  }
 }
