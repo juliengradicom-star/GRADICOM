@@ -1,5 +1,86 @@
 [
  {
+  "id": "2026-10-26-business-connect-s44",
+  "date": "2026-10-26",
+  "title": "Business Connect — semaine du 27 octobre au 2 novembre",
+  "text": "L'essentiel de la semaine (image 1), puis un FOCUS sur les mobiles en bon plan : forfait sans engagement (image 2) et forfait Illimité 5G+ (image 3), avec prix, remises, ODR et bonus reprise. Touche une image pour l'agrandir.",
+  "images": [
+   "actus/business-connect-s44.png",
+   "actus/business-connect-s44-mobiles-1.png",
+   "actus/business-connect-s44-mobiles-2.png"
+  ],
+  "notifyText": "Derniers jours Pixel 11 et Buds4, Maison Sécurisée prolongée, Canal+ à 19,99 € : les infos de la semaine + un quiz !",
+  "quiz": [
+   {
+    "q": "Un client prend le Galaxy S26 avec un forfait Illimité 5G+ et veut payer en 4 fois. Que lui proposes-tu ?",
+    "options": [
+     "4 × 49,75 € sans frais",
+     "4 × 62,25 € sans frais",
+     "4 × 97,75 € sans frais",
+     "4 × 137,25 € sans frais"
+    ],
+    "answer": [
+     2
+    ],
+    "explain": "4 × 97,75 € sans frais, puis ODR de 100 € remboursée (99 € + 8 €/mois pendant 24 mois en paiement comptant)."
+   },
+   {
+    "q": "Quel est le prix du Redmi 17C avec un forfait SANS engagement (ODR SFR de 20 € déduite) ?",
+    "options": [
+     "149 €",
+     "179 €",
+     "199 €",
+     "219 €"
+    ],
+    "answer": [
+     1
+    ],
+    "explain": "179 € (199 € − 20 € d'ODR SFR), ou 4 × 49,75 € sans frais puis ODR de 20 € remboursée."
+   },
+   {
+    "q": "Quels accessoires ont une remise de 100 € cette semaine ? (plusieurs réponses)",
+    "options": [
+     "Galaxy Watch Ultra2",
+     "Galaxy Buds4 Pro",
+     "AirPods 4 ANC",
+     "Galaxy Watch9"
+    ],
+    "answer": [
+     0,
+     1
+    ],
+    "multi": true,
+    "explain": "Watch Ultra2 (649 €) et Buds4 Pro (149 €) : −100 €. Watch9 : −50 €, AirPods 4 ANC : −70 €."
+   },
+   {
+    "q": "Quel est le prix de l'offre 100 % Canal+ (avec Pass Coupes d'Europe) pendant les 24 mois ?",
+    "options": [
+     "14,99 € / mois",
+     "19,99 € / mois",
+     "24,99 € / mois",
+     "32,99 € / mois"
+    ],
+    "answer": [
+     1
+    ],
+    "explain": "19,99 €/mois pendant 24 mois, puis 32,99 €/mois : prolongée jusqu'au 9/11 en conquête et Mig Inter, en boutique et télévente."
+   },
+   {
+    "q": "Jusqu'à quelle date l'ODR de 10 € sur la caméra Wifi additionnelle Maison Sécurisée est-elle prolongée ?",
+    "options": [
+     "Le 2/11",
+     "Le 9/11",
+     "Le 16/11",
+     "Le 30/11"
+    ],
+    "answer": [
+     3
+    ],
+    "explain": "Prolongation jusqu'au 30/11 : la 2e caméra Wifi à 29 € au lieu de 39 €. Preuve d'achat à envoyer sous 30 jours."
+   }
+  ]
+ },
+ {
   "id": "2026-10-20-business-connect-s43",
   "date": "2026-10-20",
   "title": "Business Connect — semaine du 20 au 26 octobre",
