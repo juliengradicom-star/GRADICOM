@@ -728,5 +728,27 @@
     ]
    ]
   }
- ]
+ ],
+ "actu": {
+  "titre": "Séjour récompense de l'équipe : Djerba, mai 2027",
+  "hotel": "Club Framissima Palm Beach Djerba (Tunisie), en bord de mer",
+  "tuiles": [
+   [
+    "4 – 7 mai 2027",
+    "4 jours / 3 nuits, départ de Bordeaux"
+   ],
+   [
+    "9 adultes",
+    "9 chambres individuelles"
+   ],
+   [
+    "Tout compris",
+    "Vols + transfert + hôtel"
+   ],
+   [
+    "4 652,75 €",
+    "soit environ 517 € par personne, budget de 5 000 €"
+   ]
+  ]
+ }
 }

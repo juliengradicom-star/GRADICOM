@@ -108,4 +108,23 @@ D.goodays.forEach((g, i) => {
   s.addTable(rows, { x: x + 2.2, y: y + 0.55, w: 3.6, colW: [0.4, 1.6, 0.95, 0.65], rowH: [0.3, ...g.lignes.map(() => Math.min(0.4, 2.0 / (g.lignes.length + 1)))], fontFace: 'Calibri', fill: { color: WHITE }, margin: [0, 0.05, 0, 0.05], objectName: 'Goodays ' + g.magasin });
 });
 
+// ---- 7. Actu : séjour récompense
+s = pres.addSlide({ masterName: 'Page' });
+s.addText('ACTU', { placeholder: 'titre' });
+{
+  const A = D.actu;
+  s.addText(A.titre, { x: 0.6, y: 1.4, w: 12.15, h: 0.45, fontFace: 'Calibri', fontSize: 20, bold: true, color: NAVY, margin: 0, isTextBox: true });
+  s.addText(A.hotel, { x: 0.6, y: 1.85, w: 12.15, h: 0.35, fontFace: 'Calibri', fontSize: 14, color: MUTED, margin: 0, isTextBox: true });
+  s.addImage({ path: path.join(__dirname, 'assets', 'djerba_piscine.png'), x: 0.6, y: 2.35, w: 5.95, h: 2.85, sizing: { type: 'cover', w: 5.95, h: 2.85 }, altText: "La piscine et l'hôtel le soir", objectName: 'Photo piscine' });
+  s.addImage({ path: path.join(__dirname, 'assets', 'djerba_plage.png'), x: 6.8, y: 2.35, w: 5.95, h: 2.85, sizing: { type: 'cover', w: 5.95, h: 2.85 }, altText: 'La plage de sable fin', objectName: 'Photo plage' });
+  const tw = 2.9, gap = 0.183;
+  A.tuiles.forEach((t, i) => {
+    const x = 0.6 + i * (tw + gap), y = 5.45;
+    s.addShape(pres.shapes.RECTANGLE, { x, y, w: tw, h: 1.35, fill: { color: 'F3F4F6' }, line: { color: LINE, width: 0.75 }, objectName: 'Tuile ' + (i + 1) });
+    s.addShape(pres.shapes.RECTANGLE, { x, y, w: tw, h: 0.04, fill: { color: GOLD }, line: { color: GOLD, width: 0 }, objectName: 'Filet tuile ' + (i + 1) });
+    s.addText([{ text: t[0], options: { fontSize: 22, bold: true, color: NAVY, breakLine: true } }, { text: t[1], options: { fontSize: 12, color: MUTED } }],
+      { x: x + 0.15, y: y + 0.1, w: tw - 0.3, h: 1.2, fontFace: 'Calibri', valign: 'middle', margin: 0, isTextBox: true });
+  });
+}
+
 pres.writeFile({ fileName: OUT }).then(() => console.log('ok', OUT));
