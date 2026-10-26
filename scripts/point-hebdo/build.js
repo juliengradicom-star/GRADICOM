@@ -108,6 +108,31 @@ D.goodays.forEach((g, i) => {
   s.addTable(rows, { x: x + 2.2, y: y + 0.55, w: 3.6, colW: [0.4, 1.6, 0.95, 0.65], rowH: [0.3, ...g.lignes.map(() => Math.min(0.4, 2.0 / (g.lignes.length + 1)))], fontFace: 'Calibri', fill: { color: WHITE }, margin: [0, 0.05, 0, 0.05], objectName: 'Goodays ' + g.magasin });
 });
 
+// ---- 7. Actu : challenge constructeur novembre (Xiaomi)
+s = pres.addSlide({ masterName: 'Page' });
+s.addText('ACTU', { placeholder: 'titre' });
+{
+  const X = D.actuXiaomi;
+  s.addText(X.sousTitre, { x: 0.6, y: 1.38, w: 12.15, h: 0.4, fontFace: 'Calibri', fontSize: 20, bold: true, color: NAVY, margin: 0, isTextBox: true });
+  s.addText(X.condition, { x: 0.6, y: 1.85, w: 12.15, h: 0.3, fontFace: 'Calibri', fontSize: 12.5, italic: true, color: MUTED, margin: 0, isTextBox: true });
+  const cw = 2.3, cg = (12.15 - 5 * cw) / 4;
+  X.categories.forEach((c, i) => {
+    const x = 0.6 + i * (cw + cg), y = 2.3;
+    s.addShape(pres.shapes.RECTANGLE, { x, y, w: cw, h: 2.55, fill: { color: WHITE }, line: { color: LINE, width: 0.75 }, objectName: 'Carte ' + c[0] });
+    s.addShape(pres.shapes.RECTANGLE, { x, y, w: cw, h: 0.62, fill: { color: NAVY }, line: { color: NAVY, width: 0 }, objectName: 'Bandeau ' + c[0] });
+    s.addText([{ text: c[0], options: { fontSize: 11, bold: true, color: 'D4B15F', breakLine: true } }, { text: c[1], options: { fontSize: 12, bold: true, color: WHITE } }], { x: x + 0.08, y, w: cw - 0.16, h: 0.62, fontFace: 'Calibri', align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+    s.addText(c[2], { x, y: y + 0.72, w: cw, h: 0.7, fontFace: 'Calibri', fontSize: 34, bold: true, color: GOLD, align: 'center', valign: 'middle', margin: 0, isTextBox: true });
+    s.addShape(pres.shapes.RECTANGLE, { x: x + 0.6, y: y + 1.5, w: cw - 1.2, h: 0.02, fill: { color: GOLD }, line: { color: GOLD, width: 0 }, objectName: 'Filet ' + c[0] });
+    s.addText(c[3].map((t, k) => ({ text: t, options: { breakLine: k < c[3].length - 1 } })), { x: x + 0.1, y: y + 1.6, w: cw - 0.2, h: 0.9, fontFace: 'Calibri', fontSize: 11.5, color: INK, align: 'center', valign: 'top', margin: 0, isTextBox: true });
+  });
+  s.addShape(pres.shapes.RECTANGLE, { x: 0.6, y: 5.1, w: 5.6, h: 1.75, fill: { color: 'F3F4F6' }, line: { color: LINE, width: 0.75 }, objectName: 'Cadre boost' });
+  s.addText(X.boostTitre, { x: 0.8, y: 5.18, w: 5.2, h: 0.4, fontFace: 'Calibri', fontSize: 15, bold: true, color: NAVY, margin: 0, isTextBox: true });
+  s.addText(X.boost.map((b, k) => ({ text: b[0] + ' : ' + b[1], options: { breakLine: k < X.boost.length - 1 } })), { x: 0.8, y: 5.62, w: 5.2, h: 1.1, fontFace: 'Calibri', fontSize: 15, color: INK, margin: 0, valign: 'top', paraSpaceAfter: 4, isTextBox: true });
+  s.addShape(pres.shapes.RECTANGLE, { x: 6.45, y: 5.1, w: 6.3, h: 1.75, fill: { color: WHITE }, line: { color: LINE, width: 0.75 }, objectName: 'Cadre validation' });
+  s.addText(X.validerTitre, { x: 6.6, y: 5.18, w: 6.0, h: 0.4, fontFace: 'Calibri', fontSize: 13, bold: true, color: NAVY, margin: 0, isTextBox: true });
+  s.addText(X.valider.map((t, k) => ({ text: t, options: { bullet: true, breakLine: k < X.valider.length - 1 } })), { x: 6.6, y: 5.6, w: 6.05, h: 1.2, fontFace: 'Calibri', fontSize: 11.5, color: INK, margin: 0, valign: 'top', paraSpaceAfter: 3, isTextBox: true });
+}
+
 // ---- 7. Actu : challenge de fin d'année (devis détaillé)
 s = pres.addSlide({ masterName: 'Page' });
 s.addText('ACTU', { placeholder: 'titre' });

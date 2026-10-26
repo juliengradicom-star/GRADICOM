@@ -782,5 +782,81 @@
    "Excursions, spa, coffre-fort (1 € par jour)",
    "Chambre vue mer (supplément)"
   ]
+ },
+ "actuXiaomi": {
+  "sousTitre": "Challenge constructeur novembre : Xiaomi",
+  "condition": "Pour être éligible, la TG doit atteindre une target de 20 % de PDM.",
+  "categories": [
+   [
+    "Catégorie 1",
+    "Nouveautés Xiaomi",
+    "30 €",
+    [
+     "Xiaomi 17T",
+     "Xiaomi 17T Pro",
+     "+ Nouveautés Premium"
+    ]
+   ],
+   [
+    "Catégorie 1 bis",
+    "Xiaomi",
+    "20 €",
+    [
+     "Xiaomi 15T",
+     "Xiaomi 15T Pro",
+     "+ anciennes références"
+    ]
+   ],
+   [
+    "Catégorie 2",
+    "REDMI Note 17 Pro",
+    "8 €",
+    [
+     "REDMI Note 17 Pro 5G",
+     "REDMI Note 17 Pro Max 5G"
+    ]
+   ],
+   [
+    "Catégorie 2 bis",
+    "REDMI Note",
+    "5 €",
+    [
+     "REDMI Note 17 5G",
+     "+ anciennes références"
+    ]
+   ],
+   [
+    "Catégorie 3",
+    "REDMI",
+    "3 €",
+    [
+     "REDMI 17 5G",
+     "REDMI 17C 5G",
+     "REDMI A5",
+     "+ anciennes références"
+    ]
+   ]
+  ],
+  "boostTitre": "Boost selon la PDM du PDV (RPV)",
+  "boost": [
+   [
+    "22 % de PDM",
+    "2 €"
+   ],
+   [
+    "25 % de PDM",
+    "4 €"
+   ],
+   [
+    "28 % de PDM",
+    "5 €"
+   ]
+  ],
+  "validerTitre": "Pour valider le challenge (à la fin de la période, sous 60 jours)",
+  "valider": [
+   "Bilan définitif par magasin avec la PDM, dans le fichier envoyé par Xiaomi",
+   "Détail des mobiles vendus avec les IMEI associés, dans ce même fichier",
+   "Les chèques cadeaux délivrés doivent être soumis à une déclaration auprès de l'Urssaf"
+  ]
  }
 }
