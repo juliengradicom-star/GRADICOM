@@ -71,13 +71,13 @@ s.addNotes('Pour modifier : touche un texte et écris. Les graphiques se modifie
 // ---- 2. Actus & rappel (visuels SFR tels quels)
 s = pres.addSlide({ masterName: 'Page' });
 s.addText('ACTUS & RAPPEL', { placeholder: 'titre' });
-const actuTitle = (t, y, h) => s.addText(t, { x: 0.4, y, w: 6.7, h, fontFace: 'Calibri', fontSize: 17, bold: true, color: WHITE, align: 'left', valign: 'middle', margin: 0, isTextBox: true });
+const actuTitle = (t, y, h) => s.addText(t, { x: 0.4, y, w: 6.7, h, fontFace: 'Calibri', fontSize: 22, bold: true, color: GOLD2, align: 'left', valign: 'middle', margin: 0, isTextBox: true });
 const actuImg = (f, y, w, h) => { const x = (W - w) / 2; s.addShape(pres.shapes.RECTANGLE, { x: x - 0.07, y: y - 0.07, w: w + 0.14, h: h + 0.14, fill: { color: GOLD }, line: { color: GOLD, width: 0 }, objectName: 'Cadre ' + f }); s.addImage({ path: A(f), x, y, w, h, objectName: f }); };
-actuTitle('NOUVEAU - MAISON SECURISEE – DES LE 03-11-2026', 2.15, 0.5);
-actuImg('actu_maison_1.png', 2.8, 6.3, 6.3 * 397 / 875);
-actuImg('actu_maison_2.png', 5.85, 6.3, 6.3 * 358 / 876);
-actuTitle('NOUVEAU -  FIN DE COMMERCIALISATION BOX + HIGH TECH – DES LE 09-11-2026', 8.55, 0.85);
-actuImg('actu_fin_box.png', 9.6, 6.3, 6.3 * 402 / 848);
+actuTitle('NOUVEAU - MAISON SECURISEE – DES LE 03-11-2026', 2.05, 0.65);
+actuImg('actu_maison_1.png', 2.85, 6.3, 6.3 * 397 / 875);
+actuImg('actu_maison_2.png', 5.9, 6.3, 6.3 * 402 / 848);
+actuTitle('NOUVEAU -  FIN DE COMMERCIALISATION BOX + HIGH TECH – DES LE 09-11-2026', 9.05, 1.0);
+actuImg('actu_fin_box.png', 10.2, 6.3, 6.3 * 358 / 876);
 
 // ---- 3. R/O (2 tableaux empilés pour rester lisibles sur téléphone)
 s = pres.addSlide({ masterName: 'Page' });
