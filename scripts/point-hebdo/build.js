@@ -59,7 +59,7 @@ s.addText(`R/O Vendeurs au ${D.dateDonnees}`, { placeholder: 'titre' });
   const V = D.roVendeurs;
   const rows = [[head('', { fontSize: 10 }), ...V.colonnes.map(c => head(c, { fontSize: 9.5 }))]];
   V.lignes.forEach(l => rows.push([lab(l[0], { align: 'left', fontSize: 11.5 }), ...l.slice(1).map(v => v === null ? ro('#DIV/0!', { fontSize: 10 }) : ro(fmtPct(v), { fontSize: 11.5 }))]));
-  s.addTable(rows, { x: 0.6, y: 1.45, w: 12.15, colW: [1.3, ...V.colonnes.map(() => (12.15 - 1.3) / V.colonnes.length)], rowH: [0.55, ...V.lignes.map(() => 0.37)], fontFace: 'Calibri', margin: [0, 0.05, 0, 0.05], objectName: 'R/O vendeurs' });
+  s.addTable(rows, { x: 0.6, y: 1.45, w: 12.15, colW: [1.3, ...V.colonnes.map(() => (12.15 - 1.3) / V.colonnes.length)], rowH: [0.55, ...V.lignes.map(() => 0.345)], fontFace: 'Calibri', margin: [0, 0.05, 0, 0.05], objectName: 'R/O vendeurs' });
 }
 function fmtPct(v) { return v.toFixed(2).replace('.', ',') + '%'; }
 
@@ -105,7 +105,7 @@ D.goodays.forEach((g, i) => {
   const th = (t, al) => ({ text: t, options: { bold: true, color: NAVY, fontSize: 10.5, align: al, valign: 'middle', border: [{ type: 'none' }, { type: 'none' }, { type: 'solid', color: GOLD, pt: 1 }, { type: 'none' }] } });
   const td = (t, al, b) => ({ text: t, options: { color: INK, bold: !!b, fontSize: 11.5, align: al, valign: 'middle', border: [{ type: 'none' }, { type: 'none' }, { type: 'solid', color: 'F3F4F6', pt: 0.5 }, { type: 'none' }] } });
   const rows = [[th('', 'center'), th('Login vendeur', 'left'), th('Note satis.', 'center'), th('Part.', 'center')], ...g.lignes.map(l => [td(l[0], 'center'), td(l[1], 'left'), td(l[2], 'center', true), td(l[3], 'center')])];
-  s.addTable(rows, { x: x + 2.2, y: y + 0.55, w: 3.6, colW: [0.4, 1.6, 0.95, 0.65], rowH: [0.32, ...g.lignes.map(() => 0.4)], fontFace: 'Calibri', fill: { color: WHITE }, margin: [0, 0.05, 0, 0.05], objectName: 'Goodays ' + g.magasin });
+  s.addTable(rows, { x: x + 2.2, y: y + 0.55, w: 3.6, colW: [0.4, 1.6, 0.95, 0.65], rowH: [0.3, ...g.lignes.map(() => Math.min(0.4, 2.0 / (g.lignes.length + 1)))], fontFace: 'Calibri', fill: { color: WHITE }, margin: [0, 0.05, 0, 0.05], objectName: 'Goodays ' + g.magasin });
 });
 
 pres.writeFile({ fileName: OUT }).then(() => console.log('ok', OUT));
