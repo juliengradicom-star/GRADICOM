@@ -1545,6 +1545,34 @@
             catch (e) { pushMsg = isOldScript(e) ? 'Le serveur n\'est pas encore prêt pour les notifications, réessaie plus tard.' : 'Activation impossible pour le moment.'; }
             renderActus();
         }
+        // Notification touchée : le texte COMPLET s'affiche dans une fenêtre du portail
+        let pendingNotif = null;
+        function showNotifBox(title, body) {
+            const old = document.getElementById('notifBox'); if (old) old.remove();
+            const esc = x => String(x || '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+            const box = document.createElement('div');
+            box.id = 'notifBox'; box.setAttribute('data-noico', '');
+            box.style.cssText = 'position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px;';
+            box.innerHTML = `<div style="max-width:420px;width:100%;max-height:90vh;overflow-y:auto;background:#14110a;border:1px solid rgba(201,166,91,.55);border-radius:14px;padding:20px 18px;box-shadow:0 10px 40px rgba(0,0,0,.7)">
+                <div style="font-family:'Bodoni Moda',serif;font-size:19px;margin:0 0 12px;color:#e5c26a;text-align:center">${esc(title)}</div>
+                <div style="font-size:15px;line-height:1.55;white-space:pre-line;margin-bottom:16px">${esc(body)}</div>
+                <button class="btn-add" style="width:100%" onclick="document.getElementById('notifBox').remove()">OK</button></div>`;
+            document.body.appendChild(box);
+        }
+        function queueNotifBox(title, body) {
+            pendingNotif = { title, body };
+            const t = setInterval(() => {
+                if (!pendingNotif) { clearInterval(t); return; }
+                if (currentUser) { const p = pendingNotif; pendingNotif = null; clearInterval(t); showNotifBox(p.title, p.body); }
+            }, 600);
+            setTimeout(() => clearInterval(t), 120000);
+        }
+        (function () {
+            try {
+                const q = new URLSearchParams(location.search);
+                if (q.get('nb')) { queueNotifBox(q.get('nt') || 'GRADICOM AMR', q.get('nb')); history.replaceState(null, '', location.pathname + (q.get('actus') ? '?actus=1' : '')); }
+            } catch (e) {}
+        })();
         let pushSynced = false;
         async function syncPushSilently() {
             if (pushSynced || !currentUser || pushState() !== 'granted') return;
@@ -1553,7 +1581,7 @@
         }
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.addEventListener('message', e => {
-                if (e.data && e.data.type === 'open-actus' && currentUser) { loadActus().then(() => switchTab('actus')); }
+                if (e.data && e.data.type === 'open-actus') { if (e.data.body) queueNotifBox(e.data.title, e.data.body); if (currentUser) { loadActus().then(() => switchTab('actus')); } }
                 if (e.data && e.data.type === 'new-actu' && currentUser) {
                     loadActus().then(() => {
                         updateTabLocks();

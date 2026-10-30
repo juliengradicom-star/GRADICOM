@@ -31,7 +31,7 @@ self.addEventListener('push', e => {
     self.registration.showNotification(d.title || 'GRADICOM AMR', {
       body: d.body || 'Une nouvelle actu est disponible.',
       icon: '/icon-192.png', badge: '/icon-192.png',
-      data: { url: d.url || '/?actus=1' }
+      data: { url: d.url || '/?actus=1', title: d.title || 'GRADICOM AMR', body: d.body || '' }
     }),
     // appli ouverte : on la prévient aussi pour qu'elle affiche la nouveauté tout de suite
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => list.forEach(c => c.postMessage({ type: 'new-actu', title: d.title || '' })))
@@ -40,10 +40,12 @@ self.addEventListener('push', e => {
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const url = (e.notification.data && e.notification.data.url) || '/?actus=1';
+  const nd = e.notification.data || {};
+  const title = nd.title || '', body = nd.body || '';
+  const url = (nd.url || '/?actus=1') + ((nd.url || '/?actus=1').includes('?') ? '&' : '?') + 'nt=' + encodeURIComponent(title) + '&nb=' + encodeURIComponent(body);
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
     for (const c of list) {
-      if ('focus' in c) { c.postMessage({ type: 'open-actus' }); return c.focus(); }
+      if ('focus' in c) { c.postMessage({ type: 'open-actus', title, body }); return c.focus(); }
     }
     return self.clients.openWindow(url);
   }));
