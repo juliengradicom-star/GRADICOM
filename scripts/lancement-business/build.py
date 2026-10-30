@@ -10,7 +10,8 @@ body{font-family:Inter,Arial,sans-serif;color:#1a1a1a}
 .body{position:absolute;left:14mm;right:14mm;top:36mm;bottom:12mm;display:flex;gap:6mm;align-items:center;justify-content:center}
 .body img{min-width:0;flex:0 1 auto;max-width:100%;max-height:100%;object-fit:contain;border:.3mm solid #d9c08a;border-radius:2mm;background:#fff}
 .col{display:flex;flex-direction:column;gap:4mm;height:100%;justify-content:center}
-.ft{position:absolute;bottom:4mm;left:14mm;right:14mm;font-size:2.8mm;color:#8a6414;display:flex;justify-content:space-between}
+.grid{display:grid;grid-template-columns:auto auto;justify-items:center;gap:4mm;align-content:center}.grid img{height:76mm;width:auto;max-width:none;max-height:none;border:none}
+.body{gap:10mm}.ft{position:absolute;bottom:4mm;left:14mm;right:14mm;font-size:2.8mm;color:#8a6414;display:flex;justify-content:space-between}
 .cover{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12mm;border:1mm solid #b8892b;margin:8mm;width:281mm;height:194mm;padding:0}
 .cover h1{font-size:15mm;color:#5c430a;text-align:center;line-height:1.15;font-weight:800}
 .cover h1 span{color:#b8892b;display:block;margin-top:3mm;font-size:12mm}
@@ -18,15 +19,15 @@ body{font-family:Inter,Arial,sans-serif;color:#1a1a1a}
 .rule{width:60mm;height:.8mm;background:#b8892b}"""
 def page(t,body,sub=''):
     s=f'<div class="sub">{sub}</div>' if sub else ''
-    return f'<div class="p"><div class="hd"><img src="file://{A}image1.png"><h1>{t}</h1>{s}</div><div class="body">{body}</div><div class="ft"><span>GRADICOM • AMR</span><span>Lancement business · Novembre 2026</span></div></div>'
-im=lambda n,st='':f'<img src="file://{A}image{n}.png" style="{st}">'
-pg=[f'<div class="p" style="padding:0"><div class="cover"><h1>LANCEMENT BUSINESS<span>NOVEMBRE 2026</span></h1><div class="rule"></div><img src="file://{A}image1.png"><div class="g">GRADICOM • AMR</div></div></div>',
-page('BUSINESS MOBILE',im(4)),
-page('BUSINESS TERMINAUX',im(6),'Forfait sans engagement'),
-page('BUSINESS TERMINAUX',im(8),'Illimité 5G+'),
-page('BUSINESS ACCESSOIRES',im(11)+f'<div class="col">{im(10)}{im(9)}</div>'),
-page('BUSINESS FIXE',im(12)),
-page('BUSINESS OPTIONS',im(13,'width:48%;height:auto;')+im(14,'width:48%;height:auto;max-height:100%;'))]
+    return f'<div class="p"><div class="hd"><img src="file://{A}logo.png"><h1>{t}</h1>{s}</div><div class="body">{body}</div><div class="ft"><span>GRADICOM • AMR</span><span>Lancement business · Novembre 2026</span></div></div>'
+im=lambda n,st='':f'<img src="file://{A}{n}.png" style="{st}">'
+pg=[f'<div class="p" style="padding:0"><div class="cover"><h1>LANCEMENT BUSINESS<span>NOVEMBRE 2026</span></h1><div class="rule"></div><img src="file://{A}logo.png"><div class="g">GRADICOM • AMR</div></div></div>',
+page('BUSINESS MOBILE',im('t4')),
+page('BUSINESS TERMINAUX',im('t6'),'Forfait sans engagement'),
+page('BUSINESS TERMINAUX',im('t8'),'Illimité 5G+'),
+page('BUSINESS ACCESSOIRES',im('t11','width:128mm;height:auto;')+'<div class="grid">'+im('c10a')+im('c10b')+im('c9a')+im('c9b')+'</div>'),
+page('BUSINESS FIXE',im('t12')),
+page('BUSINESS OPTIONS',im('t13','height:auto;width:46%;')+im('t14','height:100%;width:auto;max-width:46%;'))]
 open('/tmp/lb.html','w').write(f'<html><head><style>{css}</style></head><body>{"".join(pg)}</body></html>')
 out=sys.argv[1]
 with sync_playwright() as p:
