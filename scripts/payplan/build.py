@@ -46,8 +46,8 @@ body{font-family:Inter,sans-serif;color:#222;-webkit-print-color-adjust:exact;pr
 .steps{position:absolute;left:0;right:0;top:0;bottom:0}
 .step{position:absolute;top:0;width:0}
 .step .t{position:absolute;left:-14mm;top:4mm;width:28mm;text-align:center;color:#fff;font-weight:800;font-size:12pt;padding:.8mm 0}
-.step .l{position:absolute;left:-.2mm;top:10mm;height:11mm;width:.5mm;background:#1a1a1a}
-.step .e{position:absolute;left:-20mm;top:21mm;width:40mm;text-align:center;font-weight:800;font-size:25pt;color:#1a1a1a;z-index:2}
+.step .l{position:absolute;left:-.2mm;top:10mm;height:12mm;width:.5mm;background:#1a1a1a}
+.step .e{position:absolute;left:-20mm;top:18mm;height:25mm;width:40mm;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:25pt;color:#1a1a1a;z-index:2}
 .arrow2{position:absolute;left:3mm;right:2mm;top:18mm;height:25mm;background:linear-gradient(90deg,#fdf6e0,#d4ae55 90%,#a67c1f);clip-path:polygon(0 0,96% 0,96% -20%,100% 50%,96% 120%,96% 100%,0 100%,3% 50%)}
 .hl{position:absolute;top:3mm;bottom:3mm;border:1.1mm solid #8a6414}
 .dn{position:absolute;top:-1mm}
