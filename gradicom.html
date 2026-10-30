@@ -6281,9 +6281,9 @@
     var launchDay = jTest === null && left <= 0 && left > -msDay;
     if (jTest === null && left <= -msDay) return;          // challenge lancé depuis plus d'un jour : plus d'écran
     if (jTest === null && j > DAYS_SHOWN + 1) return;     // trop tôt
-    /* une fois par jour */
+    /* à chaque ouverture */
     var key = 'gj_teaser_' + now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate(), seen = false;
-    if (force !== '1') { try { seen = localStorage.getItem(key) === '1'; } catch (e) {} if (seen) return; }
+    /* affiché à CHAQUE ouverture jusqu'au lundi (voulu par Julien le 30/10) : plus de limite « une fois par jour » */
     /* ---------- TEXTES ---------- */
     var el = function (id) { return document.getElementById(id); }, root = el('gj-teaser');
     var T = {
@@ -6305,7 +6305,6 @@
     root.hidden = false; document.documentElement.style.overflow = 'hidden';
     requestAnimationFrame(function () { root.classList.add('gj-on'); setTimeout(function () { arc.style.strokeDashoffset = (C * (1 - frac)).toFixed(1); }, 50); });
     function close() {
-      try { localStorage.setItem(key, '1'); } catch (e) {}
       root.classList.remove('gj-on'); setTimeout(function () { root.hidden = true; document.documentElement.style.overflow = ''; }, 600);
     }
     el('gj-go').addEventListener('click', close);
