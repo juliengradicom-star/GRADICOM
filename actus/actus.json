@@ -1,5 +1,16 @@
 [
  {
+  "id": "2026-10-31-bravo-octobre",
+  "date": "2026-10-31",
+  "title": "Un message pour vous",
+  "text": "Bravo à chacun d'entre vous pour ce mois d'octobre : le travail de chaque vendeur et de chaque responsable, dans les quatre magasins, fait le résultat. Merci !",
+  "images": [
+   "actus/bravo-octobre-2026.png"
+  ],
+  "notifyText": "Octobre est terminé, et il y a un petit mot qui vous attend dans l'appli. Ouvrez-la.",
+  "lecture": false
+ },
+ {
   "id": "2026-10-26-business-connect-s44",
   "date": "2026-10-26",
   "title": "Business Connect — semaine du 27 octobre au 2 novembre",
